@@ -27,7 +27,7 @@
  * @{
  */
 
-
+#include <inttypes.h>
 #include "global.h"
 #include "uart-comm.h"
 #include "frame-comm.h"

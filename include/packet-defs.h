@@ -45,10 +45,7 @@
 #ifndef PACKET_DEFS_H
 #define PACKET_DEFS_H
 
-
 #include <stdint.h>
-
-
 
 /** Histogram packet types (UNUSED SO FAR)
  *
@@ -73,12 +70,13 @@ typedef enum {
 
 /** Histogram packet header
  *
- * \todo Verify the compiler does not do strange alignment things.
- *
  * Note: If you change this structure, please make sure you update the
  * table above.
+ *
+ * Structure must be packed to supress padding bytes
  */
-typedef struct {
+
+struct packet_histogram_header_struct {
   /** histogram element size in bytes (1,2,3,4) */
   uint8_t  element_size;
   /** histogram type (#packet_histogram_type_t cast to uint8_t) */
@@ -87,7 +85,10 @@ typedef struct {
   uint16_t duration;
   /** total duration (of the measurement in progress) */
   uint16_t total_duration;
-} packet_histogram_header_t;
+}__attribute__((__packed__));
+
+
+typedef struct packet_histogram_header_struct packet_histogram_header_t;
 
 
 /** @} */

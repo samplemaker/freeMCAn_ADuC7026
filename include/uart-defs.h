@@ -58,14 +58,14 @@
 //#define UART_BAUDRATE 1000000UL
 
 
-/** Maximum admissible UART baud rate error 
+/** Maximum admissible UART baud rate error
  *
- * Error between requested baud rate and real baudrate [per mill] 
+ * Error between requested baud rate and real baudrate [per mill]
  * Suggestion is to set this to 1% [10]
  *
  */
- 
-#define UART_RELTOL 21  // 2.1% Error
+
+#define UART_RELTOL 10  // 1.0% Error
 
 
 /** @} */

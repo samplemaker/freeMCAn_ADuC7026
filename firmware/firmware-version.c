@@ -29,7 +29,7 @@
  */
 
 
-#include <avr/pgmspace.h>
+#include <inttypes.h>
 
 
 #include "firmware-version.h"

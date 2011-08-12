@@ -1,7 +1,7 @@
 /** \file firmware/global.h
  * \brief Global adjustments for freemcan firmware
  *
- * \author Copyright (C) 2010 samplemaker
+ * \author Copyright (C) 2011 samplemaker
  * \author Copyright (C) 2010 Hans Ulrich Niedermann <hun@n-dimensional.de>
  *
  *  This library is free software; you can redistribute it and/or
@@ -33,69 +33,16 @@
 #include <stdint.h>
 
 
-/** XTAL frequency */
-#ifndef F_CPU
-/* #define F_CPU 1000000UL                     //!< factory configuration: 8Mhz/8 */
-#define F_CPU 16000000UL                               //!< Pollin AVR Eval board
-#endif
-
-
-/** ADC prescaler selection for ADC clock source frequency
- *
- *  0: ADC clock divider=2
- *  1: ADC clock divider=2
- *  2: ADC clock divider=4
- *  3: ADC clock divider=8
- *  4: ADC clock divider=16
- *  5: ADC clock divider=32
- *  6: ADC clock divider=64
- *  7: ADC clock divider=128
- *
- *  Select a prescaler in order to set a resonable ADC clock frequency.
- *  For ATMEGA644P the nominal frequency range lies between 50 - 200kHz.
- *
- *  ADC clock division factor = F_CPU [Hz]/ADC clock source frequency [Hz]
- *  E.g. 16000kHz/64 = 250khz
- */
-#define ADC_PRESCALER (6)
-
-
 /** ADC resolution in bit
  *
  *  Put in here resonable value:
- *  E.g. 8 bit resolution at 500 kHz.
- *  (ATMEGA644P has 3,5LSB accuracy at 1Mhz; 4V)
+ *  i.e. 10bit +-1LSB accuracy
  */
-#define ADC_RESOLUTION (10)
-
-
-/** Timer prescaler selection (16Bit timer)
- *
- *  1: No prescaling
- *  2: Divider=8
- *  3: Divider=64
- *  4: Divider=256
- *  5: Divider=1024
- *
- *  Select a prescaler to have an compare match value as integer
- */
-#define TIMER_PRESCALER (5)
-
-
-/** Timer compare match value for 16Bit timer
- *
- *  TIMER_COMPARE_MATCH_VAL = (time_elpased [sec]*F_CPU [Hz]/Divider) - 1
- *  E.g. (1sec*16000000Hz/1024) - 1 = 15624
- *
- *  The data measurement is carried out in multiples of time_elapsed.
- */
-#define TIMER_COMPARE_MATCH_VAL 15624
+#define ADC_RESOLUTION (11)
 
 
 /** Histogram element size in bytes
  *
- * The code should support values of 2, 3, and 4, but we are focussing
- * on 3 from now on.
  */
 #define ELEMENT_SIZE_IN_BYTES 3
 
@@ -131,31 +78,37 @@ typedef
 inline static
 void histogram_element_inc(volatile freemcan_uint24_t *element)
 {
-  uint16_t accu;
+  register uint32_t accu;
+  register uint32_t tmp_reg;
   asm volatile("\n\t"
-               /* load 24 bit value */
-               "ld  %A[accu],    %a[elem]\n\t"             /* 2 cycles */
-               "ldd %B[accu],    %a[elem]+1\n\t"           /* 2 cycles */
-               "ldd __tmp_reg__, %a[elem]+2\n\t"           /* 2 cycles */
-
-               /* increment 24 bit value */
-               "adiw %[accu], 1\n\t"                       /* 2 cycles for word */
-               "adc  __tmp_reg__, __zero_reg__\n\t"        /* 1 cycle */
-
-               /* store 24 bit value */
-               "st  %a[elem],   %A[accu]\n\t"              /* 2 cycles */
-               "std %a[elem]+1, %B[accu]\n\t"              /* 2 cycles */
-               "std %a[elem]+2, __tmp_reg__\n\t"           /* 2 cycles */
-
+               /* load three bytes with respect to endianess */
+               "eor   %[tmp_reg], %[tmp_reg]          \n\t"
+               "ldrb  %[accu],    [%[elem], #2]       \n\t"
+               "orr   %[tmp_reg], %[accu] ,LSL #16    \n\t"
+               "ldrb  %[accu],    [%[elem], #1]       \n\t"
+               "orr   %[tmp_reg], %[accu] ,LSL #8     \n\t"
+               "ldrb  %[accu],    [%[elem]]           \n\t"
+               "orr   %[tmp_reg], %[accu]             \n\t"
+               /* increase by one */
+               "add   %[tmp_reg], %[tmp_reg], #1      \n\t"
+               /* store three bytes with respect to endianess */
+               "strb  %[tmp_reg], [%[elem]]           \n\t"
+               "mov   %[tmp_reg], %[tmp_reg] ,LSR #8  \n\t"
+               "strb  %[tmp_reg], [%[elem], #1]       \n\t"
+               "mov   %[tmp_reg], %[tmp_reg] ,LSR #8  \n\t"
+               "strb  %[tmp_reg], [%[elem], #2]       \n\t"
                : /* output operands */
                  /* let compiler decide which registers to clobber */
-                 [accu] "=&r" (accu)
-
+                 [accu] "=&r" (accu),
+                 /* temporary register */
+                 [tmp_reg] "=&r" (tmp_reg)
                : /* input operands */
-                 [elem] "b" (element)
-
-                 /* : let compiler decide which regs to clobber via register var accu var */
-               );
+                 [elem] "r" (element)
+                 /* inform that we change the condition code flag */
+                 /* : "cc"*/
+                 /* store all cached values before and reload them after */
+                    : "memory"
+  );
 }
 #else
 /** Increment 8bit, 16bit, or 32bit unsigned integer */
