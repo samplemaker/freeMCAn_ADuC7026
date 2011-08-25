@@ -24,16 +24,20 @@
  * @{
  */
 
-/** memory regions for ADUC7026
+/** memory regions for device ADUC7026
  *
- * sram:
- * 8 kbyte => [0x10000 .. 0x11FFF]
+ * sram
+ * total: 8 kbyte
+ * range: 0x10000 .. 0x11FFF
  *
- * flash:
- * 62 kbyte = 31k x 16 bit for userspace => [0x80000 .. 0x8F7FF]
- * 2 kbyte = 1k x 16 bit reserved for factory-configured boot page
- * (onchip kernel) => [0x8F800 .. 0x8FFFF]
- * flash page (sector size): 512 byte
+ * flash - userspace
+ * total: 62 kbyte = 31k x 16 bit 
+ * range: 0x80000 .. 0x8F7FF
+ * flash - reserved for factory-configured boot page (onchip kernel)
+ * total: 2 kbyte = 1k x 16 bit 
+ * range: 0x8F800 .. 0x8FFFF
+ *
+ * flash page (sector size) is 512 byte
  *
  */
 
