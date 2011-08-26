@@ -167,6 +167,21 @@ void ISR_WAKEUP_TIMER2(void){
   T2CLRI = 0x00;
 }
 
+/* DEBUG ADC */
+inline static
+void ISR_TIMER0(void){
+  GP1DAT ^= _BV(GP_DATA_OUTPUT_Px5);
+  T0CLRI = 0x00;
+}
+/* DEBUG ADC */
+inline static
+void DEBUG_(void){
+  T0CON |= (_FS(TIMER0_PRESCALER, TIMER0_PRESCALER_VALUE) |
+            _BV(TIMER0_MODE) );
+  T0LD = TIMER0_LOAD_VALUE;
+  T0CON |= _BV(TIMER0_ENABLE);
+  IRQEN |= _BV(INT_TIMER0);
+}
 
 /** IRQ - handler coordinator
  *
@@ -182,6 +197,9 @@ void _irq_handler(void)
   };
   if (IRQSTA & _BV(INT_WAKEUP_TIMER2)){
     ISR_WAKEUP_TIMER2();
+  };
+  if (IRQSTA & _BV(INT_TIMER0)){
+    ISR_TIMER0();
   };
 
 }
@@ -204,38 +222,6 @@ uint16_t get_duration(void)
   const uint16_t duration = orig_timer_count - a;
   return duration;
 }
-
-/** ADC trigger configuration
- *
- * \todo write driver for external D-Flipflop because ADUC7026 ADC
- * is level triggered (not edge) at #CONVstart
- */
-
-inline static
-void trigger_src_conf(void){
-  /*
-  // configure P2.0 as CONVstart:
-  GP2CON |= _FS(GP_SELECT_FUNCTION_Px0, MASK_01);
-  // configure P2.0 as input
-  GP2DAT &= ~_BV(GP_DATA_DIRECTION_Px0);
-  */
-  /* ADC-Busy collides with Olimex board
-  // disable pull up P0.5
-  GP0PAR &= ~_BV(GP_PAR_PULL_UP_Px5);
-  // configure P0.5 as ADCbusy:
-  GP0CON |= _FS(GP_SELECT_FUNCTION_Px5, MASK_01);
-  // configure P0.5 as output
-  GP0DAT &= ~_BV(GP_DATA_DIRECTION_Px5); */
-
-  /* dummy trigger source for testing purposes only
-   *
-   */
-  T0CON |= (_FS(TIMER0_PRESCALER, TIMER0_PRESCALER_VALUE) |
-            _BV(TIMER0_MODE) );
-  T0LD = TIMER0_LOAD_VALUE;
-  T0CON |= _BV(TIMER0_ENABLE);
-}
-
 
 /** ADC initialisation and configuration
  *
@@ -263,7 +249,7 @@ adc_init(void){
              _FS(ADC_ACQUISITION_TIME, MASK_10) |
              _BV(ADC_POWER_CONTROL)             |
              _FS(ADC_CONVERSION_MODE, MASK_00)  |
-             _FS(ADC_TRIGGER_SOURCE, MASK_010)    );
+             _FS(ADC_TRIGGER_SOURCE, MASK_101)    );
   /* Use ADCbusy pin (NOTE: Conflicts with olimex board switch!)
    * ADCCON |= _BV(ADC_ENABLE_ADCBUSY);
    */
@@ -310,6 +296,81 @@ void timer_init(const uint8_t timer0, const uint8_t timer1){
   IRQEN |= _BV(INT_WAKEUP_TIMER2);
 }
 
+/** Programmable logic array used for edged triggering the ADC
+ *
+ * HCLK synchronous implementation for edge triggering the ADC
+ * Element0: Logic function for generating a one clock pulse
+ * Element4: Shifting flip flop for generating a one clock pulse
+ * Element5: Input flip flop to suppress glitches
+ *
+ * \todo write driver for external D-Flipflop because ADUC7026 ADC
+ * is level triggered (not edge) at #CONVstart
+ */
+void pla_init(void){
+ 
+  /* PLAs triggering the adc:
+   * 0b0000: Element0  (BLOCK0)
+   * 0b0001: Element1  (BLOCK0) 
+   * 0b1111: Element15 (BLOCK1)  
+   */
+  PLAADC |= (_BV(PLA_ADC_CONV_START) |
+             _FS(PLA_ADC_CONV_SRC, MASK_0000) ); 
+
+  /* Configure PLA ELEMENT0 (BLOCK0)
+   *
+   * - MUX3: Select MUX1, not GPIO (nothing to do)
+   * - MUX1: Connect element 5 at MUX1
+   * - MUX2: Select MUX0, not PLAIN 
+   * - MUX0: Connect element 4 at MUX0
+   * - Select logical function of the block (B and not A)
+   * - Bypass flip-flop (MUX4)
+   */
+  PLAELM0 |= (/*_BV(PLA_MUX3_CONTROL)             |*/
+              _FS(PLA_MUX1_CONTROL, MASK_10)      |
+              _BV(PLA_MUX2_CONTROL)               |
+              _FS(PLA_MUX0_CONTROL, MASK_10)      |
+              _FS(PLA_LOOKUP_TABLE, MASK_0010)    |
+              _BV(PLA_MUX4_CONTROL));
+
+  /* Configure PLA ELEMENT4 (BLOCK0)
+   *
+   * - MUX3: Select MUX1, not GPIO (nothing to do)
+   * - MUX1: Connect element 5 at MUX1
+   * - Select logical function of the block (B -> route MUX3)
+   * - Use flip-flop (MUX4) (nothing to do)
+   */
+  PLAELM4 |= (/*_BV(PLA_MUX3_CONTROL)             |*/
+              _FS(PLA_MUX1_CONTROL, MASK_10)      |
+              _FS(PLA_LOOKUP_TABLE, MASK_1010) );
+
+  /* Configure PLA ELEMENT5 (BLOCK0)
+   *
+   * - MUX3: Select GPIO, not MUX1 
+   * - Select logical function of the block:
+   *   B -> route MUX3 -> trigger on rising edge
+   *   Not B -> trigger on falling edge
+   * - Use flip-flop (MUX4) (nothing to do)
+   */
+  PLAELM5 |= (_BV(PLA_MUX3_CONTROL)               |
+              _FS(PLA_LOOKUP_TABLE, MASK_1010) );
+  /* configure P1.5 as GPIO and input for PLA5 
+   *
+   * may be configured as output and switched by software, timer
+   * for testing.
+   * \todo : configure as input 
+   */
+  GP1CON |= _FS(GP_SELECT_FUNCTION_Px5, MASK_00);
+  GP1DAT |= _BV(GP_DATA_DIRECTION_Px5);
+
+  /* PLA-BLOCK0 clock source selection
+   * Clock source: 
+   * HCLK: MASK_011
+   * P0.5: MASK_000
+   */
+  PLACLK |= _FS(PLA_BLOCK0_CLK_SRC, MASK_011);
+ 
+}
+
 
 inline static
 void timer_init_quick(void)
@@ -326,7 +387,9 @@ void timer_init_quick(void)
 inline static
 void io_init(void)
 {
- /* configure P4.1 as GPIO: */
+  /* measurement in progress LED */
+
+  /* configure P4.1 as GPIO: */
   GP4CON |= _FS(GP_SELECT_FUNCTION_Px1, MASK_00);
   /* configure P4.1 as output */
   GP4DAT |= _BV(GP_DATA_DIRECTION_Px1);
@@ -434,10 +497,11 @@ int main(void)
     send_version();
 
     /* initialize */
+    DEBUG_();
     io_init();
-    trigger_src_conf();
+    pla_init();
     adc_init();
-
+ 
     /** Used while receiving "m" command */
     register uint8_t timer0 = 0;
     /** Used while receiving "m" command */
