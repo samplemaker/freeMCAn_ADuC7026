@@ -167,7 +167,6 @@ sym: $(TARGET).sym
 	$(NM) -n $< > $@
 
 
-
 # Link: create ELF output file from object files.
 $(TARGET).elf: depend $(OBJ)
 	$(CC) $(ALL_CFLAGS) $(OBJ) --output $@ $(LDFLAGS)
