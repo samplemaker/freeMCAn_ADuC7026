@@ -1,7 +1,8 @@
 /** \file firmware/uart-comm.c
- * \brief ATmega UART communication implementation (layer 1)
+ * \brief ADUC specific UART communication implementation (layer 1)
  *
  * \author Copyright (C) 2010 samplemaker
+ * \author Copyright (C) 2011 samplemaker
  * \author Copyright (C) 2010 Hans Ulrich Niedermann <hun@n-dimensional.de>
  *
  *  This library is free software; you can redistribute it and/or
@@ -74,15 +75,15 @@
  */
 void uart_init(void)
 {
-  /* set up port pin P1.1 (TX) as SPM1 */
-  GP1CON |= _FS(GP_SELECT_FUNCTION_Px1, MASK_01);
-  /* configure as output */
+  /* set up port pin P1.1 (TX) as SOUT 
+   * set up port pin P1.0 (RX) as SIN
+   */
+  GP1CON |= (_FS(GP_SELECT_FUNCTION_Px1, MASK_01) |
+             _FS(GP_SELECT_FUNCTION_Px0, MASK_01) );
+  /* configure SOUT as output */
   GP1DAT |= _BV(GP_DATA_DIRECTION_Px1);
-  /* set up port pin P1.0 (RX) as */
-  GP1CON |= _FS(GP_SELECT_FUNCTION_Px0, MASK_01);
-  /* disable pull up */
+  /* configure SIN as input and disable pull up */
   GP1PAR &= ~_BV(GP_PAR_PULL_UP_Px0);
-  /* configure as input */
   GP1DAT &= ~_BV(GP_DATA_DIRECTION_Px0);
 
   /* operate in normal mode, no parity, 1 stop bit */
@@ -93,10 +94,10 @@ void uart_init(void)
   COMCON1 &= ~_BV(UART_LOOPBACK);
 
   #if USE_FRACTIONAL_DIVIDER
-    COMDIV2 |= _BV(UART_FBM0);
     COMDIV2 &= ~_BV(UART_FBM1);
-    COMDIV2 |= _FS(UART_FBN, UART_FBN_VALUE);
-    COMDIV2 |= _BV(UART_FBEN);
+    COMDIV2 |= (_BV(UART_FBM0)                |
+                _FS(UART_FBN, UART_FBN_VALUE) |
+                _BV(UART_FBEN) );
   #else
     COMDIV2 &= ~_BV(UART_FBEN);
   #endif
