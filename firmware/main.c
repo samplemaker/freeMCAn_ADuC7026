@@ -66,6 +66,7 @@
 /** Number of elements in the histogram table */
 #define MAX_COUNTER (1<<ADC_RESOLUTION)
 
+#define DEBUG_ADC_TRIGGER 1
 
 /*------------------------------------------------------------------------------
  * Variables  (static, not visible in other modules)
@@ -167,21 +168,24 @@ void ISR_WAKEUP_TIMER2(void){
   T2CLRI = 0x00;
 }
 
-/* DEBUG ADC */
+
+#if DEBUG_ADC_TRIGGER
 inline static
 void ISR_TIMER0(void){
   GP1DAT ^= _BV(GP_DATA_OUTPUT_Px5);
   T0CLRI = 0x00;
 }
-/* DEBUG ADC */
+
 inline static
-void DEBUG_(void){
+void timer0_init(void){
   T0CON |= (_FS(TIMER0_PRESCALER, TIMER0_PRESCALER_VALUE) |
             _BV(TIMER0_MODE) );
   T0LD = TIMER0_LOAD_VALUE;
   T0CON |= _BV(TIMER0_ENABLE);
   IRQEN |= _BV(INT_TIMER0);
 }
+#endif
+
 
 /** IRQ - handler coordinator
  *
@@ -198,11 +202,15 @@ void _irq_handler(void)
   if (IRQSTA & _BV(INT_WAKEUP_TIMER2)){
     ISR_WAKEUP_TIMER2();
   };
+
+#if DEBUG_ADC_TRIGGER
   if (IRQSTA & _BV(INT_TIMER0)){
     ISR_TIMER0();
   };
+#endif
 
 }
+
 
 /** Get measurement time elapsed
  *
@@ -222,6 +230,7 @@ uint16_t get_duration(void)
   const uint16_t duration = orig_timer_count - a;
   return duration;
 }
+
 
 /** ADC initialisation and configuration
  *
@@ -267,6 +276,7 @@ adc_init(void){
   /* Poll for 'result is ready':  while (!ADCSTA){};*/
 }
 
+
 /** Configure 16 bit timer to trigger an ISR every second
  *
  */
@@ -295,6 +305,7 @@ void timer_init(const uint8_t timer0, const uint8_t timer1){
   /* Enable interrupt flag for Timer2 */
   IRQEN |= _BV(INT_WAKEUP_TIMER2);
 }
+
 
 /** Programmable logic array used for edged triggering the ADC
  *
@@ -362,7 +373,11 @@ void pla_init(void){
    * \todo : configure as input 
    */
   GP1CON |= _FS(GP_SELECT_FUNCTION_Px5, MASK_00);
-  GP1DAT |= _BV(GP_DATA_DIRECTION_Px5);
+  #if DEBUG_ADC_TRIGGER
+    GP1DAT |= _BV(GP_DATA_DIRECTION_Px5);
+  #else
+    GP1DAT &=~ _BV(GP_DATA_DIRECTION_Px5);
+  #endif
   /* PLA-BLOCK0 clock source selection
    * Clock source: 
    * HCLK: MASK_011
@@ -376,7 +391,7 @@ void pla_init(void){
 inline static
 void timer_init_quick(void)
 {
-  /* no automatic pin toggling with ADUC avable */
+  /* no automatic pin toggling with ADUC avaible - maybe use PWM? */
 }
 
 
@@ -389,7 +404,6 @@ inline static
 void io_init(void)
 {
   /* measurement in progress LED */
-
   /* configure P4.1 as GPIO: */
   GP4CON |= _FS(GP_SELECT_FUNCTION_Px1, MASK_00);
   /* configure P4.1 as output */
@@ -498,7 +512,9 @@ int main(void)
     send_version();
 
     /* initialize */
-    DEBUG_();
+    #if DEBUG_ADC_TRIGGER
+      timer0_init();
+    #endif
     io_init();
     pla_init();
     adc_init();
