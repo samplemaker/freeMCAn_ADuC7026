@@ -262,6 +262,18 @@
 #define T1CLRI    _MMR_SIZE_08(0x032C)
 #define T1CAP     _MMR_SIZE_32(0x0330)
 
+#define TIMER1_CAPTURE_ENABLE   17
+#define TIMER1_CAPTURE_EVENT    12
+#define TIMER1_CLKSOURCE        9
+#define TIMER1_CORE_CLK         0
+#define TIMER1_EXT_XTAL         1
+#define TIMER1_P10_RISING_EDGE  2
+#define TIMER1_P06_RISING_EDGE  3
+#define TIMER1_COUNT_DIR        8
+#define TIMER1_ENABLE           7
+#define TIMER1_MODE             6
+#define TIMER1_FORMAT           4
+#define TIMER1_PRESCALER        0
 
 #define T2LD      _MMR_SIZE_32(0x0340)
 #define T2VAL     _MMR_SIZE_32(0x0344)

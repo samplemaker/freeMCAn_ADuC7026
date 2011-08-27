@@ -71,6 +71,71 @@
 # error TIMER0_LOAD_VALUE: too high => try to increase timer0 divider
 #endif
 
+
+/**  Defines for TIMER1 (General-Purpose Timer)
+ *
+ * 32 kHz external crystal, core clock frequency, or GPIO (P1.0 or P0.6)
+ */
+
+/** Select a valid clock divider depending on interval and clock source */
+#define TIMER1_CLOCK_DIVISION_FACTOR_x1000 256000ULL
+
+/** Select source to be connected to TIMER1 */
+#define TIMER1_CLK TIMER1_CORE_CLK
+
+/** Timeout time                            */
+#define TIMER1_INTERVAL 1000ULL             // [ms]
+
+
+/** TIMER1 prescaler selection (32Bit timer)
+ *
+ *   0: No prescaling
+ *   4: Divider=16
+ *   8: Divider=256
+ *  15: Divider=32.768
+ *
+ */
+#if   (TIMER1_CLOCK_DIVISION_FACTOR_x1000 == 256000ULL)
+   #define TIMER1_PRESCALER_VALUE 8
+#elif (TIMER1_CLOCK_DIVISION_FACTOR_x1000 == 16000ULL)
+   #define TIMER1_PRESCALER_VALUE 4
+#elif (TIMER1_CLOCK_DIVISION_FACTOR_x1000 == 1000ULL)
+   #define TIMER1_PRESCALER_VALUE 0
+#elif (TIMER1_CLOCK_DIVISION_FACTOR_x1000 == 32768ULL)
+   #define TIMER1_PRESCALER_VALUE 15
+#else
+   #error Invalid TIMER1_CLOCK_DIVISION_FACTOR_x1000 value!
+#endif
+
+
+/** TIMER1 load value calculation for timer initialization
+ *
+ * Depends on various clock sources connected to the timer
+ * Depends on timer Interval and divider choosen
+ *
+ * Note: If the clock source is a GPIO the user must provide 
+ *       these macros himself
+ */
+#if   (TIMER1_CLK == TIMER1_EXT_XTAL)
+  #define TIMER1_LOAD_VALUE_DOWNCNT                       \
+    ( (TIMER1_INTERVAL)  *  ((F_XTAL) /                   \
+    ( (TIMER1_CLOCK_DIVISION_FACTOR_x1000) ) ) )
+#elif (TIMER1_CLK == TIMER1_CORE_CLK)
+  #define TIMER1_LOAD_VALUE_DOWNCNT                       \
+    ( (TIMER1_INTERVAL)  *  ((F_UCLK) /                   \
+    ( (TIMER1_CLOCK_DIVISION_FACTOR_x1000) ) ) )
+#endif
+
+#if (TIMER1_LOAD_VALUE_DOWNCNT < 0x000000FFULL)
+  #error TIMER1_LOAD_VALUE_DOWNCNT: too low
+#endif
+#if (TIMER1_LOAD_VALUE_DOWNCNT > 0xFF000000ULL)
+  #error TIMER1_LOAD_VALUE_DOWNCNT: too high
+#endif
+
+#define TIMER1_LOAD_VALUE_UPCNT (0xFFFFFFFFULL - TIMER1_LOAD_VALUE_DOWNCNT)
+
+
 /**  Defines for TIMER2 (Wake-Up Timer)
  *
  * Internal Oscillator, External Crystal or HCLK
@@ -133,7 +198,7 @@
   #error TIMER2_LOAD_VALUE_DOWNCNT: too high
 #endif
 
-#define TIMER2_LOAD_VALUE_UPCNT (0xFFFFFFFF - TIMER2_LOAD_VALUE_DOWNCNT)
+#define TIMER2_LOAD_VALUE_UPCNT (0xFFFFFFFFULL - TIMER2_LOAD_VALUE_DOWNCNT)
 
 /**  Defines for TIMER3 (WatchDog-Timer)
  *
