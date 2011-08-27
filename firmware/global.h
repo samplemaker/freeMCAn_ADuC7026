@@ -40,6 +40,10 @@
  */
 #define ADC_RESOLUTION (11)
 
+/** ADC trigger on rising or falling edge
+ *
+ */
+#define ADC_TRIGGER_ON_RISING_EDGE 1
 
 /** Histogram element size in bytes
  *

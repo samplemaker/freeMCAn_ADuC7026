@@ -315,7 +315,6 @@ void pla_init(void){
    */
   PLAADC |= (_BV(PLA_ADC_CONV_START) |
              _FS(PLA_ADC_CONV_SRC, MASK_0000) ); 
-
   /* Configure PLA ELEMENT0 (BLOCK0)
    *
    * - MUX3: Select MUX1, not GPIO (nothing to do)
@@ -331,7 +330,6 @@ void pla_init(void){
               _FS(PLA_MUX0_CONTROL, MASK_10)      |
               _FS(PLA_LOOKUP_TABLE, MASK_0010)    |
               _BV(PLA_MUX4_CONTROL));
-
   /* Configure PLA ELEMENT4 (BLOCK0)
    *
    * - MUX3: Select MUX1, not GPIO (nothing to do)
@@ -342,7 +340,6 @@ void pla_init(void){
   PLAELM4 |= (/*_BV(PLA_MUX3_CONTROL)             |*/
               _FS(PLA_MUX1_CONTROL, MASK_10)      |
               _FS(PLA_LOOKUP_TABLE, MASK_1010) );
-
   /* Configure PLA ELEMENT5 (BLOCK0)
    *
    * - MUX3: Select GPIO, not MUX1 
@@ -352,7 +349,12 @@ void pla_init(void){
    * - Use flip-flop (MUX4) (nothing to do)
    */
   PLAELM5 |= (_BV(PLA_MUX3_CONTROL)               |
-              _FS(PLA_LOOKUP_TABLE, MASK_1010) );
+  #if ADC_TRIGGER_ON_RISING_EDGE
+              _FS(PLA_LOOKUP_TABLE, MASK_1010) 
+  #else
+              _FS(PLA_LOOKUP_TABLE, MASK_0101) 
+  #endif
+             );
   /* configure P1.5 as GPIO and input for PLA5 
    *
    * may be configured as output and switched by software, timer
@@ -361,7 +363,6 @@ void pla_init(void){
    */
   GP1CON |= _FS(GP_SELECT_FUNCTION_Px5, MASK_00);
   GP1DAT |= _BV(GP_DATA_DIRECTION_Px5);
-
   /* PLA-BLOCK0 clock source selection
    * Clock source: 
    * HCLK: MASK_011
