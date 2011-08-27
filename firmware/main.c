@@ -196,15 +196,15 @@ void _irq_handler(void) __attribute__ ((interrupt ("IRQ")));
 void _irq_handler(void)
 {
   /* which interrupt is enabled and pending? */
-  if (IRQSTA & _BV(INT_ADC_CHANNEL)){
+  if (bit_is_set(IRQSTA, INT_ADC_CHANNEL)){
     ISR_ADC();
   };
-  if (IRQSTA & _BV(INT_WAKEUP_TIMER2)){
+  if (bit_is_set(IRQSTA, INT_WAKEUP_TIMER2)){
     ISR_WAKEUP_TIMER2();
   };
 
 #if DEBUG_ADC_TRIGGER
-  if (IRQSTA & _BV(INT_TIMER0)){
+  if (bit_is_set(IRQSTA, INT_TIMER0)){
     ISR_TIMER0();
   };
 #endif
@@ -318,19 +318,19 @@ void timer_init(const uint8_t timer0, const uint8_t timer1){
  * is level triggered (not edge) at #CONVstart
  */
 void pla_init(void){
- 
+
   /* PLAs triggering the adc:
    * 0b0000: Element0  (BLOCK0)
-   * 0b0001: Element1  (BLOCK0) 
-   * 0b1111: Element15 (BLOCK1)  
+   * 0b0001: Element1  (BLOCK0)
+   * 0b1111: Element15 (BLOCK1)
    */
   PLAADC |= (_BV(PLA_ADC_CONV_START) |
-             _FS(PLA_ADC_CONV_SRC, MASK_0000) ); 
+             _FS(PLA_ADC_CONV_SRC, MASK_0000) );
   /* Configure PLA ELEMENT0 (BLOCK0)
    *
    * - MUX3: Select MUX1, not GPIO (nothing to do)
    * - MUX1: Connect element 5 at MUX1
-   * - MUX2: Select MUX0, not PLAIN 
+   * - MUX2: Select MUX0, not PLAIN
    * - MUX0: Connect element 4 at MUX0
    * - Select logical function of the block (B and not A)
    * - Bypass flip-flop (MUX4)
@@ -353,7 +353,7 @@ void pla_init(void){
               _FS(PLA_LOOKUP_TABLE, MASK_1010) );
   /* Configure PLA ELEMENT5 (BLOCK0)
    *
-   * - MUX3: Select GPIO, not MUX1 
+   * - MUX3: Select GPIO, not MUX1
    * - Select logical function of the block:
    *   B -> route MUX3 -> trigger on rising edge
    *   Not B -> trigger on falling edge
@@ -361,16 +361,16 @@ void pla_init(void){
    */
   PLAELM5 |= (_BV(PLA_MUX3_CONTROL)               |
   #if ADC_TRIGGER_ON_RISING_EDGE
-              _FS(PLA_LOOKUP_TABLE, MASK_1010) 
+              _FS(PLA_LOOKUP_TABLE, MASK_1010)
   #else
-              _FS(PLA_LOOKUP_TABLE, MASK_0101) 
+              _FS(PLA_LOOKUP_TABLE, MASK_0101)
   #endif
              );
-  /* configure P1.5 as GPIO and input for PLA5 
+  /* configure P1.5 as GPIO and input for PLA5
    *
    * may be configured as output and switched by software, timer
    * for testing.
-   * \todo : configure as input 
+   * \todo : configure as input
    */
   GP1CON |= _FS(GP_SELECT_FUNCTION_Px5, MASK_00);
   #if DEBUG_ADC_TRIGGER
@@ -379,12 +379,12 @@ void pla_init(void){
     GP1DAT &=~ _BV(GP_DATA_DIRECTION_Px5);
   #endif
   /* PLA-BLOCK0 clock source selection
-   * Clock source: 
+   * Clock source:
    * HCLK: MASK_011
    * P0.5: MASK_000
    */
   PLACLK |= _FS(PLA_BLOCK0_CLK_SRC, MASK_011);
- 
+
 }
 
 
@@ -518,7 +518,7 @@ int main(void)
     io_init();
     pla_init();
     adc_init();
- 
+
     /** Used while receiving "m" command */
     register uint8_t timer0 = 0;
     /** Used while receiving "m" command */
