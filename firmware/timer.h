@@ -206,10 +206,10 @@
  */
 
 /** Select a valid clock divider depending on interval and clock source */
-#define TIMER3_CLOCK_DIVISION_FACTOR 16ULL
+#define TIMER3_CLOCK_DIVISION_FACTOR 1ULL
 
 /** Timeout time                            */
-#define TIMER3_INTERVAL 250ULL              // [ms]
+#define TIMER3_INTERVAL 50ULL              // [ms]
 
 /** Timer3 prescaler selection (16Bit timer)
  *

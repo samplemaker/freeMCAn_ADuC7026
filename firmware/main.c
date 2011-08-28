@@ -171,18 +171,26 @@ void ISR_WAKEUP_TIMER2(void){
 
 #if DEBUG_ADC_TRIGGER
 inline static
-void ISR_TIMER0(void){
+void ISR_WATCHDOG_TIMER3(void){
   GP1DAT ^= _BV(GP_DATA_OUTPUT_Px5);
-  T0CLRI = 0x00;
+  T3CLRI = 0x00;
 }
 
 inline static
-void timer0_init(void){
-  T0CON |= (_FS(TIMER0_PRESCALER, TIMER0_PRESCALER_VALUE) |
-            _BV(TIMER0_MODE) );
-  T0LD = TIMER0_LOAD_VALUE;
-  T0CON |= _BV(TIMER0_ENABLE);
-  IRQEN |= _BV(INT_TIMER0);
+void adctest_init(void){
+  /* clear watch dog and force down counting */
+  T3CON &=~ ( _BV(TIMER3_COUNT_DIR) |
+              _BV(TIMER3_SECURE)    |
+              _BV(TIMER3_WDT_ENABLE)  );
+  /* set prescaler and run timer in periodic mode
+   * (automatic reload from T3LD)                   */
+  T3CON |= (_FS(TIMER3_PRESCALER, TIMER3_PRESCALER_VALUE) |
+            _BV(TIMER3_MODE) );
+  /* timer compare match value */
+  T3LD = TIMER3_LOAD_VALUE_DOWNCNT;
+  T3CON |= _BV(TIMER3_ENABLE);
+  /* enable interrupt flag for Timer3 */
+  IRQEN |= _BV(INT_WATCHDOG_TIMER3);
 }
 #endif
 
@@ -204,8 +212,8 @@ void _irq_handler(void)
   };
 
 #if DEBUG_ADC_TRIGGER
-  if (bit_is_set(IRQSTA, INT_TIMER0)){
-    ISR_TIMER0();
+  if (bit_is_set(IRQSTA, INT_WATCHDOG_TIMER3)){
+    ISR_WATCHDOG_TIMER3();
   };
 #endif
 
@@ -309,10 +317,10 @@ void timer_init(const uint8_t timer0, const uint8_t timer1){
 
 /** Programmable logic array used for edged triggering the ADC
  *
- * HCLK synchronous implementation for edge triggering the ADC
- * Element0: Logic function for generating a one clock pulse
- * Element4: Shifting flip flop for generating a one clock pulse
- * Element5: Input flip flop to suppress glitches
+ * HCLK synchronous implementation for triggering the ADC
+ * Element0: Logic function for generating the output pulse
+ * Element4: Flip flop shifter for generating a one clock pulse
+ * Element5: Input flip flop to suppress glitches (debouncer)
  *
  * \todo write driver for external D-Flipflop because ADUC7026 ADC
  * is level triggered (not edge) at #CONVstart
@@ -327,7 +335,6 @@ void pla_init(void){
   PLAADC |= (_BV(PLA_ADC_CONV_START) |
              _FS(PLA_ADC_CONV_SRC, MASK_0000) );
   /* Configure PLA ELEMENT0 (BLOCK0)
-   *
    * - MUX3: Select MUX1, not GPIO (nothing to do)
    * - MUX1: Connect element 5 at MUX1
    * - MUX2: Select MUX0, not PLAIN
@@ -342,7 +349,6 @@ void pla_init(void){
               _FS(PLA_LOOKUP_TABLE, MASK_0010)    |
               _BV(PLA_MUX4_CONTROL));
   /* Configure PLA ELEMENT4 (BLOCK0)
-   *
    * - MUX3: Select MUX1, not GPIO (nothing to do)
    * - MUX1: Connect element 5 at MUX1
    * - Select logical function of the block (B -> route MUX3)
@@ -352,7 +358,6 @@ void pla_init(void){
               _FS(PLA_MUX1_CONTROL, MASK_10)      |
               _FS(PLA_LOOKUP_TABLE, MASK_1010) );
   /* Configure PLA ELEMENT5 (BLOCK0)
-   *
    * - MUX3: Select GPIO, not MUX1
    * - Select logical function of the block:
    *   B -> route MUX3 -> trigger on rising edge
@@ -367,7 +372,6 @@ void pla_init(void){
   #endif
              );
   /* configure P1.5 as GPIO and input for PLA5
-   *
    * may be configured as output and switched by software, timer
    * for testing.
    * \todo : configure as input
@@ -513,7 +517,7 @@ int main(void)
 
     /* initialize */
     #if DEBUG_ADC_TRIGGER
-      timer0_init();
+      adctest_init();
     #endif
     io_init();
     pla_init();
