@@ -222,21 +222,15 @@ void _irq_handler(void)
 
 /** Get measurement time elapsed
  *
- * Poll until value in destiny is correct (may be accessed by an interrupt)
- *
+ * When an interrupt is recognised, the core allows the current instruction 
+ * to  complete. This might be even a LDM (load-multiple) of a long list 
+ * of registers. Therefore loading timer_count with LDRH Rd, [Rb, #6bit_offset]  
+ * is an atomic instruction and not interrupted by ISR_WAKEUP_TIMER2.
  */
 inline static
 uint16_t get_duration(void)
 {
-  uint16_t a, b;
-  a = timer_count;
-  do {
-    b = a;
-    a = timer_count;
-  } while (a != b);
-  /* Now 'a' and 'b' both contain the same valid #timer1_count value. */
-  const uint16_t duration = orig_timer_count - a;
-  return duration;
+  return (orig_timer_count - timer_count);
 }
 
 
