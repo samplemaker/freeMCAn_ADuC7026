@@ -42,7 +42,7 @@
 #include <string.h>
 */
 
-#include <inttypes.h>
+#include <stdint.h>
 #include "aduc7026.h"
 #include "timer.h"
 #include "int.h"

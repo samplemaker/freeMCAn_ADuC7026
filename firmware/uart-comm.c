@@ -30,7 +30,7 @@
  */
 
 
-#include <inttypes.h>
+#include <stdint.h>
 #include "aduc7026.h"
 #include "uart-defs.h"
 #include "uart-comm.h"

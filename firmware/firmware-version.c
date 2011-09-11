@@ -29,7 +29,7 @@
  */
 
 
-#include <inttypes.h>
+#include <stdint.h>
 
 
 #include "firmware-version.h"

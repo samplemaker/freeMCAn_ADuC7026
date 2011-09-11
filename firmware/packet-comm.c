@@ -34,7 +34,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <inttypes.h>
+#include <stdint.h>
 
 #include "frame-comm.h"
 #include "packet-comm.h"
