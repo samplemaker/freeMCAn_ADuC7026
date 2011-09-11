@@ -27,9 +27,47 @@
 #ifndef aduc7026_H
 #define aduc7026_H
 
-
 #include "defs.h"
 
+
+/** Various simple bitmasks
+ *
+ *
+ */
+#define MASK_00000            0
+#define MASK_00001            1
+#define MASK_10000           16
+
+#define MASK_0000             0
+#define MASK_0001             1
+#define MASK_0010             2
+#define MASK_0011             3
+#define MASK_0100             4
+#define MASK_0101             5
+#define MASK_0110             6
+#define MASK_0111             7
+#define MASK_1000             8
+#define MASK_1001             9
+#define MASK_1010             10
+#define MASK_1011             11
+#define MASK_1100             12
+#define MASK_1101             13
+#define MASK_1110             14
+#define MASK_1111             15
+
+#define MASK_000              0
+#define MASK_001              1
+#define MASK_010              2
+#define MASK_011              3
+#define MASK_100              4
+#define MASK_101              5
+#define MASK_110              6
+#define MASK_111              7
+
+#define MASK_00               0
+#define MASK_01               1
+#define MASK_10               2
+#define MASK_11               3
 
 /** Memory mapped registers base adress (offset)
  *
@@ -37,66 +75,6 @@
  *
  */
 #define __MMR_BASE 0xFFFF0000
-
-
-/** Flash sector size definition
- *
- * 9 --> 2^9 = 512 bytes per sector
- */
-#define FLASH_SECTOR_DEF 9
-
-
-/** Boot set up for PLL and power control (if required)
- *
- */
-#define RESET_POWER_AND_PLL_AT_BOOT  1
-
-/* CD = 0 (No clock divider), PC = 0 (Active Mode) */
-#define POWCON_RESET_CFG             0x0    
-/* MDCLK = 1 (PLL, Default configuration )         */
-#define PLLCON_RESET_CFG             0x1    
-
-
-/** Frequency definition external crystal
- *
- */
-#define F_XTAL  32768ULL
-
-/** Frequency definition system clock
- *
- * The PLL locks onto a multiple (1275) of the internal oscillator or an
- * external crystal to provide a stabel 41.78 MHz clock (UCLK)
- * for the system. 
- *
- */
-#define F_UCLK  41780000ULL
-
-/** Frequency definition internal resonator
- *
- * 32.768 kHz +-3% oscillator
- * ADuC7019/20/21/22/24/25/26/27/28/29
- *
- */
-#define F_OSC 32768ULL
-
-/** Frequency definition of CPU core frequency
- *
- *   To allow power saving, the core can operate at F_UCLK
- *   frequency, or at binary submultiples of it. The actual core 
- *   operating frequency (UCLK/2^CD) is refered to as HCLK. 
- *   F_HCLK = F_UCLK / 2^CD
- *   0: run core with 41.78 Mhz
- *   1: run core with 41.78/2 Mhz
- *   2: run core with 41.78/4 Mhz
- *   3: run core with 41.78/8 Mhz -> default without boot
- *   ...
- *
- */
-#if RESET_POWER_AND_PLL_AT_BOOT
-  #define F_HCLK (F_UCLK / (1ULL << ((POWCON_RESET_CFG) & 0x7)) )
-#else
-  #define F_HCLK 5222500ULL
-#endif
 
 
 /** Defines for PLL and power control / ADC BANDGAP
@@ -129,48 +107,6 @@
 #define POW_CD0               0
 #define POW_CD1               1
 #define POW_CD2               2
-
-
-/** Various simple bitmasks
- *
- *
- */
-#define MASK_00000            0
-#define MASK_00001            1
-#define MASK_10000           16
-
-#define MASK_0000             0
-#define MASK_0001             1
-#define MASK_0010             2
-#define MASK_0011             3
-#define MASK_0100             4
-#define MASK_0101             5
-#define MASK_0110             6
-#define MASK_0111             7
-#define MASK_1000             8
-#define MASK_1001             9
-#define MASK_1010             10
-#define MASK_1011             11
-#define MASK_1100             12
-#define MASK_1101             13
-#define MASK_1110             14
-#define MASK_1111             15
-
-
-#define MASK_000              0
-#define MASK_001              1
-#define MASK_010              2
-#define MASK_011              3
-#define MASK_100              4
-#define MASK_101              5
-#define MASK_110              6
-#define MASK_111              7
-
-
-#define MASK_00               0
-#define MASK_01               1
-#define MASK_10               2
-#define MASK_11               3
 
 
 /** Defines for GPIO module

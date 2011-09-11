@@ -32,6 +32,7 @@
 
 #include <stdint.h>
 #include "aduc7026.h"
+#include "reset.h"
 #include "uart-defs.h"
 #include "uart-comm.h"
 

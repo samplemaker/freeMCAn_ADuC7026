@@ -38,6 +38,7 @@
  */
 
 #include "aduc7026.h"
+#include "reset.h"
 #include "int.h"
 
 .extern main
@@ -73,7 +74,7 @@
 	.equ	STACKSIZE_USR, 256
 
 
-.section .vectors,"ax"
+.section .vector,"ax"
 .code 32
 .align 0
 
@@ -82,7 +83,7 @@
  * See: ARM7TDMI Technical Reference Manual p. 67
  *
  */
-	b	_init0			@ Reset -> Supervisor  
+	b	_init_target		@ Reset -> Supervisor  
 	b	.			@ Undefined Instruction -> Undefinded 
 	b	_swi_handler		@ Software Interrupt -> Supervisor 
 	b	.			@ Prefetch Abort -> Abort 
@@ -92,11 +93,11 @@
 	b	.			@ FIQ -> FIQ 
 
 
-.section .init0,"ax"
+.section .init_target,"ax"
 .code 32
 .align 4
 
-_init0:
+_init_target:
 
 /** Initialize / reset phase lock loop and power control
  *

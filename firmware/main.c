@@ -44,6 +44,7 @@
 
 #include <stdint.h>
 #include "aduc7026.h"
+#include "reset.h"
 #include "timer.h"
 #include "int.h"
 
