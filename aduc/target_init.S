@@ -73,7 +73,7 @@
 	.equ	STACKSIZE_USR, 256
 
 
-.section .vectors,"x"
+.section .vectors,"ax"
 .code 32
 .align 0
 
@@ -92,7 +92,7 @@
 	b	.			@ FIQ -> FIQ 
 
 
-.section .init0,"x"
+.section .init0,"ax"
 .code 32
 .align 4
 

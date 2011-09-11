@@ -54,14 +54,18 @@ __stack_end__ = ORIGIN(ram) + LENGTH(ram) - 4;
  */
 SECTIONS
 {
+  .init : {
+    KEEP(*target_init.o (.vectors)) /* jump island for ARM modes */
+    . = ALIGN(0x4);
+    KEEP(*target_init.o (.init0))   /* target initialization startup code */
+    . = ALIGN(0x4);
+  } >flash
 
 /** Code and const variables which remain in flash
  *
  */
   .text :
   {
-    *(.vectors)  /* jump island for ARM modes */
-    *(.init0)    /* target initialization startup code */
     *(.text)     /* code */
     *(.text.*)
     *(.rodata)   /* read only constants for flash */
