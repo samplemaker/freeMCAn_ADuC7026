@@ -97,6 +97,9 @@
 .code 32
 .align 4
 
+.global _init_target
+.func _init_target
+
 _init_target:
 
 /** Initialize / reset phase lock loop and power control
@@ -180,6 +183,8 @@ zero_bss:
 
 	b	main
 
+.endfunc
+
 
 .section .text
 .code 32
@@ -205,6 +210,9 @@ zero_bss:
  *  See: ARM Compiler toolchain p. 116
  *
  */
+
+.global _swi_handler
+.func _swi_handler
 
 _swi_handler:
 	stmfd	sp!,{r0-r12,lr}		@ Save workspace and current return 
@@ -234,7 +242,7 @@ swi_disable_irq:
 	orr	r1, r1, #I_FLAG		@ Disable interrupt flag 
 	b	swi_end			
 
-
+.endfunc
 
 /** @} */
 

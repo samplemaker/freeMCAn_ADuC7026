@@ -28,6 +28,8 @@
 #ifndef TIMER_H
 #define TIMER_H
 
+#include "reset.h"
+
 /**  Defines for TIMER0 (RTOS Timer)
  *
  * HCLK only
