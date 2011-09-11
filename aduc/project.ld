@@ -55,9 +55,9 @@ __stack_end__ = ORIGIN(ram) + LENGTH(ram) - 4;
 SECTIONS
 {
   .init : {
-    KEEP(*target_init.o (.vector))        /* jump island for ARM modes */
+    *target_init.o (.vector)        /* jump island for ARM modes */
     . = ALIGN(0x4);
-    KEEP(*target_init.o (.init_target))   /* target initialization startup code */
+    *target_init.o (.init_target)   /* target initialization startup code */
     . = ALIGN(0x4);
   } >flash
 
