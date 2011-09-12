@@ -240,7 +240,7 @@ uint16_t get_duration(void)
  */
 static void
 adc_init(void){
-  ADCCON = 0;
+
   /* - Set clock speed (default value is 0b001 = fADC/2)
    * - ADC acquisition time (default value is 0b10 = eight clocks)
    * - Power control: set ADC to normal mode
@@ -257,11 +257,11 @@ adc_init(void){
    *     SOFTWARE CONT:    MASK_100
    *     PLA:              MASK_101
    */
-  ADCCON |= (_FS(ADC_CLOCK_SPEED, MASK_001)     |
-             _FS(ADC_ACQUISITION_TIME, MASK_10) |
-             _BV(ADC_POWER_CONTROL)             |
-             _FS(ADC_CONVERSION_MODE, MASK_00)  |
-             _FS(ADC_TRIGGER_SOURCE, MASK_101)    );
+  ADCCON = (_FS(ADC_CLOCK_SPEED, MASK_001)     |
+            _FS(ADC_ACQUISITION_TIME, MASK_10) |
+            _BV(ADC_POWER_CONTROL)             |
+            _FS(ADC_CONVERSION_MODE, MASK_00)  |
+            _FS(ADC_TRIGGER_SOURCE, MASK_101)    );
   /* Use ADCbusy pin (NOTE: Conflicts with olimex board switch!)
    * ADCCON |= _BV(ADC_ENABLE_ADCBUSY);
    */
