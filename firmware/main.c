@@ -223,9 +223,9 @@ void _irq_handler(void)
 
 /** Get measurement time elapsed
  *
- * When an interrupt is recognised, the core allows the current instruction 
- * to  complete. This might be even a LDM (load-multiple) of a long list 
- * of registers. Therefore loading timer_count with LDRH Rd, [Rb, #6bit_offset]  
+ * When an interrupt is recognised, the core allows the current instruction
+ * to  complete. This might be even a LDM (load-multiple) of a long list
+ * of registers. Therefore loading timer_count with LDRH Rd, [Rb, #6bit_offset]
  * is an atomic instruction and not interrupted by ISR_WAKEUP_TIMER2.
  */
 inline static
@@ -238,7 +238,7 @@ uint16_t get_duration(void)
 /** ADC initialisation and configuration
  *
  */
-void
+static void
 adc_init(void){
   ADCCON = 0;
   /* - Set clock speed (default value is 0b001 = fADC/2)
@@ -320,6 +320,7 @@ void timer_init(const uint8_t timer0, const uint8_t timer1){
  * \todo write driver for external D-Flipflop because ADUC7026 ADC
  * is level triggered (not edge) at #CONVstart
  */
+static
 void pla_init(void){
 
   /* PLAs triggering the adc:
