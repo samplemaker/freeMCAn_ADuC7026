@@ -78,8 +78,10 @@
 #define _BV(bit_no) (1 << (bit_no))
 #define bit_is_set(mmr, bit_no) ((mmr) & _BV(bit_no))
 #define bit_is_clear(mmr, bit_no) (!((mmr) & _BV(bit_no)))
-#define loop_until_bit_is_set(mmr, bit_no) do { } while (bit_is_clear(mmr, bit_no))
-#define loop_until_bit_is_clear(mmr, bit_no) do { } while (bit_is_set(mmr, bit_no))
+#define loop_until_bit_is_set(mmr, bit_no) do { }   \
+        while (bit_is_clear(mmr, bit_no))
+#define loop_until_bit_is_clear(mmr, bit_no) do { } \
+        while (bit_is_set(mmr, bit_no))
 
 #endif
 

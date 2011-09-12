@@ -47,21 +47,21 @@
 
 /** Current program status register (cpsr) bit definitions and mode identifiers
  *
- * CPSR_c = [I F T M4 M3 M2 M1 M0] 
+ * CPSR_c = [I F T M4 M3 M2 M1 M0]
  *
  * See: ARM7TDMI Technical Reference Manual p. 61
  *
  */
- 	.equ	I_FLAG, 0x80		@ IRQ 
-	.equ	F_FLAG, 0x40		@ FIQ 
-	.equ	T_FLAG, 0x20		@ Arm<>Thumb state 
-	.equ	M_USR, 0x10		@ User Mode 
-	.equ	M_FIQ, 0x11		@ Fast Interrupt Mode 
-	.equ	M_IRQ, 0x12		@ Interrupt Mode 
-	.equ	M_SVC, 0x13		@ Supervisor Mode 
-	.equ	M_ABT, 0x17		@ Abort Mode 
-	.equ	M_UND, 0x1B		@ Undefined Mode 
-	.equ	M_SYS, 0x1F		@ System Mode 
+ 	.equ	I_FLAG, 0x80		@ IRQ
+	.equ	F_FLAG, 0x40		@ FIQ
+	.equ	T_FLAG, 0x20		@ Arm<>Thumb state
+	.equ	M_USR, 0x10		@ User Mode
+	.equ	M_FIQ, 0x11		@ Fast Interrupt Mode
+	.equ	M_IRQ, 0x12		@ Interrupt Mode
+	.equ	M_SVC, 0x13		@ Supervisor Mode
+	.equ	M_ABT, 0x17		@ Abort Mode
+	.equ	M_UND, 0x1B		@ Undefined Mode
+	.equ	M_SYS, 0x1F		@ System Mode
 
 /** Stack sizes in operating modes 
  *
@@ -83,14 +83,14 @@
  * See: ARM7TDMI Technical Reference Manual p. 67
  *
  */
-	b	_init_target		@ Reset -> Supervisor  
-	b	.			@ Undefined Instruction -> Undefinded 
-	b	_swi_handler		@ Software Interrupt -> Supervisor 
-	b	.			@ Prefetch Abort -> Abort 
-	b	.			@ Data Abort -> Abort 
-	nop				@ Reserved -> Reserved 
-	b	_irq_handler		@ IRQ -> IRQ 
-	b	.			@ FIQ -> FIQ 
+	b	_init_target		@ Reset -> Supervisor
+	b	.			@ Undefined Instruction -> Undefinded
+	b	_swi_handler		@ Software Interrupt -> Supervisor
+	b	.			@ Prefetch Abort -> Abort
+	b	.			@ Data Abort -> Abort
+	nop				@ Reserved -> Reserved
+	b	_irq_handler		@ IRQ -> IRQ
+	b	.			@ FIQ -> FIQ
 
 
 .section .init_target,"ax"
@@ -160,26 +160,26 @@ _init_target:
  * into RAM (VMA) starting at _data. Note: Requires ALIGN(4).
  *
  */
-	ldr	r0, =_data_load_start	@ r3 = addr(end of .text => fash)   
-	ldr	r1, =_data		@ r0 = addr(start of .data => ram)  
-	ldr	r2, =_data_load_end	@ r1 = addr(end of .data => ram)    
+	ldr	r0, =_data_load_start	@ r3 = addr(end of .text => fash)
+	ldr	r1, =_data		@ r0 = addr(start of .data => ram)
+	ldr	r2, =_data_load_end	@ r1 = addr(end of .data => ram)
 copy_data:
-	cmp	r0, r2			@ (r0 ==<> r2) ?                    
-	ldrlo	r3, [r0], #4		@ if r0<r2: r3=*(r0) then r0+=4     
-	strlo	r3, [r1], #4		@ if r0<r2: *(r1)=r3 then r1+=4     
-	blo	copy_data		@ branch if condition lower         
+	cmp	r0, r2			@ (r0 ==<> r2) ?
+	ldrlo	r3, [r0], #4		@ if r0<r2: r3=*(r0) then r0+=4
+	strlo	r3, [r1], #4		@ if r0<r2: *(r1)=r3 then r1+=4
+	blo	copy_data		@ branch if condition lower
 
 /** Clear .bss section 
  *
  * Note: Requires ALIGN(4).
  */
-	mov	r0, #0			@ r0 = 0                            
-	ldr	r1, =__bss_start__	@ r0 = addr(start of .bss section)  
-	ldr	r2, =__bss_end__	@ r0 = addr(end of .bss section)    
+	mov	r0, #0			@ r0 = 0
+	ldr	r1, =__bss_start__	@ r0 = addr(start of .bss section)
+	ldr	r2, =__bss_end__	@ r0 = addr(end of .bss section)
 zero_bss:
-        cmp	r1, r2			@ (r1 ==<> r2) ?                    
-	strlo	r0, [r1], #4		@ if r1<r2: *(r1)=r0 then r1+=4     
-	blo	zero_bss		@ branch if condition lower         
+        cmp	r1, r2			@ (r1 ==<> r2) ?
+	strlo	r0, [r1], #4		@ if r1<r2: *(r1)=r0 then r1+=4
+	blo	zero_bss		@ branch if condition lower
 
 	b	main
 
@@ -192,11 +192,11 @@ zero_bss:
 
 /** Software interrupt handler for enabling and disabling the I-Flag
  *
- *  1.) The I-Flag in cpsr_c cannot be written in user mode but only in 
- *	a priviledged mode.
+ *  1.) The I-Flag in cpsr_c cannot be written in user mode but only in
+ *      a priviledged mode.
  *  2.) Switch to supervisor mode by software interrupt.
  *  3.) Entering the SWI-exception the processor does:
- *      i.)   Save the address of the next instruction (return adr.) 
+ *      i.)   Save the address of the next instruction (return adr.)
  *            in the appropriate Link Register: (lr_svc = pc + 4)
  *      ii.)  spsr_svc = current cpsr
  *      iii.) Overwrite M-field in cpsr with the svc mode bits
@@ -215,32 +215,34 @@ zero_bss:
 .func _swi_handler
 
 _swi_handler:
-	stmfd	sp!,{r0-r12,lr}		@ Save workspace and current return 
-				  	@ Address lr into the stack              
-	mrs	r1, spsr		@ Get old user mode cpsr from spsr_svc   
-	tst	r1, #T_FLAG		@ SWI occurred in Thumb state?           
-	ldrneh	r0, [lr,#-2]		@ Yes: Load SVC instruction halfword via 
-	bicne	r0, r0, #0xFF00		@ linkregister and extract comment field 
-	ldreq	r0, [lr,#-4]		@ No: Load word SVC instruction and      
-	biceq	r0, r0, #0xFF000000	@ clear top 8 bits of SVC 
-					@ instruction opcode             
+	stmfd	sp!,{r0-r12,lr}		@ Save workspace and current return
+					@ Address lr into the stack
+	mrs	r1, spsr		@ Get old user mode cpsr from spsr_svc
+	tst	r1, #T_FLAG		@ SWI occurred in Thumb state?
+	ldrneh	r0, [lr,#-2]		@ Yes: Load SVC instruction halfword
+	bicne	r0, r0, #0xFF00		@ via linkregister and extract
+					@ comment field
+	ldreq	r0, [lr,#-4]		@ No: Load word SVC instruction and
+	biceq	r0, r0, #0xFF000000	@ clear top 8 bits of SVC
+					@ instruction opcode
 	cmp	r0, #ENABLE_GLOBALIRQ_BY_SWI
 	beq	swi_enable_irq
 	cmp	r0, #DISABLE_GLOBALIRQ_BY_SWI
 	beq	swi_disable_irq
 swi_end:
-	msr	spsr_c, r1		@ Store condition field with updated I-Flag 
-	ldmfd	sp!, {r0-r12,pc}^	@ Return to instruction following 
-					@ the SVC instr. ^ in this context 
-					@ means restore CPSR from SPSR      
+	msr	spsr_c, r1		@ Store condition field with updated 
+					@ I-Flag
+	ldmfd	sp!, {r0-r12,pc}^	@ Return to instruction following
+					@ the SVC instr. ^ in this context
+					@ means restore CPSR from SPSR
 
 swi_enable_irq:
-	bic	r1, r1, #I_FLAG		@ Enable interrupt flag 	
+	bic	r1, r1, #I_FLAG		@ Enable interrupt flag
 	b	swi_end
 
 swi_disable_irq:
-	orr	r1, r1, #I_FLAG		@ Disable interrupt flag 
-	b	swi_end			
+	orr	r1, r1, #I_FLAG		@ Disable interrupt flag
+	b	swi_end	
 
 .endfunc
 
