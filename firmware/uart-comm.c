@@ -103,12 +103,14 @@ void uart_init(void)
     COMDIV2 &= ~_BV(UART_FBEN);
   #endif
 
-  /* set baud rate.
-     register for access to DIV0 & DIV1 registers */
+  /* 1.) set baud rate:
+   *     register for access to divisor latch
+   *     DIV0 & DIV1 registers and write divider */
   COMCON0 |= _BV(UART_DLAB);
   COMDIV0 = UARTL_DL;
   COMDIV1 = UARTH_DL;
-  /* set access to COMRX/COMTX by default */
+  /* 2.) reset access to COMRX/COMTX receive and transmit
+   *     registers by default (memory share with COMDIVn) */
   COMCON0 &= ~_BV(UART_DLAB);
 }
 

@@ -160,9 +160,9 @@ _init_target:
  * into RAM (VMA) starting at _data. Note: Requires ALIGN(4).
  *
  */
-	ldr	r0, =_data_load_start	@ r3 = addr(end of .text => fash)
-	ldr	r1, =_data		@ r0 = addr(start of .data => ram)
-	ldr	r2, =_data_load_end	@ r1 = addr(end of .data => ram)
+	ldr	r0, =_data_load_start	@ r0 = addr(end of .text => fash)
+	ldr	r1, =_data		@ r1 = addr(start of .data => ram)
+	ldr	r2, =_data_load_end	@ r2 = addr(end of .data => ram)
 copy_data:
 	cmp	r0, r2			@ (r0 ==<> r2) ?
 	ldrlo	r3, [r0], #4		@ if r0<r2: r3=*(r0) then r0+=4
@@ -174,8 +174,8 @@ copy_data:
  * Note: Requires ALIGN(4).
  */
 	mov	r0, #0			@ r0 = 0
-	ldr	r1, =__bss_start__	@ r0 = addr(start of .bss section)
-	ldr	r2, =__bss_end__	@ r0 = addr(end of .bss section)
+	ldr	r1, =__bss_start__	@ r1 = addr(start of .bss section)
+	ldr	r2, =__bss_end__	@ r2 = addr(end of .bss section)
 zero_bss:
         cmp	r1, r2			@ (r1 ==<> r2) ?
 	strlo	r0, [r1], #4		@ if r1<r2: *(r1)=r0 then r1+=4
@@ -183,6 +183,7 @@ zero_bss:
 
 	b	main
 
+.size    _init_target, . - _init_target
 .endfunc
 
 
@@ -244,6 +245,7 @@ swi_disable_irq:
 	orr	r1, r1, #I_FLAG		@ Disable interrupt flag
 	b	swi_end	
 
+.size    _swi_handler, . - _swi_handler
 .endfunc
 
 /** @} */
