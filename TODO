@@ -1,0 +1,49 @@
+hostware: Allow setting measurement intervals on command line.
+
+hostware: Allow giving commands on command line.
+
+hostware: Ignore tty input after receiving an <esc>. Idea: Ignore
+          stupid escape sequences.
+
+hostware: For time series data, when receiving a value table, use
+          the receive time and the total_duration to generate proper
+          time stamps for the output file instead of just numbering
+          the value table elements.
+
+hostware: At least for time series value tables, link against libR.so
+          and directly let R plot statistics.
+
+firmware: Put EEPROM parameter block to a different place for each
+          personality, so that changing the personality code does not
+          require changing the parameters in EEPROM. Would only make
+          sense if avrdude could program the flash without touching
+          the EEPROM - which it cannot (or the ATmega cannot).
+
+firmware: Device Signature
+
+protocol: Migrate to CRC16 checksum using <util/crc16.h> on AVR,
+          and TBD on the host.
+
+hostware: Examine whether the checksum code can be made more simple
+          by working with pure functions of the prototype
+
+              uint16_t crc16_update(uint16_t crc, uint8_t byte)
+
+firmware: Use <util/setbaud.h> for calculating baud rate?
+
+firmware: Examine how doxygen copes with the new multiple parallel
+          definitions of the same function/variable in different
+          source files.
+	  Answer: Badly. It just picks one.
+
+firmware: Examine whether e.g. the adc-int and adc-ext histogram
+          definitions (which differ only in table size) can be unified
+          into a common source file.
+
+firmware: Generate build-time configuration information summaries on
+          the actual constants, clock frequencies etc. actually used
+          in the build. Idea: Put numerical values into const data
+          sections named something like ".configinfo.uart_baudrate",
+          and then extract all ".configinfo.*" sections at build time
+          to make them into config info reports (and avoid linking
+          these sections into the actual firmware images).

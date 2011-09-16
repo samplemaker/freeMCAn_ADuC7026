@@ -1,0 +1,8 @@
+/.deps/
+/.objs/
+/*.d
+/*.o
+/*.strace
+/freemcan-tui
+/freemcan-tui.log
+/test-log

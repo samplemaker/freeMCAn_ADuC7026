@@ -1,0 +1,10 @@
+/dox/
+/Doxyfile
+/README.html
+git-version.h
+data.*.dat
+hist.*.dat
+time.*.dat
+samp.*.dat
+.RData
+.Rhistory
