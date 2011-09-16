@@ -31,7 +31,7 @@
 
 #include <stdlib.h>
 #include <avr/eeprom.h>
-#include <avr/pgmspace.h>
+
 
 #include "packet-defs.h"
 
@@ -53,25 +53,25 @@
                     UNITS_PER_SECOND,                               \
                     MAX_BYTES_PER_TABLE,                            \
                     TABLE_ELEMENT_SIZE)                             \
-  const packet_personality_info_t personality_info PROGMEM = {      \
+  const packet_personality_info_t personality_info = {      \
     MAX_BYTES_PER_TABLE,                                            \
     TABLE_ELEMENT_SIZE,                                             \
     UNITS_PER_SECOND,                                               \
     PARAM_SIZE_TIMER1_COUNT,                                        \
     PARAM_SIZE_SKIP_SAMPLES                                         \
   };                                                                \
-  const char personality_name[] PROGMEM = NAME;                     \
+  const char personality_name[] = NAME;                     \
   const uint8_t personality_name_length = sizeof(NAME)-1;           \
   const uint8_t personality_param_size = (PARAM_SIZE_TIMER1_COUNT+PARAM_SIZE_SKIP_SAMPLES)
 
-extern const char personality_name[] PROGMEM;
+extern const char personality_name[];
 extern const uint8_t personality_name_length;
 
 extern const uint8_t personality_param_size;
 extern uint8_t personality_param_sram[];
 extern uint8_t personality_param_eeprom[] EEMEM;
 
-extern const packet_personality_info_t personality_info PROGMEM;
+extern const packet_personality_info_t personality_info;
 
 
 /** The data table as an opaque array of bytes

@@ -28,12 +28,11 @@
  */
 
 
-#include "global.h"
 #include "uart-comm.h"
 #include "frame-comm.h"
 
 
-char magic_header[4] PROGMEM = FRAME_MAGIC_STR;
+char magic_header[4] = FRAME_MAGIC_STR;
 
 
 /** Start a data frame */
@@ -44,7 +43,7 @@ void frame_start(const frame_type_t frame_type,
   uart_send_checksum_reset();
 
   /* Send frame header magic value */
-  uart_putb_P(&magic_header, sizeof(magic_header));
+  uart_putb(&magic_header, sizeof(magic_header));
 
   /* send payload size */
   const uint16_t size = payload_size;
@@ -73,14 +72,6 @@ void frame_send(const frame_type_t frame_type,
   frame_end();
 }
 
-
-void frame_send_P(const frame_type_t frame_type,
-                  PGM_VOID_P payload, const size_t payload_size)
-{
-  frame_start(frame_type, payload_size);
-  uart_putb_P(payload, payload_size);
-  frame_end();
-}
 
 /** @} */
 

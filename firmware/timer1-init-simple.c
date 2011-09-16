@@ -63,7 +63,7 @@ void timer1_init(const uint16_t timer1_value)
 
   /** Safeguard: We cannot handle 0 or 1 count measurements. */
   if (orig_timer1_count <= 1) {
-    send_text_P(PSTR("Unsupported timer value <= 1"));
+    send_text("Unsupported timer value <= 1");
     wdt_soft_reset();
   }
 

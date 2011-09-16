@@ -79,7 +79,7 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <avr/pgmspace.h>
+
 #include <avr/wdt.h>
 #include <avr/eeprom.h>
 
@@ -110,19 +110,19 @@
 
 
 /** Define static string in a single place */
-const char PSTR_INVALID_EEPROM_DATA[] PROGMEM = "Invalid EEPROM data";
+const char PSTR_INVALID_EEPROM_DATA[] = "Invalid EEPROM data";
 
 /** Define static string in a single place */
-const char PSTR_DONE[]      PROGMEM = "DONE";
+const char PSTR_DONE[]                = "DONE";
 
 /** Define static string in a single place */
-const char PSTR_MEASURING[] PROGMEM = "MEASURING";
+const char PSTR_MEASURING[]           = "MEASURING";
 
 /** Define static string in a single place */
-const char PSTR_READY[]     PROGMEM = "READY";
+const char PSTR_READY[]               = "READY";
 
 /** Define static string in a single place */
-const char PSTR_RESET[]     PROGMEM = "RESET";
+const char PSTR_RESET[]               = "RESET";
 
 /** Define AVR device fuses.
  *
@@ -195,8 +195,8 @@ void send_personality_info(void)
 {
   frame_start(FRAME_TYPE_PERSONALITY_INFO,
               sizeof(personality_info) + personality_name_length);
-  uart_putb_P((const void *)&personality_info, sizeof(personality_info));
-  uart_putb_P((const void *)personality_name, personality_name_length);
+  uart_putb((const void *)&personality_info, sizeof(personality_info));
+  uart_putb((const void *)personality_name, personality_name_length);
   frame_end();
 }
 
@@ -211,7 +211,7 @@ void send_eeprom_params_in_sram(void)
 {
   const uint8_t length = pparam_sram.length;
   if (length == 0xff || length > sizeof(pparam_sram.params)) {
-    send_text_P(PSTR_INVALID_EEPROM_DATA);
+    send_text(PSTR_INVALID_EEPROM_DATA);
   } else {
     frame_start(FRAME_TYPE_PARAMS_FROM_EEPROM, length);
     uart_putb((const void *)pparam_sram.params, length);
@@ -277,7 +277,7 @@ firmware_state_t firmware_handle_measurement_finished(const firmware_state_t pst
     return STP_DONE;
     break;
   default:
-    send_text_P(PSTR("invalid state transition"));
+    send_text("invalid state transition");
     wdt_soft_reset();
     break;
   }
@@ -293,18 +293,18 @@ firmware_state_t firmware_handle_switch_pressed(const firmware_state_t pstate)
     params_copy_from_eeprom_to_sram();
     const uint8_t length = pparam_sram.length;
     if ((length == 0xff) || (length > sizeof(pparam_sram.params))) {
-      send_text_P(PSTR_INVALID_EEPROM_DATA);
-      send_state_P(PSTR_READY);
+      send_text(PSTR_INVALID_EEPROM_DATA);
+      send_state(PSTR_READY);
       return STP_READY;
     } else {
       general_personality_start_measurement_sram();
-      send_state_P(PSTR_MEASURING);
+      send_state(PSTR_MEASURING);
       return STP_MEASURING;
     }
     break;
   default:
     /* silently ignore the switch press in all other states */
-    /* send_text_P(PSTR("ignoring pressed switch")); */
+    /* send_text("ignoring pressed switch"); */
     return pstate;
     break;
   }
@@ -339,31 +339,31 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
     case FRAME_CMD_ABORT:
     case FRAME_CMD_INTERMEDIATE:
     case FRAME_CMD_STATE:
-      send_state_P(PSTR_READY);
+      send_state(PSTR_READY);
       return STP_READY;
       break;
     case FRAME_CMD_PARAMS_TO_EEPROM:
       /* The param length has already been checked by the frame parser */
-      send_state_P(PSTR("PARAMS_TO_EEPROM"));
+      send_state("PARAMS_TO_EEPROM");
       eeprom_update_block(&pparam_sram, &pparam_eeprom,
                           sizeof(pparam_eeprom));
-      send_state_P(PSTR_READY);
+      send_state(PSTR_READY);
       return STP_READY;
       break;
     case FRAME_CMD_PARAMS_FROM_EEPROM:
       params_copy_from_eeprom_to_sram();
       send_eeprom_params_in_sram();
-      send_state_P(PSTR_READY);
+      send_state(PSTR_READY);
       return STP_READY;
       break;
     case FRAME_CMD_MEASURE:
       /* The param length has already been checked by the frame parser */
       general_personality_start_measurement_sram();
-      send_state_P(PSTR_MEASURING);
+      send_state(PSTR_MEASURING);
       return STP_MEASURING;
       break;
     case FRAME_CMD_RESET:
-      send_state_P(PSTR_RESET);
+      send_state(PSTR_RESET);
       wdt_soft_reset();
       break;
     }
@@ -394,7 +394,7 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
        * not reset the peak hold capacitor.
        */
       send_table(PACKET_VALUE_TABLE_INTERMEDIATE);
-      send_state_P(PSTR_MEASURING);
+      send_state(PSTR_MEASURING);
       return STP_MEASURING;
       break;
     case FRAME_CMD_PERSONALITY_INFO:
@@ -405,15 +405,15 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
     case FRAME_CMD_MEASURE:
     case FRAME_CMD_RESET:
     case FRAME_CMD_STATE:
-      send_state_P(PSTR_MEASURING);
+      send_state(PSTR_MEASURING);
       return STP_MEASURING;
       break;
     case FRAME_CMD_ABORT:
-      send_state_P(PSTR_DONE);
+      send_state(PSTR_DONE);
       cli();
       on_measurement_finished();
       send_table(PACKET_VALUE_TABLE_ABORTED);
-      send_state_P(PSTR_DONE);
+      send_state(PSTR_DONE);
       return STP_DONE;
       break;
     }
@@ -424,22 +424,22 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
       send_personality_info();
       /* fall through */
     case FRAME_CMD_STATE:
-      send_state_P(PSTR_DONE);
+      send_state(PSTR_DONE);
       return STP_DONE;
       break;
     case FRAME_CMD_RESET:
-      send_state_P(PSTR_RESET);
+      send_state(PSTR_RESET);
       wdt_soft_reset();
       break;
     default:
       send_table(PACKET_VALUE_TABLE_RESEND);
-      send_state_P(PSTR_DONE);
+      send_state(PSTR_DONE);
       return STP_DONE;
       break;
     }
     break;
   }
-  send_text_P(PSTR("STP_ERROR"));
+  send_text("STP_ERROR");
   wdt_soft_reset();
 }
 
@@ -580,7 +580,7 @@ void main_event_loop(void)
           /* whoever sent us that wrongly sized data frame made an error */
           /** \todo Find a way to report errors without resorting to
            *        sending free text. */
-          send_text_P(PSTR("param length mismatch"));
+          send_text("param length mismatch");
           goto error_restart_nomsg;
         }
         break;
@@ -610,7 +610,7 @@ void main_event_loop(void)
         } else {
           /** \todo Find a way to report checksum failure without
            *        resorting to sending free text. */
-          send_text_P(PSTR("checksum fail"));
+          send_text("checksum fail");
           goto error_restart_nomsg;
         }
         break;
@@ -665,7 +665,7 @@ int main(void)
    */
 
   send_personality_info();
-  send_state_P(PSTR_READY);
+  send_state(PSTR_READY);
 
   main_event_loop();
 } /* int main(void) */

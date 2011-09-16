@@ -32,8 +32,6 @@
 #include <stdint.h>
 
 #include "uart-comm.h"
-#include "global.h"
-
 #include "uart-defs.h"
 #include "checksum.h"
 
@@ -152,14 +150,6 @@ void uart_putb(const void *buf, size_t len)
 {
   for (const char *s = (const char *)buf; len > 0; s++, len--) {
     uart_putc(*s);
-  }
-}
-
-
-void uart_putb_P(PGM_VOID_P buf, size_t len)
-{
-  for (PGM_P s = buf; len > 0; s++, len--) {
-    uart_putc(pgm_read_byte(s));
   }
 }
 

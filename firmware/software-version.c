@@ -29,9 +29,6 @@
  */
 
 
-#include <avr/pgmspace.h>
-
-
 #include "packet-comm.h"
 #include "git-version.h"
 
@@ -41,7 +38,13 @@ void software_version_send(void)
   __attribute__ ((section(".init8")));
 void software_version_send(void)
 {
-  send_text_P(PSTR("freemcan " GIT_VERSION));
+
+/*  
+  # define PSTR(s) (__extension__({static char __c[] PROGMEM = (s); &__c[0];}))
+  send_text((__extension__({static char __c[] __attribute__((__progmem__)) =
+            ("freemcan " ""); &__c[0];})));
+*/
+  send_text("freemcan " GIT_VERSION);
 }
 
 /** @} */
