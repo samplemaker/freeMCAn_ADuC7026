@@ -66,6 +66,10 @@ CWARN = -Wall -Wextra -Wstrict-prototypes
 #    -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
 #CFLAGS += -fshort-enums
 #CEXTRA = -Wa,-adhlns=$(<:.c=.lst)
+
+# 32 bit arm code (no thumb)
+CEXTRA = -marm
+
 CFLAGS += $(CDEBUG) $(CDEFS) $(CINCS) -O$(OPT) $(CWARN) $(CSTANDARD) $(CEXTRA)
 
 
@@ -110,7 +114,8 @@ EXTMEMOPTS =
 LDMAP = -Wl,-Map=$(TARGET).map,--cref
 LDFLAGS = $(EXTMEMOPTS) $(LDMAP) $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB) $(LINKERFILE) $(HAVE_CRTs)
 
-ARMPATH=~/DevelToolbin/binaries/armThumb-4.4.6/bin/
+# if you have a non customized toolchain remove that path
+ARMPATH=~/DevelToolbin/binaries/armThumb-4.4.6/bin
 
 ERL = erl
 CC = $(ARMPATH)/arm-elf-gcc
@@ -139,7 +144,7 @@ CLEANFILES += $(DEPEND_MK)
 # Default target.
 all: depend build
 
-build: elf hex bin checks
+build: elf hex bin checks lss
 
 ALL: depend elf hex bin lss sym checks
 

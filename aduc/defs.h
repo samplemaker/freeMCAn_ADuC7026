@@ -42,12 +42,6 @@
  */
 #define soft_reset() (RSTSTA |= _BV(RST_SOFTRST))
 
-/** Flash sector size definitions
- *
- */
-#define MEM_TO_SECTOR(value) ((value) >> (FLASH_SECTOR_DEF))
-#define FLASH_SECTOR_SIZE ((1UL) << (FLASH_SECTOR_DEF))
-
 /** Alignment to next higher value 
  *
  */
