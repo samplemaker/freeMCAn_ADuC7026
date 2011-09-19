@@ -211,7 +211,7 @@
 #define TIMER3_CLOCK_DIVISION_FACTOR 1ULL
 
 /** Timeout time                            */
-#define TIMER3_INTERVAL 50ULL              // [ms]
+#define TIMER3_INTERVAL 10ULL              // [ms]
 
 /** Timer3 prescaler selection (16Bit timer)
  *

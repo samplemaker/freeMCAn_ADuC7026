@@ -201,8 +201,8 @@ void adctest_init(void){
  * Distributes the IRQ processing according to the IRQ-source
  *
  */
-void _irq_handler(void) __attribute__ ((interrupt ("IRQ")));
-void _irq_handler(void)
+void  __irq  _irq_handler(void);
+void  __irq  _irq_handler(void)
 {
   /* which interrupt is enabled and pending? */
   if (bit_is_set(IRQSTA, INT_ADC_CHANNEL)){

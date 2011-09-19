@@ -36,6 +36,8 @@
 #define STR1(x)  #x
 #define STR(x)  STR1(x)
 
+#define __irq __attribute__ ((interrupt("IRQ")))
+
 /** \brief Enable interrupts within nonpriviledged usermode
  *
  *  Trigger a software interrupt and switch to supervisor mode

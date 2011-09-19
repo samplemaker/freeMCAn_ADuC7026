@@ -181,7 +181,9 @@ zero_bss:
 	strlo	r0, [r1], #4		@ if r1<r2: *(r1)=r0 then r1+=4
 	blo	zero_bss		@ branch if condition lower
 
-	b	main
+	ldr	r0,=main
+	mov	lr,pc			@ set return address
+	bx	r0			@ could be thumb / never return
 
 .size    _init_target, . - _init_target
 .endfunc
