@@ -67,10 +67,10 @@
  *
  */
 	.equ	STACKSIZE_UND, 4
-	.equ	STACKSIZE_SVC, 256
+	.equ	STACKSIZE_SVC, 64
 	.equ	STACKSIZE_ABT, 4
 	.equ	STACKSIZE_FIQ, 4
-	.equ	STACKSIZE_IRQ, 256
+	.equ	STACKSIZE_IRQ, 64
 	.equ	STACKSIZE_USR, 256
 
 
@@ -87,43 +87,45 @@
  *       To not keep on executing in this address range lets jump
  *       to the flash adress range 0x80000 onwards. Therefore we
  *       have to reload the handler address from a "literal pool"
- *       rather than using a branch instruction (b).
+ *       rather than using a branch (b $targetaddr) instruction.
  *
  */
 _vector:
-	ldr	pc, INIT_ADDR		@ Reset -> Supervisor
-	ldr	pc, UND_ADDR		@ Undefined Instruction -> Undefinded
-	ldr	pc, SWI_ADDR		@ Software Interrupt -> Supervisor
-	ldr	pc, PABT_ADDR		@ Prefetch Abort -> Abort
-	ldr	pc, DABT_ADDR		@ Data Abort -> Abort
+	ldr	pc, init_target		@ Reset -> Supervisor
+	ldr	pc, und_handler		@ Undefined Instruction -> Undefinded
+	ldr	pc, swi_handler		@ Software Interrupt -> Supervisor
+	ldr	pc, pabt_handler	@ Prefetch Abort -> Abort
+	ldr	pc, dabt_handler	@ Data Abort -> Abort
 	nop				@ Reserved -> Reserved
-	ldr	pc, IRQ_ADDR		@ IRQ -> IRQ
-	ldr	pc, FIQ_ADDR		@ FIQ -> FIQ
+	ldr	pc, irq_handler		@ IRQ -> IRQ
+	ldr	pc, fiq_handler		@ FIQ -> FIQ
 
 /* Handler functions may be implemented in foreign modules
  * without doing any changes here 
  */
-INIT_ADDR:	.word	_init_target
-UND_ADDR:	.word	_und_handler
-SWI_ADDR:	.word	_swi_handler
-PABT_ADDR:	.word	_pabt_handler
-DABT_ADDR:	.word	_dabt_handler
-IRQ_ADDR:	.word	_irq_handler
-FIQ_ADDR:	.word	_fiq_handler
-/* Power on reset initialization is handled inside this file:
- * Non weak symbol                                          
- */
+
+init_target:	.word	_init_target
+und_handler:	.word	_und_handler
+swi_handler:	.word	_swi_handler
+pabt_handler:	.word	_pabt_handler
+dabt_handler:	.word	_dabt_handler
+irq_handler:	.word	_irq_handler
+fiq_handler:	.word	_fiq_handler
+
+/* Power on reset init handled inside this file (non weak)     */
+
 	.weak	_und_handler
 	.set	_und_handler, _xcpt_endless
-/* Software interrupts are handled inside this file:
- * Non weak symbol                                          
- */
+
+/* Software interrupts are handled inside this file (non weak) */
+
 	.weak	_pabt_handler
 	.set	_pabt_handler, _xcpt_endless
 	.weak	_dabt_handler
 	.set	_dabt_handler, _xcpt_endless
-/* IRQs are handled outside this file                       
- */
+
+/* IRQs are handled outside this file                          */
+
 	.weak	_irq_handler
 	.equ	_irq_handler, _xcpt_endless
 	.weak	_fiq_handler
@@ -198,21 +200,6 @@ _init_target:
 	msr	cpsr_c, #M_USR|I_FLAG|F_FLAG
 	mov	sp, r0
 
-/** Initialize variables in RAM
- *
- * Copy block .data from flash (LMA) starting after .text with size of .data
- * into RAM (VMA) starting at _data. Note: Requires ALIGN(4).
- *
- */
-	ldr	r0, =_data_load_start	@ r0 = addr(end of .text => fash)
-	ldr	r1, =_data		@ r1 = addr(start of .data => ram)
-	ldr	r2, =_data_load_end	@ r2 = addr(end of .data => ram)
-copy_data:
-	cmp	r0, r2			@ (r0 ==<> r2) ?
-	ldrlo	r3, [r0], #4		@ if r0<r2: r3=*(r0) then r0+=4
-	strlo	r3, [r1], #4		@ if r0<r2: *(r1)=r3 then r1+=4
-	blo	copy_data		@ branch if condition lower
-
 /** Clear .bss section 
  *
  * Note: Requires ALIGN(4).
@@ -225,6 +212,26 @@ zero_bss:
 	strlo	r0, [r1], #4		@ if r1<r2: *(r1)=r0 then r1+=4
 	blo	zero_bss		@ branch if condition lower
 
+/** Initialize variables in RAM
+ *
+ * Copy block .data from flash (LMA) starting after .text with size of .data
+ * into RAM (VMA) starting at _data. 
+ * 
+ * Note: Requires ALIGN(4).
+ *
+ */
+	ldr	r0, =_data_load_start	@ r0 = addr(end of .text => fash)
+	ldr	r1, =_data		@ r1 = addr(start of .data => ram)
+	ldr	r2, =_data_load_end	@ r2 = addr(end of .data => ram)
+copy_data:
+	cmp	r0, r2			@ (r0 ==<> r2) ?
+	ldrlo	r3, [r0], #4		@ if r0<r2: r3=*(r0) then r0+=4
+	strlo	r3, [r1], #4		@ if r0<r2: *(r1)=r3 then r1+=4
+	blo	copy_data		@ branch if condition lower
+
+/** Jump to main
+ *
+ */
 	ldr	r0,=main
 	mov	lr,pc			@ set return address
 	bx	r0			@ could be thumb / never return
