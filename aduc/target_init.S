@@ -74,9 +74,9 @@
 	.equ	STACKSIZE_USR, 256
 
 
-.section .vector,"ax"
 .code 32
 .align 0
+.section .vector, "ax"
 
 /** Jump island exception vector table for operating modes
  *
@@ -134,14 +134,14 @@ fiq_handler:	.word	_fiq_handler
 _xcpt_endless:
 	b	_xcpt_endless
 
-.ascii "freeMCAn ADUC / (C) 2011 samplemaker and Hans Ulrich Niedermann"
+.ascii "freeMCAn-ADUC (C) 2011 Samplemaker and Hans Ulrich Niedermann"
 
 .size   _vector, . - _vector
 
 
-.section .init_target,"ax"
 .code 32
 .align 4
+.section .init_target,"ax"
 
 .global _init_target
 .func _init_target
@@ -242,9 +242,9 @@ copy_data:
 .endfunc
 
 
-.section .text
 .code 32
 .align 4
+.section .text
 
 /** Software interrupt handler for enabling and disabling the I-Flag
  *
