@@ -82,15 +82,59 @@
  *
  * See: ARM7TDMI Technical Reference Manual p. 67
  *
+ * Note: In the ADUC7026 asic the FLASH is mirrored at ADDR
+ *       0x00000 by default after reset (MMR-REMAP bit 0 unset).
+ *       To not keep on executing in this address range lets jump
+ *       to the flash adress range 0x80000 onwards. Therefore we
+ *       have to reload the handler address from a "literal pool"
+ *       rather than using a branch instruction (b).
+ *
  */
-	b	_init_target		@ Reset -> Supervisor
-	b	.			@ Undefined Instruction -> Undefinded
-	b	_swi_handler		@ Software Interrupt -> Supervisor
-	b	.			@ Prefetch Abort -> Abort
-	b	.			@ Data Abort -> Abort
+_vector:
+	ldr	pc, INIT_ADDR		@ Reset -> Supervisor
+	ldr	pc, UND_ADDR		@ Undefined Instruction -> Undefinded
+	ldr	pc, SWI_ADDR		@ Software Interrupt -> Supervisor
+	ldr	pc, PABT_ADDR		@ Prefetch Abort -> Abort
+	ldr	pc, DABT_ADDR		@ Data Abort -> Abort
 	nop				@ Reserved -> Reserved
-	b	_irq_handler		@ IRQ -> IRQ
-	b	.			@ FIQ -> FIQ
+	ldr	pc, IRQ_ADDR		@ IRQ -> IRQ
+	ldr	pc, FIQ_ADDR		@ FIQ -> FIQ
+
+/* Handler functions may be implemented in foreign modules
+ * without doing any changes here 
+ */
+INIT_ADDR:	.word	_init_target
+UND_ADDR:	.word	_und_handler
+SWI_ADDR:	.word	_swi_handler
+PABT_ADDR:	.word	_pabt_handler
+DABT_ADDR:	.word	_dabt_handler
+IRQ_ADDR:	.word	_irq_handler
+FIQ_ADDR:	.word	_fiq_handler
+/* Power on reset initialization is handled inside this file:
+ * Non weak symbol                                          
+ */
+	.weak	_und_handler
+	.set	_und_handler, _xcpt_endless
+/* Software interrupts are handled inside this file:
+ * Non weak symbol                                          
+ */
+	.weak	_pabt_handler
+	.set	_pabt_handler, _xcpt_endless
+	.weak	_dabt_handler
+	.set	_dabt_handler, _xcpt_endless
+/* IRQs are handled outside this file                       
+ */
+	.weak	_irq_handler
+	.equ	_irq_handler, _xcpt_endless
+	.weak	_fiq_handler
+	.set	_fiq_handler, _xcpt_endless
+
+_xcpt_endless:
+	b	_xcpt_endless
+
+.ascii "freeMCAn ADUC / (C) 2011 samplemaker and Hans Ulrich Niedermann"
+
+.size   _vector, . - _vector
 
 
 .section .init_target,"ax"
@@ -184,6 +228,8 @@ zero_bss:
 	ldr	r0,=main
 	mov	lr,pc			@ set return address
 	bx	r0			@ could be thumb / never return
+
+	b	.			@ should never come here
 
 .size    _init_target, . - _init_target
 .endfunc
