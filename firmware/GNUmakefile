@@ -115,14 +115,14 @@ LDMAP = -Wl,-Map=$(TARGET).map,--cref
 LDFLAGS = $(EXTMEMOPTS) $(LDMAP) $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB) $(LINKERFILE) $(HAVE_CRTs)
 
 # if you have a non customized toolchain remove that path
-ARMPATH=~/DevelToolbin/binaries/armThumb-4.4.6/bin
+ARMPATH=~/DevelToolbin/binaries/armThumb-4.4.6/bin/
 
 ERL = erl
-CC = $(ARMPATH)/arm-elf-gcc
-OBJCOPY = $(ARMPATH)/arm-elf-objcopy
-OBJDUMP = $(ARMPATH)/arm-elf-objdump
-SIZE = $(ARMPATH)/arm-elf-size
-NM = $(ARMPATH)/arm-elf-nm
+CC = $(ARMPATH)arm-elf-gcc
+OBJCOPY = $(ARMPATH)arm-elf-objcopy
+OBJDUMP = $(ARMPATH)arm-elf-objdump
+SIZE = $(ARMPATH)arm-elf-size
+NM = $(ARMPATH)arm-elf-nm
 REMOVE = rm -f
 MV = mv -f
 OD = od
