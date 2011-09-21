@@ -202,7 +202,7 @@ void adctest_init(void){
  *
  */
 void  __irq  _irq_handler(void);
-void  __irq  _irq_handler(void)
+void _irq_handler(void)
 {
   /* which interrupt is enabled and pending? */
   if (bit_is_set(IRQSTA, INT_ADC_CHANNEL)){
