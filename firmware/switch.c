@@ -29,7 +29,8 @@
  * @{
  */
 
-#include <avr/io.h>
+#include <stdint.h>
+#include "aduc7026.h"
 
 #define SWITCH_LOCKED     0x01
 #define SWITCH_UNPRESSED  0x00
@@ -39,16 +40,22 @@ uint8_t switch_state = SWITCH_UNPRESSED;
 /** Initialize peripherals necessary for "start measurement hardware button"
  *
  */
-void switch_init(void)
-  __attribute__ ((naked))
-  __attribute__ ((section(".init5")));
-void switch_init(void)
+static
+void __init switch_init(void)
 {
-  DDRB &= ~_BV(DDB2);
-  /* enable pull up in order to prevent activating a measurement
-     in case the hardware pin is floating (ie using pollin board) */
-  PORTB |= _BV(PB2);
+ /* disable pull up P0.4 */
+  GP0PAR &= ~_BV(GP_PAR_PULL_UP_Px4);
+  /* configure P0.4 as GPIO */
+  GP0CON |= _FS(GP_SELECT_FUNCTION_Px4, MASK_00);
+  /* configure P0.4 as input */
+  GP0DAT &= ~_BV(GP_DATA_DIRECTION_Px4);
 }
+
+/** Put function into init section, register function pointer and
+ *  execute function at start up
+ */
+register_init5(switch_init);
+
 
 /** Acquire "start of measurement command by hardware button"
  *
@@ -61,7 +68,7 @@ uint8_t switch_trigger_measurement(void){
       return (0);
   }
   else {
-      return (bit_is_clear(PINB, PB2));
+      return (!bit_is_set (GP0DAT, GP_DATA_INPUT_Px4));
   }
 }
 

@@ -30,16 +30,10 @@
 
 #include <stdlib.h>
 
-#include <avr/io.h>
-#include <avr/interrupt.h>
-
-
-
 /** Histogram element size */
 #define ELEMENT_SIZE_IN_BYTES 3
 
-
-#include "global.h"
+#include "aduc7026.h"
 #include "main.h"
 #include "perso-adc-int-global.h"
 #include "packet-comm.h"
@@ -49,9 +43,14 @@
 #include "timer1-measurement.h"
 
 
+/* \todo : comment following lines to have the "real working code" */
+#include "timer1-constants.h"
+#define DEBUG_ADC_TRIGGER 1
+
+
+
 /** Number of elements in the histogram table */
 #define MAX_COUNTER (1<<ADC_RESOLUTION)
-
 
 /** Histogram table
  *
@@ -84,20 +83,43 @@ PERSONALITY("adc-int-mca",
             ELEMENT_SIZE_IN_BYTES);
 
 
+#if DEBUG_ADC_TRIGGER
+void ISR_WATCHDOG_TIMER3(void){
+  GP1DAT ^= _BV(GP_DATA_OUTPUT_Px5);
+  T3CLRI = 0x00;
+}
+inline static void 
+adctest_init(void){
+  /* clear watch dog and force down counting */
+  T3CON &=~ ( _BV(TIMER3_COUNT_DIR) |
+              _BV(TIMER3_SECURE) |
+              _BV(TIMER3_WDT_ENABLE) );
+  /* set prescaler and run timer in periodic mode
+* (automatic reload from T3LD) */
+  T3CON |= (_FS(TIMER3_PRESCALER, TIMER3_PRESCALER_VALUE) |
+            _BV(TIMER3_MODE) );
+  /* timer compare match value */
+  T3LD = TIMER3_LOAD_VALUE_DOWNCNT;
+  T3CON |= _BV(TIMER3_ENABLE);
+  /* enable interrupt flag for Timer3 */
+  IRQEN |= _BV(INT_WATCHDOG_TIMER3);
+}
+#endif
+
+
 /** Initialize peripherals
  *
  * Configure peak hold capacitor reset pin.
  */
-void personality_io_init(void)
-  __attribute__ ((naked))
-  __attribute__ ((section(".init5")));
-void personality_io_init(void)
+static
+void __init personality_io_init(void)
 {
-    /* configure pin 20 as an output                               */
-    DDRD |= (_BV(DDD6));
-    /* set pin 20 to ground                                        */
-    PORTD &= ~_BV(PD6);
+  // \todo reset pin
 }
+/** Put function into init section, register function pointer and
+ *  execute function at start up
+ */
+register_init5(personality_io_init);
 
 
 /** AD conversion complete interrupt entry point
@@ -106,139 +128,148 @@ void personality_io_init(void)
  * Update histogram
  * Discharge peak hold capacitor
  */
-ISR(ADC_vect)
-{
+void ISR_ADC(void){
   /* pull pin to discharge peak hold capacitor                    */
   /** \todo worst case calculation: runtime & R7010 */
-  PORTD |= _BV(PD6);
+  // \todo
+ 
+  /* starting from bit 16 the result is stored in ADCDAT.
+     reading the ADCDATA also clears flag in ADCSTA */
+  const uint32_t result =  ADCDAT;
 
-  /* Read analog value */
-  uint16_t result = ADCW;
+  /* adjust to correct size */
+  const uint16_t index = (result >> (16 + 12 - ADC_RESOLUTION));
 
-  /* We are confident that the range of values the ADC gives us
-   * is within the specced 10bit range of 0..1023. */
-
-  /* cut off 2, 1 or 0 LSB */
-  const uint16_t index = result >> (10-ADC_RESOLUTION);
-
-  /* For 24bit values, the source code looks a little more complicated
-   * than just table[index]++ (even though the generated machine
-   * instructions are not).  Anyway, we needed to move the increment
-   * into a properly defined _inc function.
-   */
-  volatile table_element_t *element = &(table[index]);
+ volatile table_element_t *element = &(table[index]);
   table_element_inc(element);
 
   /* set pin to GND and release peak hold capacitor   */
-  PORTD &=~ _BV(PD6);
+  // \todo
 
-  /* If a hardware event on int0 pin occurs an interrupt flag in EIFR is set.
-   * Since int0 is only configured but not enabled ISR(INT0_vect){} is
-   * not executed and therefore this flag is not reset automatically.
-   * To reset this flag the bit at position INTF0 must be set.
-   */
-  EIFR |= _BV(INTF0);
 }
+  
 
-
-/** Setup of INT0
+/** Programmable logic array used for edged triggering the ADC
  *
- * INT0 via pin 16 is configured but not enabled
- * Trigger on falling edge
- * Enable pull up resistor on Pin 16 (20-50kOhm)
+ * HCLK synchronous implementation for triggering the ADC
+ * Element0: Logic function for generating the output pulse
+ * Element4: Flip flop shifter for generating a one clock pulse
+ * Element5: Input flip flop to suppress glitches (debouncer)
+ *
+ * \todo write driver for external D-Flipflop because ADUC7026 ADC
+ * is level triggered (not edge) at #CONVstart
  */
 inline static
 void adc_int_trigger_src_conf(void)
 {
 
-    /* Configure INT0 pin 16 as input */
-    /* Reset Int0 pin 16 bit DDRD in port D Data direction register */
-    DDRD &= ~(_BV(DDD2));
-    /* Port D data register: Enable pull up on pin 16, 20-50kOhm */
-    PORTD |= _BV(PD2);
-
-    /* Disable interrupt "INT0" (clear interrupt enable bit in
-     * external interrupt mask register) otherwise an interrupt may
-     * occur during level and edge configuration (EICRA)  */
-    EIMSK &= ~(_BV(INT0));
-    /* Level and edges on the external pin that activates INT0
-     * is configured now (interrupt sense control bits in external
-     * interrupt control register A). Disable everything.  */
-    EICRA &= ~(_BV(ISC01) | _BV(ISC00));
-    /* Now enable interrupt on falling edge.
-     * [ 10 = interrupt on rising edge
-     *   11 = interrupt on falling edge ] */
-    EICRA |=  _BV(ISC01);
-    /* Clear interrupt flag by writing a locical one to INTFn in the
-     * external interrupt flag register.  The flag is set when a
-     * interrupt occurs. if the I-flag in the sreg is set and the
-     * corresponding flag in the EIFR the program counter jumps to the
-     * vector table  */
-    EIFR |= _BV(INTF0);
-    /* reenable interrupt INT0 (External interrupt mask
-     * register). we do not want to jump to the ISR in case of an interrupt
-     * so we do not set this bit  */
-    // EIMSK |= (_BV(INT0));
+  /* PLAs triggering the adc:
+   * 0b0000: Element0  (BLOCK0)
+   * 0b0001: Element1  (BLOCK0)
+   * 0b1111: Element15 (BLOCK1)
+   */
+  PLAADC |= (_BV(PLA_ADC_CONV_START) |
+             _FS(PLA_ADC_CONV_SRC, MASK_0000) );
+  /* Configure PLA ELEMENT0 (BLOCK0)
+   * - MUX3: Select MUX1, not GPIO (nothing to do)
+   * - MUX1: Connect element 5 at MUX1
+   * - MUX2: Select MUX0, not PLAIN
+   * - MUX0: Connect element 4 at MUX0
+   * - Select logical function of the block (B and not A)
+   * - Bypass flip-flop (MUX4)
+   */
+  PLAELM0 |= (/*_BV(PLA_MUX3_CONTROL)             |*/
+              _FS(PLA_MUX1_CONTROL, MASK_10)      |
+              _BV(PLA_MUX2_CONTROL)               |
+              _FS(PLA_MUX0_CONTROL, MASK_10)      |
+              _FS(PLA_LOOKUP_TABLE, MASK_0010)    |
+              _BV(PLA_MUX4_CONTROL));
+  /* Configure PLA ELEMENT4 (BLOCK0)
+   * - MUX3: Select MUX1, not GPIO (nothing to do)
+   * - MUX1: Connect element 5 at MUX1
+   * - Select logical function of the block (B -> route MUX3)
+   * - Use flip-flop (MUX4) (nothing to do)
+   */
+  PLAELM4 |= (/*_BV(PLA_MUX3_CONTROL)             |*/
+              _FS(PLA_MUX1_CONTROL, MASK_10)      |
+              _FS(PLA_LOOKUP_TABLE, MASK_1010) );
+  /* Configure PLA ELEMENT5 (BLOCK0)
+   * - MUX3: Select GPIO, not MUX1
+   * - Select logical function of the block:
+   *   B -> route MUX3 -> trigger on rising edge
+   *   Not B -> trigger on falling edge
+   * - Use flip-flop (MUX4) (nothing to do)
+   */
+  PLAELM5 |= (_BV(PLA_MUX3_CONTROL)               |
+  #if ADC_TRIGGER_ON_RISING_EDGE
+              _FS(PLA_LOOKUP_TABLE, MASK_1010)
+  #else
+              _FS(PLA_LOOKUP_TABLE, MASK_0101)
+  #endif
+             );
+  /* configure P1.5 as GPIO and input for PLA5
+   * may be configured as output and switched by software, timer
+   * for testing.
+   * \todo : configure as input
+   */
+  GP1CON |= _FS(GP_SELECT_FUNCTION_Px5, MASK_00);
+  #if DEBUG_ADC_TRIGGER
+    GP1DAT |= _BV(GP_DATA_DIRECTION_Px5);
+  #else
+    GP1DAT &=~ _BV(GP_DATA_DIRECTION_Px5);
+  #endif
+  /* PLA-BLOCK0 clock source selection
+   * Clock source:
+   * HCLK: MASK_011
+   * P0.5: MASK_000
+   */
+  PLACLK |= _FS(PLA_BLOCK0_CLK_SRC, MASK_011);
 
 }
 
 
 /** ADC initialisation and configuration
  *
- * ADC configured as auto trigger
- * Trigger source INT0
- * Use external analog reference AREF at PIN 32
- * AD input channel on Pin 40 ADC0
  */
 inline static
 void adc_int_init(void)
 {
-  uint16_t result;
-
-  /* channel number: PIN 40 ADC0 -> ADMUX=0 */
-  ADMUX = 0;
-
-  /* select voltage reference: external AREF Pin 32 as reference */
-  ADMUX &= ~(_BV(REFS1) | _BV(REFS0));
-
-  /* clear ADC Control and Status Register A
-   * enable ADC & configure IO-Pins to ADC (ADC ENable) */
-  ADCSRA = _BV(ADEN);
-
-  /* ADC prescaler selection (ADC Prescaler Select Bits) */
-  /* bits ADPS0 .. ADPS2 */
-  ADCSRA |= ((((ADC_PRESCALER >> 2) & 0x1)*_BV(ADPS2)) |
-             (((ADC_PRESCALER >> 1) & 0x1)*_BV(ADPS1)) |
-              ((ADC_PRESCALER & 0x01)*_BV(ADPS0)));
-
-  /* dummy read out (first conversion takes some time) */
-  /* software triggered AD-Conversion */
-  ADCSRA |= _BV(ADSC);
-
-  /* wait until conversion is complete */
-  loop_until_bit_is_clear(ADCSRA, ADSC);
-
-  /* Either we should discharge the peak/hold cap here to make sure
-   * that the first proper ADCW read will measure a good value, or we
-   * just discount the first value as being irrelevant for the whole
-   * histogram.
+  /* - Set clock speed (default value is 0b001 = fADC/2)
+   * - ADC acquisition time (default value is 0b10 = eight clocks)
+   * - Power control: set ADC to normal mode
+   * - Set conversion mode:
+   *     Single ended (default): 0b00
+   *     (Vin- can be left floating)
+   *     Pseudo differential   : 0b10
+   *     (Ground must be connected to ADCNEG (Pin 9))
+   * - Choose trigger source :
+   *     #CONVstart:       MASK_000
+   *     TIMER1:           MASK_001
+   *     TIMER0:           MASK_010
+   *     SOFTWARE SINGLE:  MASK_011
+   *     SOFTWARE CONT:    MASK_100
+   *     PLA:              MASK_101
+   */
+  ADCCON = (_FS(ADC_CLOCK_SPEED, MASK_001)     |
+            _FS(ADC_ACQUISITION_TIME, MASK_10) |
+            _BV(ADC_POWER_CONTROL)             |
+            _FS(ADC_CONVERSION_MODE, MASK_00)  |
+            _FS(ADC_TRIGGER_SOURCE, MASK_101)    );
+  /* Use ADCbusy pin (NOTE: Conflicts with olimex board switch!)
+   * ADCCON |= _BV(ADC_ENABLE_ADCBUSY);
    */
 
-  /* clear returned AD value, other next conversion value is not ovrtaken */
-  result = ADCW;
-
-  /* Enable AD conversion complete interrupt if I-Flag in sreg is set
-   * (-> ADC interrupt enable) */
-  ADCSRA |= _BV(ADIE);
-
-   /* Configure ADC trigger source:
-    * Select external trigger "interrupt request 0"
-    * Interrupt on rising edge                         */
-  ADCSRB |= _BV(ADTS1);
-  ADCSRB &= ~(_BV(ADTS0) | _BV(ADTS2));
-
-  /* ADC auto trigger enable: ADC will be started by trigger signal */
-  ADCSRA |= _BV(ADATE);
+  /* Channel selection: ADC0 = 00000 */
+  ADCCP = _FS(ADC_PCHANNEL_SELECTION, MASK_00000);
+  /* Set bit for internal bandgap reference.
+   * external reference  otherwise but must connect a voltage reference
+   * to pin 68 (Vref) */
+  REFCON |= _BV(REF_BANDGAP_ENABLE);
+  /* Engage adc */
+  ADCCON |=  _BV(ADC_ENABLE_CONVERION);
+  /* Enable ADC IRQ */
+  IRQEN |= _BV(INT_ADC_CHANNEL);
+  /* Poll for 'result is ready':  while (!ADCSTA){};*/
 }
 
 
@@ -246,11 +277,7 @@ void adc_int_init(void)
 inline static
 void adc_init(void)
 {
-  /** configure INT0 pin 16 */
   adc_int_trigger_src_conf();
-
-  /** configure AREF at pin 32 and single shot auto trigger over int0
-   * at pin 40 ADC0 */
   adc_int_init();
 }
 
@@ -260,6 +287,9 @@ void personality_start_measurement_sram(void)
   const void *voidp = &pparam_sram.params[0];
   const uint16_t *timer1_value = voidp;
   adc_init();
+  #if DEBUG_ADC_TRIGGER
+    adctest_init();
+  #endif
   timer1_init(*timer1_value);
 }
 

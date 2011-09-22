@@ -1,8 +1,7 @@
-/** \file firmware/wdt-softreset.c
- * \brief Reset the AVR processor via the watchdog timer
+/** \file ./flash.h
+ * \brief Driver support for eeprom-flash emulation
  *
- * \author Copyright (C) 2010 samplemaker
- * \author Copyright (C) 2010 Hans Ulrich Niedermann <hun@n-dimensional.de>
+ * \author Copyright (C) 2011 samplemaker
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License
@@ -19,38 +18,28 @@
  *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301 USA
  *
- * \defgroup wdt_softreset AVR Reset via watchdog timer
- * \ingroup firmware_generic
- *
- * Reset the AVR processor via the watchdog timer.
- *
+ * \addtogroup LIB_FLASH
  * @{
  */
 
+#ifndef FLASH_H
+#define FLASH_H
 
-#include "wdt-softreset.h"
+#define NUM_BLOCKS 3
+
+#define BLOCKID_0 0
+#define BLOCKID_1 1
+#define BLOCKID_2 2
 
 
-/** Disable watchdog on device reset.
- *
- * Newer AVRs do not disable the watchdog on reset, so we need to
- * disable it manually early in the startup sequence. "Newer" AVRs
- * include the 164P/324P/644P we are using.
- *
- * See http://www.nongnu.org/avr-libc/user-manual/FAQ.html#faq_softreset
- */
-void wdt_softreset_init(void)
-  __attribute__((naked))
-  __attribute__((section(".init3")));
-void wdt_softreset_init(void)
-{
-  MCUSR = 0;
-  wdt_disable();
-  return;
-}
+void eepflash_write(const char *src, const uint16_t user_len, const uint8_t block_id);
+int8_t eepflash_read(char **dst, uint16_t *len, const uint8_t block_id);
 
 
 /** @} */
+
+#endif /* !FLASH_H */
+
 
 /*
  * Local Variables:

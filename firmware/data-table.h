@@ -30,8 +30,6 @@
 
 
 #include <stdlib.h>
-#include <avr/eeprom.h>
-
 
 #include "packet-defs.h"
 
@@ -69,7 +67,7 @@ extern const uint8_t personality_name_length;
 
 extern const uint8_t personality_param_size;
 extern uint8_t personality_param_sram[];
-extern uint8_t personality_param_eeprom[] EEMEM;
+extern uint8_t personality_param_eeprom[];
 
 extern const packet_personality_info_t personality_info;
 

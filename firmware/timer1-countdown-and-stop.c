@@ -29,9 +29,15 @@
 
 #include "timer1-measurement.h"
 #include "main.h"
+#include "aduc7026.h"
 
+#define TOG_LED1 (GP4DAT ^= _BV(GP_DATA_OUTPUT_Px1))
 
 volatile uint16_t timer1_count;
+
+/* global value to export which controls program flow (start and stop) */
+volatile uint8_t measurement_finished;
+
 volatile uint16_t orig_timer1_count;
 
 
@@ -45,17 +51,18 @@ volatile uint16_t orig_timer1_count;
  *
  * \see timer1_count, get_duration
  */
-ISR(TIMER1_COMPA_vect)
+void ISR_WAKEUP_TIMER2(void)
 {
-  /* toggle a sign PORTD ^= _BV(PD5); (done automatically) */
+  /* toggle a sign */
+  TOG_LED1;
 
-  if (GF_IS_CLEARED(GF_MEASUREMENT_FINISHED)) {
+  if (measurement_finished) {
     /** We do not touch #measurement_finished ever again after setting
      * it. */
     timer1_count--;
     if (timer1_count == 0) {
       /* timer has elapsed, set the flag to signal the main program */
-      GF_SET(GF_MEASUREMENT_FINISHED);
+      measurement_finished = 1;
     }
   }
 }

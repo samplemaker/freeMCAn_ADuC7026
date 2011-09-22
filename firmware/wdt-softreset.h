@@ -27,9 +27,6 @@
 #define WDT_SOFTRESET_H
 
 
-#include <avr/wdt.h>
-
-
 /** Trigger AVR reset via watchdog device. */
 static inline
 void wdt_soft_reset(void)
@@ -37,12 +34,7 @@ void wdt_soft_reset(void)
 static inline
 void wdt_soft_reset(void)
 {
-  do {
-    wdt_enable(WDTO_15MS);
-    while (1) {
-      /* wait until watchdog has caused a system reset */
-    }
-  } while(0);
+  RSTSTA |= _BV(RST_SOFTRST);
 }
 
 

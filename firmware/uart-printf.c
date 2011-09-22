@@ -30,8 +30,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "global.h"
-
 #include "uart-printf.h"
 #include "uart-comm.h"
 #include "frame-comm.h"

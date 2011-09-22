@@ -28,110 +28,229 @@
 #define TIMER1_CONSTANTS_H
 
 
-/** XTAL frequency */
-#ifndef F_CPU
-# error You need to define F_CPU!
-#endif
+#include "reset.h"
 
-
-/** Timer prescaler selection (16Bit timer)
+/**  Defines for TIMER0 (RTOS Timer)
  *
- *  1: No prescaling
- *  2: Divider=8
- *  3: Divider=64
- *  4: Divider=256
- *  5: Divider=1024
- *
- *  Select a prescaler to have an compare match value as integer
+ * HCLK only
  */
-#if   (F_CPU == 20000000UL)
-# ifdef TIMER1_SUB_1SEC
-#  define TIMER1_PRESCALER 4
-# else
-#  define TIMER1_PRESCALER 5
-# endif
-#elif (F_CPU == 18432000UL)
-# ifdef TIMER1_SUB_1SEC
-#  define TIMER1_PRESCALER 4
-# else
-#  define TIMER1_PRESCALER 5
-# endif
-#elif (F_CPU == 16000000UL)
-# ifdef TIMER1_SUB_1SEC
-#  define TIMER1_PRESCALER 4
-# else
-#  define TIMER1_PRESCALER 5
-# endif
+
+/** Select a valid clock divider depending on interval and clock source */
+#define TIMER0_CLOCK_DIVISION_FACTOR 256ULL
+
+/** Timeout time                            */
+#define TIMER0_INTERVAL 50ULL       // [ms]
+
+/** Timer0 prescaler selection (16Bit timer)
+ *
+ * 0: No prescaling
+ * 1: Divider=16
+ * 2: Divider=256
+ *
+ */
+#if   (TIMER0_CLOCK_DIVISION_FACTOR == 256ULL)
+# define TIMER0_PRESCALER_VALUE 2
+#elif (TIMER0_CLOCK_DIVISION_FACTOR == 16ULL)
+# define TIMER0_PRESCALER_VALUE 1
+#elif (TIMER0_CLOCK_DIVISION_FACTOR == 1ULL)
+# define TIMER0_PRESCALER_VALUE 0
 #else
-# error Unsupported F_CPU value
+# error Invalid TIMER0_CLOCK_DIVISION_FACTOR value!
+#endif
+
+/** Timer0 load value calculation for timer initialization
+ *
+ * Depends on timer Interval and divider choosen
+ */
+#define TIMER0_LOAD_VALUE                          \
+  ( (TIMER0_INTERVAL)  *  ((F_HCLK) /              \
+  ( (TIMER0_CLOCK_DIVISION_FACTOR) * 1000ULL) ) )
+
+#if (TIMER0_LOAD_VALUE < 0x00FF)
+# error TIMER0_LOAD_VALUE: too low => try to decrease timer0 divider
+#endif
+#if (TIMER0_LOAD_VALUE > 0xFF00)
+# error TIMER0_LOAD_VALUE: too high => try to increase timer0 divider
 #endif
 
 
-/** Timer compare match value for 16Bit timer
+/**  Defines for TIMER1 (General-Purpose Timer)
  *
- *  TIMER1_COMPARE_MATCH_VAL = (time_elpased [sec]*F_CPU [Hz]/Divider) - 1
- *  E.g. (1sec*16000000Hz/1024) - 1 = 15624
- *  E.g. (0.1sec*16000000Hz/256) - 1 = 6249
+ * 32 kHz external crystal, core clock frequency, or GPIO (P1.0 or P0.6)
+ */
+
+/** Select a valid clock divider depending on interval and clock source */
+#define TIMER1_CLOCK_DIVISION_FACTOR_x1000 256000ULL
+
+/** Select source to be connected to TIMER1 */
+#define TIMER1_CLK TIMER1_CORE_CLK
+
+/** Timeout time                            */
+#define TIMER1_INTERVAL 1000ULL             // [ms]
+
+
+/** TIMER1 prescaler selection (32Bit timer)
  *
- *  The data measurement is carried out in multiples of time_elapsed.
- *
- * Lazy people can calculate these constants using Erlang as follows:
- * $ erl
- * 1> Freqs = [ 20000000, 18432000, 16000000 ].
- * [20000000,18432000,16000000]
- * 2> Speeds = [ {0.1, 256}, {1.0, 1024} ].
- * [{0.1,256},{1.0,1024}]
- * 3> [ {Per, F_CPU, Per*F_CPU/Div-1} || F_CPU <- Freqs, {Per,Div} <- Speeds ].
- * [{0.1,20000000,7811.5},
- *  {1.0,20000000,19530.25},
- *  {0.1,18432000,7199.0},
- *  {1.0,18432000,17999.0},
- *  {0.1,16000000,6249.0},
- *  {1.0,16000000,15624.0}]
- * 4> q().
- * ok
- * $
+ *   0: No prescaling
+ *   4: Divider=16
+ *   8: Divider=256
+ *  15: Divider=32.768
  *
  */
-#if   (F_CPU == 20000000UL)
-# ifdef TIMER1_SUB_1SEC
-#  define TIMER1_COMPARE_MATCH_VAL 7811
-# else
-#  define TIMER1_COMPARE_MATCH_VAL 19530
-#endif
-#elif (F_CPU == 18432000UL)
-# ifdef TIMER1_SUB_1SEC
-#  define TIMER1_COMPARE_MATCH_VAL 7199
-# else
-#  define TIMER1_COMPARE_MATCH_VAL 17999
-# endif
-#elif (F_CPU == 16000000UL)
-# ifdef TIMER1_SUB_1SEC
-#  define TIMER1_COMPARE_MATCH_VAL 6249
-# else
-#  define TIMER1_COMPARE_MATCH_VAL 15624
-# endif
+#if   (TIMER1_CLOCK_DIVISION_FACTOR_x1000 == 256000ULL)
+   #define TIMER1_PRESCALER_VALUE 8
+#elif (TIMER1_CLOCK_DIVISION_FACTOR_x1000 == 16000ULL)
+   #define TIMER1_PRESCALER_VALUE 4
+#elif (TIMER1_CLOCK_DIVISION_FACTOR_x1000 == 1000ULL)
+   #define TIMER1_PRESCALER_VALUE 0
+#elif (TIMER1_CLOCK_DIVISION_FACTOR_x1000 == 32768ULL)
+   #define TIMER1_PRESCALER_VALUE 15
 #else
-# error Unsupported F_CPU value
+   #error Invalid TIMER1_CLOCK_DIVISION_FACTOR_x1000 value!
 #endif
 
 
-/** Toggle a sign if the measurement is over */
-#ifdef TIMER1_SUB_1SEC
-# define TIMER1_COMPARE_MATCH_VAL_MEASUREMENT_OVER \
-  (((TIMER1_COMPARE_MATCH_VAL)*10UL)>>2)
-#endif
-
-
-/** Timer1 wave form generation mode
+/** TIMER1 load value calculation for timer initialization
  *
- *   0  normal
- *   4  CTC (clear timer on compare match) with OCR1A as top
- *  12  CTC (clear timer on compare match) with ICR1 as top
- *  ...
+ * Depends on various clock sources connected to the timer
+ * Depends on timer Interval and divider choosen
+ *
+ * Note: If the clock source is a GPIO the user must provide 
+ *       these macros himself
+ */
+#if   (TIMER1_CLK == TIMER1_EXT_XTAL)
+  #define TIMER1_LOAD_VALUE_DOWNCNT                       \
+    ( (TIMER1_INTERVAL)  *  ((F_XTAL) /                   \
+    ( (TIMER1_CLOCK_DIVISION_FACTOR_x1000) ) ) )
+#elif (TIMER1_CLK == TIMER1_CORE_CLK)
+  #define TIMER1_LOAD_VALUE_DOWNCNT                       \
+    ( (TIMER1_INTERVAL)  *  ((F_UCLK) /                   \
+    ( (TIMER1_CLOCK_DIVISION_FACTOR_x1000) ) ) )
+#endif
+
+#if (TIMER1_LOAD_VALUE_DOWNCNT < 0x000000FFULL)
+  #error TIMER1_LOAD_VALUE_DOWNCNT: too low
+#endif
+#if (TIMER1_LOAD_VALUE_DOWNCNT > 0xFF000000ULL)
+  #error TIMER1_LOAD_VALUE_DOWNCNT: too high
+#endif
+
+#define TIMER1_LOAD_VALUE_UPCNT (0xFFFFFFFFULL - TIMER1_LOAD_VALUE_DOWNCNT)
+
+
+/**  Defines for TIMER2 (Wake-Up Timer)
+ *
+ * Internal Oscillator, External Crystal or HCLK
+ */
+
+/** Select a valid clock divider depending on interval and clock source */
+#define TIMER2_CLOCK_DIVISION_FACTOR_x1000 256000ULL
+
+/** Select source to be connected to timer2 */
+#define TIMER2_CLK TIMER2_CORE_CLK
+
+/** Timeout time                            */
+#define TIMER2_INTERVAL 1000ULL             // [ms]
+
+
+/** Timer2 prescaler selection (32Bit timer)
+ *
+ *   0: No prescaling
+ *   4: Divider=16
+ *   8: Divider=256
+ *  15: Divider=32.768
  *
  */
-#define TIMER1_WGM_MODE 4
+#if   (TIMER2_CLOCK_DIVISION_FACTOR_x1000 == 256000ULL)
+   #define TIMER2_PRESCALER_VALUE 8
+#elif (TIMER2_CLOCK_DIVISION_FACTOR_x1000 == 16000ULL)
+   #define TIMER2_PRESCALER_VALUE 4
+#elif (TIMER2_CLOCK_DIVISION_FACTOR_x1000 == 1000ULL)
+   #define TIMER2_PRESCALER_VALUE 0
+#elif (TIMER2_CLOCK_DIVISION_FACTOR_x1000 == 32768ULL)
+   #define TIMER2_PRESCALER_VALUE 15
+#else
+   #error Invalid TIMER2_CLOCK_DIVISION_FACTOR_x1000 value!
+#endif
+
+
+/** Timer2 load value calculation for timer initialization
+ *
+ * Depends on various clock sources connected to the timer
+ * Depends on timer Interval and divider choosen
+ */
+#if   (TIMER2_CLK == TIMER2_EXT_XTAL)
+  #define TIMER2_LOAD_VALUE_DOWNCNT                       \
+    ( (TIMER2_INTERVAL)  *  ((F_XTAL) /                   \
+    ( (TIMER2_CLOCK_DIVISION_FACTOR_x1000) ) ) )
+#elif (TIMER2_CLK == TIMER2_INT_OSC)
+  #define TIMER2_LOAD_VALUE_DOWNCNT                       \
+    ( (TIMER2_INTERVAL)  *  ((F_OSC) /                    \
+    ( (TIMER2_CLOCK_DIVISION_FACTOR_x1000) ) ) )
+#elif (TIMER2_CLK == TIMER2_CORE_CLK)
+  #define TIMER2_LOAD_VALUE_DOWNCNT                       \
+    ( (TIMER2_INTERVAL)  *  ((F_UCLK) /                   \
+    ( (TIMER2_CLOCK_DIVISION_FACTOR_x1000) ) ) )
+#endif
+
+#if (TIMER2_LOAD_VALUE_DOWNCNT < 0x000000FFULL)
+  #error TIMER2_LOAD_VALUE_DOWNCNT: too low
+#endif
+#if (TIMER2_LOAD_VALUE_DOWNCNT > 0xFF000000ULL)
+  #error TIMER2_LOAD_VALUE_DOWNCNT: too high
+#endif
+
+#define TIMER2_LOAD_VALUE_UPCNT (0xFFFFFFFFULL - TIMER2_LOAD_VALUE_DOWNCNT)
+
+/**  Defines for TIMER3 (WatchDog-Timer)
+ *
+ *
+ */
+
+/** Select a valid clock divider depending on interval and clock source */
+#define TIMER3_CLOCK_DIVISION_FACTOR 1ULL
+
+/** Timeout time                            */
+#define TIMER3_INTERVAL 50ULL              // [ms]
+
+/** Timer3 prescaler selection (16Bit timer)
+ *
+ *   0: No prescaling
+ *   1: Divider=16
+ *   2: Divider=256
+ *
+ */
+#if   (TIMER3_CLOCK_DIVISION_FACTOR == 256ULL)
+# define TIMER3_PRESCALER_VALUE 2
+#elif (TIMER3_CLOCK_DIVISION_FACTOR == 16ULL)
+# define TIMER3_PRESCALER_VALUE 1
+#elif (TIMER3_CLOCK_DIVISION_FACTOR == 1ULL)
+# define TIMER3_PRESCALER_VALUE 0
+#else
+# error Invalid TIMER3_CLOCK_DIVISION_FACTOR value!
+#endif
+
+/** Timer3 load value calculation for timer initialization
+ *
+ * Depends on timer Interval and divider choosen
+ */
+#define TIMER3_LOAD_VALUE_DOWNCNT                  \
+  ( (TIMER3_INTERVAL)  *  ((F_OSC) /               \
+  ( (TIMER3_CLOCK_DIVISION_FACTOR) * 1000ULL ) ) )
+
+/** Timer3 load value calculation for timer initialization
+ *
+ * Depends on the timer Interval and divider
+ *
+ */
+#if (TIMER3_LOAD_VALUE_DOWNCNT < 0x00FFULL)
+# error TIMER3_LOAD_VALUE_DOWNCNT: too low
+#endif
+#if (TIMER3_LOAD_VALUE_DOWNCNT > 0xFF00ULL)
+# error TIMER3_LOAD_VALUE_DOWNCNT: too high
+#endif
+
+#define TIMER3_LOAD_VALUE_UPCNT (0xFFFFULL - TIMER3_LOAD_VALUE_DOWNCNT)
 
 
 #endif /* !TIMER1_CONSTANTS_H */

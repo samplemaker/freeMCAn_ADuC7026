@@ -27,29 +27,28 @@
  * @{
  */
 
-
+#include "aduc7026.h"
 #include "data-table.h"
 #include "timer1-constants.h"
 #include "timer1-measurement.h"
-
-
-/** Timer1 compare output mode for channel A for non-PWM mode:
- *
- * Toggle LED pin 19 on ATmega644 DIP40 on compare match.
- */
-#define TIMER1_COMA_MODE 1
-
+#include "wdt-softreset.h"
+#include "packet-comm.h"
 
 /** Set up our IO pins */
-void timer1_simple_io_init(void)
-  __attribute__((naked))
-  __attribute__((section(".init5")));
-void timer1_simple_io_init(void)
+static
+void __init timer1_simple_io_init(void)
 {
-  /* Configure "measurement in progress LED"                      */
-  /* configure ATmega644 pin 19 as an output */
-  DDRD |= (_BV(DDD5));
+ /* measurement in progress LED */
+  /* configure P4.1 as GPIO: */
+  GP4CON |= _FS(GP_SELECT_FUNCTION_Px1, MASK_00);
+  /* configure P4.1 as output */
+  GP4DAT |= _BV(GP_DATA_DIRECTION_Px1);
 }
+/** Put function into init section, register function pointer and
+ *  execute function at start up
+ */
+register_init5(timer1_simple_io_init);
+
 
 
 /** Configure 16 bit timer to trigger an ISR every second
@@ -67,42 +66,28 @@ void timer1_init(const uint16_t timer1_value)
     wdt_soft_reset();
   }
 
-  /* Compare match value into output compare reg. A               */
-  OCR1A = TIMER1_COMPARE_MATCH_VAL;
+ /** Configure 32 bit Timer2 (used for timer base) */
 
-  /* Configure and start timer */
-  TCCR1A =
-    BITF(TIMER1_COMA_MODE, COM1A, 0) |
-    BITF(TIMER1_COMA_MODE, COM1A, 1) |
-    BITF(TIMER1_WGM_MODE,  WGM1, 0) |
-    BITF(TIMER1_WGM_MODE,  WGM1, 1);
-  TCCR1B =
-    BITF(TIMER1_PRESCALER,  CS1, 0) |
-    BITF(TIMER1_PRESCALER,  CS1, 1) |
-    BITF(TIMER1_PRESCALER,  CS1, 2) |
-    BITF(TIMER1_WGM_MODE,  WGM1, 2) |
-    BITF(TIMER1_WGM_MODE,  WGM1, 3);
+  /* - Select appropriate clock source
+   * - Run timer in periodic mode (automatic reload from T2LD)
+   */
+  T2CON |= (_FS(TIMER2_PRESCALER, TIMER2_PRESCALER_VALUE) |
+            _FS(TIMER2_CLKSOURCE, TIMER2_CLK)              |
+            _BV(TIMER2_MODE) );
+  /* Force downcount */
+  T2CON &= ~_BV(TIMER2_COUNT_DIR);
 
-  /* output compare match A interrupt enable                      */
-  TIMSK1 |= _BV(OCIE1A);
+  /* Timer compare match value */
+  T2LD = TIMER2_LOAD_VALUE_DOWNCNT;
+  T2CON |= _BV(TIMER2_ENABLE);
+  /* Enable interrupt flag for Timer2 */
+  IRQEN |= _BV(INT_WAKEUP_TIMER2);
 }
 
 
-/** Configure 16bit timer to trigger an ISR four times as fast ast timer1_init() does.
- *
- * You MUST have run timer1_init() some time before running timer1_init_quick().
- */
 void timer1_init_quick(void)
 {
-  const uint8_t old_tccr1b = TCCR1B;
-  /* pause the clock */
-  TCCR1B &= ~(_BV(CS12) | _BV(CS11) | _BV(CS10));
-  /* faster blinking */
-  OCR1A = TIMER1_COMPARE_MATCH_VAL / 4;
-  /* start counting from 0, needs clock to be paused */
-  TCNT1 = 0;
-  /* unpause the clock */
-  TCCR1B = old_tccr1b;
+ // \todo
 }
 
 

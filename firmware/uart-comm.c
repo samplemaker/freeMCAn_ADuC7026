@@ -28,93 +28,106 @@
  * @{
  */
 
-#include <avr/io.h>
-#include <stdint.h>
 
-#include "uart-comm.h"
+#include <stdint.h>
+#include "aduc7026.h"
+#include "reset.h"
 #include "uart-defs.h"
+#include "uart-comm.h"
 #include "checksum.h"
 
 
-/* We want to avoid switching to double speed mode as long as
- * possible, as in normal speed mode the receiver will sample more
- * often than in double speed mode.
- *
- * On the other hand, the relative baud rate error (depending
- * on F_CPU) might turn out to be less in double speed mode.
- *
- * So double speed works at 115200 with F_CPU = 16MHz on my system
- * but not single speed. -ndim
- *
- * (-> 2.1% error) may work but in general an error < 1% 
- * is suggested -samplemaker
- */
+/* Normal 450 UART Baud Rate Generation */
+#define UART_DL ((F_HCLK) / (2ULL * 16ULL * (UART_BAUDRATE)))
+#define BAUD_REAL_DL ((F_HCLK) / (2ULL * 16ULL * (UART_DL)))
+#define BAUD_ERROR ((BAUD_REAL_DL * 1000ULL) / (UART_BAUDRATE))
 
-/* Check settings in asynchronous normal speed mode */
-#define UBRR_VALUE ((F_CPU+UART_BAUDRATE*8UL)/(UART_BAUDRATE*16UL)-1UL)
-#define BAUD_REAL (F_CPU/(16UL*(UBRR_VALUE+1UL)))
-#define BAUD_ERROR ((BAUD_REAL*1000UL)/UART_BAUDRATE)
-
-/* If baud error is too high revert to double speed mode */
+/* If baud error is too high revert to FD */
 #if ((BAUD_ERROR<(1000-UART_RELTOL)) || (BAUD_ERROR>(1000+UART_RELTOL)))
-  #define USE_2X 1
-  /* #warning baud error too high: reverting to asynchronous double speed mode */
+  #define USE_FRACTIONAL_DIVIDER 1
+  #warning baud error exceeds UART_RELTOL => reverting to fractional divider
 #else
-  #define USE_2X 0
+  #define USE_FRACTIONAL_DIVIDER 0
 #endif
 
-/* Check asynchronous double speed mode if requested */
-#if USE_2X
-#undef UBRR_VALUE
-#undef BAUD_REAL
+/* Check fractional divider if requested */
+#if USE_FRACTIONAL_DIVIDER
 #undef BAUD_ERROR
-#define UBRR_VALUE ((F_CPU+UART_BAUDRATE*4UL)/(UART_BAUDRATE*8UL)-1UL)
-#define BAUD_REAL (F_CPU/(8UL*(UBRR_VALUE+1UL)))
-#define BAUD_ERROR ((BAUD_REAL*1000UL)/UART_BAUDRATE)
+#define UART_FBM_VALUE (1ULL)
+#define UART_FBN_VALUE (((2048ULL * ((BAUD_REAL_DL) - (UART_FBM_VALUE) * \
+                         (UART_BAUDRATE))) / (UART_BAUDRATE)) & 0x7FF)
 
-/* If nothing helps give up */
+#define BAUD_REAL_FD ((2048ULL * (BAUD_REAL_DL)) /                       \
+                      (2048ULL * (UART_FBM_VALUE) + (UART_FBN_VALUE)))
+#define BAUD_ERROR ((BAUD_REAL_FD * 1000UL) / (UART_BAUDRATE))
+
 #if ((BAUD_ERROR<(1000-UART_RELTOL)) || (BAUD_ERROR>(1000+UART_RELTOL)))
-  #error baud error is too high also in UART asynchronous double speed mode!
+  #error baud error is too high although using fractional divider
 #endif
+
 
 #endif
 
-#define UBRRL_VALUE (UBRR_VALUE & 0xff)
-#define UBRRH_VALUE (UBRR_VALUE >> 8)
+#define UARTL_DL (UART_DL & 0xff)
+#define UARTH_DL (UART_DL >> 8)
 
 
 static checksum_accu_t cs_accu_send;
 static checksum_accu_t cs_accu_recv;
 
 
-/** USART0 initialisation to 8 databits no parity
+/** UART initialisation to 8 databits no parity
  *
  */
-void uart_init(void)
-  __attribute__ ((naked))
-  __attribute__ ((section(".init5")));
-void uart_init(void)
+static
+void __init uart_init(void)
 {
-  /* set baud rate */
+  /* set up port pin P1.1 (TX) as SOUT
+   * set up port pin P1.0 (RX) as SIN
+   */
+  GP1CON |= (_FS(GP_SELECT_FUNCTION_Px1, MASK_01) |
+             _FS(GP_SELECT_FUNCTION_Px0, MASK_01) );
+  /* configure SOUT as output */
+  GP1DAT |= _BV(GP_DATA_DIRECTION_Px1);
+  /* configure SIN as input and disable pull up */
+  GP1PAR &= ~_BV(GP_PAR_PULL_UP_Px0);
+  GP1DAT &= ~_BV(GP_DATA_DIRECTION_Px0);
 
-  UBRR0H=UBRRH_VALUE;
-  UBRR0L=UBRRL_VALUE;
+  /* operate in normal mode, no parity, 1 stop bit */
+  COMCON0 &= ~(_BV(UART_BRK) | _BV(UART_PEN) | _BV(UART_STOP));
+  /* word length: 8 bits */
+  COMCON0 |= (_BV(UART_WLS0) | _BV(UART_WLS1));
+  /* normal mode no modem */
+  COMCON1 &= ~_BV(UART_LOOPBACK);
 
-  /* Asynchronous (no clock is used); 8 databit with no parity bit (8N1
-   * frame format) */
-  UCSR0C = (_BV(UCSZ01) | _BV(UCSZ00));
+  #if USE_FRACTIONAL_DIVIDER
+    COMDIV2 &= ~_BV(UART_FBM1);
+    COMDIV2 |= (_BV(UART_FBM0)                |
+                _FS(UART_FBN, UART_FBN_VALUE) |
+                _BV(UART_FBEN) );
+  #else
+    COMDIV2 &= ~_BV(UART_FBEN);
+  #endif
 
-  /* Enable transmit and receive */
-  UCSR0B = (_BV(TXEN0) | _BV(RXEN0));
-
-  /* Clear or set U2X0 baudrate doubling bit, depending on
-   * UART_BAUDRATE. Also disable multi device mode, and do not clear
-   * the TXC0 bit (you would *clear* TXC0 bit by writing a 1). */
-  UCSR0A = (USE_2X<<U2X0);
+  /* 1.) set baud rate:
+   *     register for access to divisor latch
+   *     DIV0 & DIV1 registers and write divider */
+  COMCON0 |= _BV(UART_DLAB);
+  COMDIV0 = UARTL_DL;
+  COMDIV1 = UARTH_DL;
+  /* 2.) reset access to COMRX/COMTX receive and transmit
+   *     registers by default (memory share with COMDIVn) */
+  COMCON0 &= ~_BV(UART_DLAB);
 
   cs_accu_send = checksum_reset();
   cs_accu_recv = checksum_reset();
 }
+
+/** Put function into init section, register function pointer and
+ *  execute function at start up
+ */
+register_init5(uart_init);
+
 
 
 /** Send checksum */
@@ -134,11 +147,11 @@ void uart_send_checksum_reset(void)
 /** Write character to UART */
 void uart_putc(const char c)
 {
-    /* poll until output buffer is empty */
-    loop_until_bit_is_set(UCSR0A, UDRE0);
+    /* poll until bit is set and output buffer is empty */
+    loop_until_bit_is_set(COMSTA0, UART_TEMT);
 
     /* put the char */
-    UDR0 = c;
+    COMTX = c;
 
     /* update the checksum state with c */
     cs_accu_send = checksum_update(cs_accu_send, c);
@@ -157,16 +170,14 @@ void uart_putb(const void *buf, size_t len)
 /** Read a character from the UART */
 char uart_getc()
 {
-    /* Poll til a character is inside the input buffer */
-    loop_until_bit_is_set( UCSR0A, RXC0 );
+    /* Poll til bit is set and char is in input buffer */
+    loop_until_bit_is_set( COMSTA0, UART_DR );
 
-    /* Get the character */
-    const char ch = UDR0;
+    /* Get the character and clear the bit */
+    const char ch = COMRX;
 
     return ch;
 }
-
-
 
 
 /** Check whether received byte c and matches the checksum

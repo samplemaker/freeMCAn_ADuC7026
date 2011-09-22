@@ -77,18 +77,19 @@
  * @{
  */
 
+/*
 #include <avr/io.h>
 #include <avr/interrupt.h>
-
 #include <avr/wdt.h>
 #include <avr/eeprom.h>
+*/
 
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 
+#include "aduc7026.h"
 #include "compiler.h"
-#include "global.h"
 #include "uart-comm.h"
 #include "uart-printf.h"
 #include "frame-comm.h"
@@ -101,13 +102,15 @@
 #include "main.h"
 #include "data-table.h"
 #include "switch.h"
+#include "flash.h"
+#include "int.h"
 
 /* Only try compiling for supported MCU types */
-#if defined(__AVR_ATmega644__) || defined(__AVR_ATmega644P__)
+/*#if defined(__AVR_ATmega644__) || defined(__AVR_ATmega644P__)
 #else
 # error Unsupported MCU!
 #endif
-
+*/
 
 /** Define static string in a single place */
 const char PSTR_INVALID_EEPROM_DATA[] = "Invalid EEPROM data";
@@ -124,27 +127,16 @@ const char PSTR_READY[]               = "READY";
 /** Define static string in a single place */
 const char PSTR_RESET[]               = "RESET";
 
-/** Define AVR device fuses.
- *
- * CAUTION: These values are highly device dependent.
- *
- * We avoid C99 initializers to make sure that we do initialize each
- * and every fuse value in the structure. */
-FUSES = {
-  /* 0xd7 = low */ (FUSE_SUT1 & FUSE_CKSEL3),
-  /* 0x99 = high */ (FUSE_JTAGEN & FUSE_SPIEN & FUSE_BOOTSZ1 & FUSE_BOOTSZ0),
-  /* 0xfc = extended */ (FUSE_BODLEVEL1 & FUSE_BODLEVEL0)
-};
-
 
 /** Configure unused pins */
-void main_io_init_unused_pins(void)
-  __attribute__ ((naked))
-  __attribute__ ((section(".init5")));
-void main_io_init_unused_pins(void)
+void __init main_io_init_unused_pins(void)
 {
   /** \todo configure unused pins */
 }
+/** Put function into init section, register function pointer and
+ *  execute function at start up
+ */
+register_init5(main_io_init_unused_pins);
 
 
 /**
@@ -152,8 +144,8 @@ void main_io_init_unused_pins(void)
  * param set.
  */
 personality_param_t pparam_sram;
-personality_param_t pparam_eeprom EEMEM;
-BARE_COMPILE_TIME_ASSERT(sizeof(pparam_sram) == sizeof(pparam_eeprom));
+ /* personality_param_t pparam_eeprom;
+BARE_COMPILE_TIME_ASSERT(sizeof(pparam_sram) == sizeof(pparam_eeprom)); */
 
 
 /** Send value table packet to controller via serial port (layer 3).
@@ -222,8 +214,22 @@ void send_eeprom_params_in_sram(void)
 
 void params_copy_from_eeprom_to_sram(void)
 {
+  /* fetch data from flash */
+  char *param_eeprom;
+  uint16_t num_chars;
+  eepflash_read((char **)&param_eeprom,
+                &num_chars, BLOCKID_0);
+  /* copy data from flash to ram */
+  char *p_dst = (char *)&pparam_sram;
+  const char *p_end = (char *) (param_eeprom + num_chars);
+  while (param_eeprom != p_end)
+    *(p_dst++) = *(param_eeprom++);
+
+/* \todo
+  dirty hack - implement "eeprom_read_block" in flash.c !
   eeprom_read_block(&pparam_sram, &pparam_eeprom,
                     sizeof(pparam_sram));
+*/
 }
 
 
@@ -271,7 +277,9 @@ firmware_state_t firmware_handle_measurement_finished(const firmware_state_t pst
   switch (pstate) {
   case STP_MEASURING:
     /* end measurement */
-    cli();
+/*    cli();*/
+    disable_IRQs_usermode();
+
     on_measurement_finished();
     send_table(PACKET_VALUE_TABLE_DONE);
     return STP_DONE;
@@ -345,8 +353,14 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
     case FRAME_CMD_PARAMS_TO_EEPROM:
       /* The param length has already been checked by the frame parser */
       send_state("PARAMS_TO_EEPROM");
+
+/* \todo
       eeprom_update_block(&pparam_sram, &pparam_eeprom,
                           sizeof(pparam_eeprom));
+*/
+      eepflash_write((char *)&pparam_sram,
+                     sizeof(pparam_sram), BLOCKID_0);
+
       send_state(PSTR_READY);
       return STP_READY;
       break;
@@ -410,7 +424,9 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
       break;
     case FRAME_CMD_ABORT:
       send_state(PSTR_DONE);
-      cli();
+  /*    cli();*/
+      disable_IRQs_usermode();
+
       on_measurement_finished();
       send_table(PACKET_VALUE_TABLE_ABORTED);
       send_state(PSTR_DONE);
@@ -514,15 +530,16 @@ void main_event_loop(void)
   firmware_state_t pstate = STP_READY;
 
   /* Globally enable interrupts */
-  sei();
+/*  sei();*/
+  enable_IRQs_usermode();
 
   /* Firmware main event loop */
   while (1) {
 
     /* check for "measurement finished" event */
-    if (GF_ISSET(GF_MEASUREMENT_FINISHED)) {
+    if (measurement_finished) {
       pstate = firmware_handle_measurement_finished(pstate);
-      GF_CLEAR(GF_MEASUREMENT_FINISHED);
+      measurement_finished = 0;
       continue;
     }
 
@@ -533,7 +550,7 @@ void main_event_loop(void)
     }
 
     /* check whether a byte has arrived via UART */
-    if (bit_is_set(UCSR0A, RXC0)) {
+    if (bit_is_set( COMSTA0, UART_DR )) {
       const char ch = uart_getc();
       const uint8_t byte = (uint8_t)ch;
 

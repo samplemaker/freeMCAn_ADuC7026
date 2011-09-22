@@ -31,13 +31,8 @@
 
 #include <stdint.h>
 
-#include <avr/io.h>
-#include <avr/interrupt.h>
 
-#include "global.h"
-#include "packet-comm.h"
-#include "wdt-softreset.h"
-
+extern volatile uint8_t measurement_finished;
 
 /** timer counter
  *

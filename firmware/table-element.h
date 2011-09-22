@@ -62,16 +62,7 @@ typedef
 inline static
 void table_element_zero(volatile freemcan_uint24_t *dest)
 {
-  asm("\n\t"
-      /* store 24 bit value zero */
-      "std %a[preg]+2, __zero_reg__\n\t"                    /* 2 cycles */
-      "std %a[preg]+1, __zero_reg__\n\t"                    /* 2 cycles */
-      "st  %a[preg], __zero_reg__\n\t"                      /* 2 cycles */
-      : /* output operands */
-      : /* input operands */
-        [preg] "b" (dest)
-        /* no clobber */
-      );
+  // \todo
 }
 
 
@@ -79,51 +70,44 @@ inline static
 void table_element_copy(volatile freemcan_uint24_t *dest,
                         volatile freemcan_uint24_t *source)
 {
-  asm("\n\t"
-      /* load and store 24 bit value in units of 8 bits */
-      "ld  __tmp_reg__, %a[src]\n\t"              /* 2 cycles */
-      "st  %a[dst], __tmp_reg__\n\t"              /* 2 cycles */
-      "ldd __tmp_reg__, %a[src]+1\n\t"            /* 2 cycles */
-      "std %a[dst]+1, __tmp_reg__\n\t"            /* 2 cycles */
-      "ldd __tmp_reg__, %a[src]+2\n\t"            /* 2 cycles */
-      "std %a[dst]+2, __tmp_reg__\n\t"            /* 2 cycles */
-      : /* output operands */
-      : /* input operands */
-        [dst] "b" (dest),
-        [src] "b" (source)
-        /* no clobbers */
-      );
+  // \todo
 }
 
 
 inline static
 void table_element_inc(volatile freemcan_uint24_t *element)
 {
-  uint16_t accu;
+  register uint32_t accu;
+  register uint32_t tmp_reg;
   asm volatile("\n\t"
-               /* load 24 bit value */
-               "ld  %A[accu],    %a[elem]\n\t"             /* 2 cycles */
-               "ldd %B[accu],    %a[elem]+1\n\t"           /* 2 cycles */
-               "ldd __tmp_reg__, %a[elem]+2\n\t"           /* 2 cycles */
-
-               /* increment 24 bit value */
-               "adiw %[accu], 1\n\t"                       /* 2 cycles for word */
-               "adc  __tmp_reg__, __zero_reg__\n\t"        /* 1 cycle */
-
-               /* store 24 bit value */
-               "st  %a[elem],   %A[accu]\n\t"              /* 2 cycles */
-               "std %a[elem]+1, %B[accu]\n\t"              /* 2 cycles */
-               "std %a[elem]+2, __tmp_reg__\n\t"           /* 2 cycles */
-
+               /* load three bytes with respect to endianess */
+               "eor   %[tmp_reg], %[tmp_reg]          \n\t"
+               "ldrb  %[accu],    [%[elem], #2]       \n\t"
+               "orr   %[tmp_reg], %[accu] ,LSL #16    \n\t"
+               "ldrb  %[accu],    [%[elem], #1]       \n\t"
+               "orr   %[tmp_reg], %[accu] ,LSL #8     \n\t"
+               "ldrb  %[accu],    [%[elem]]           \n\t"
+               "orr   %[tmp_reg], %[accu]             \n\t"
+               /* increase by one */
+               "add   %[tmp_reg], %[tmp_reg], #1      \n\t"
+               /* store three bytes with respect to endianess */
+               "strb  %[tmp_reg], [%[elem]]           \n\t"
+               "mov   %[tmp_reg], %[tmp_reg] ,LSR #8  \n\t"
+               "strb  %[tmp_reg], [%[elem], #1]       \n\t"
+               "mov   %[tmp_reg], %[tmp_reg] ,LSR #8  \n\t"
+               "strb  %[tmp_reg], [%[elem], #2]       \n\t"
                : /* output operands */
                  /* let compiler decide which registers to clobber */
-                 [accu] "=&r" (accu)
-
+                 [accu] "=&r" (accu),
+                 /* temporary register */
+                 [tmp_reg] "=&r" (tmp_reg)
                : /* input operands */
-                 [elem] "b" (element)
-
-                 /* : let compiler decide which regs to clobber via register var accu var */
-               );
+                 [elem] "r" (element)
+                 /* inform that we change the condition code flag */
+                 /* : "cc"*/
+                 /* store all cached values before and reload them after */
+                    : "memory"
+  );
 }
 
 
@@ -145,32 +129,7 @@ inline static
 uint8_t table_element_cmp_eq(volatile freemcan_uint24_t *element,
                              const uint32_t value)
 {
-  uint8_t result_bool;
-  asm volatile(
-        "\n\t"
-	/* presume non-equal, i.e. false */
-        "	eor	%[result],    %[result]\n"
-
-        "	ldd	__tmp_reg__,  %a[elem]+2\n"
-        "	cp	__tmp_reg__,  %C[valu]\n"
-
-        "	ldd	__tmp_reg__,  %a[elem]+1\n"
-        "	cpc	__tmp_reg__,  %B[valu]\n"
-
-        "	ld	__tmp_reg__,  %a[elem]\n"
-        "	cpc	__tmp_reg__,  %A[valu]\n"
-
-        "	brne	1f\n"
-        "	ldi	%[result],    1\n"
-        "1:\t\n"
-
-        : /* output operands */
-          [result] "=&r" (result_bool)
-        : /* input operands */
-          [elem] "b" (element),
-          [valu] "r" (value)
-               );
-  return result_bool;
+  // \todo
 }
 
 

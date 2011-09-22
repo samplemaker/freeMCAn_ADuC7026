@@ -34,12 +34,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-
-#include "global.h"
-#include "uart-comm.h"
 #include "frame-comm.h"
-#include "packet-comm.h"
-#include "data-table.h"
 
 
 /** Send state message packet to host (layer 3).

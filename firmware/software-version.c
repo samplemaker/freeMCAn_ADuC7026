@@ -31,12 +31,11 @@
 
 #include "packet-comm.h"
 #include "git-version.h"
+#include "defs.h"
 
 
-void software_version_send(void)
-  __attribute__ ((naked))
-  __attribute__ ((section(".init8")));
-void software_version_send(void)
+static
+void __init software_version_send(void)
 {
 
 /*  
@@ -44,8 +43,19 @@ void software_version_send(void)
   send_text((__extension__({static char __c[] __attribute__((__progmem__)) =
             ("freemcan " ""); &__c[0];})));
 */
-  send_text("freemcan " GIT_VERSION);
+  // \todo
+
+  //send_text("freemcan" GIT_VERSION);
+send_text("freemcan");
+  //send_text(GIT_VERSION);
 }
+
+/** Put function into init section, register function pointer and
+ *  execute function at start up
+ */
+register_init8(software_version_send);
+
+
 
 /** @} */
 
