@@ -32,8 +32,6 @@
 #include <stdint.h>
 
 
-extern volatile uint8_t measurement_finished;
-
 /** timer counter
  *
  * Initialized once by main() with value received from host

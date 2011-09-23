@@ -35,9 +35,6 @@
 
 volatile uint16_t timer1_count;
 
-/* global value to export which controls program flow (start and stop) */
-volatile uint8_t measurement_finished;
-
 volatile uint16_t orig_timer1_count;
 
 

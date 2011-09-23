@@ -41,8 +41,11 @@ typedef struct {
   uint8_t params[MAX_PARAM_LENGTH];
 } personality_param_t;
 
-
 extern personality_param_t pparam_sram;
+
+
+/** Global flag controlling the measurement in progress flow */
+extern volatile uint8_t measurement_finished;
 
 
 /** Notification function called when measurement has finished.

@@ -128,6 +128,11 @@ const char PSTR_READY[]               = "READY";
 const char PSTR_RESET[]               = "RESET";
 
 
+/** Global flag controlling the measurement in progress flow */
+volatile uint8_t measurement_finished;
+
+
+
 /** Configure unused pins */
 void __init main_io_init_unused_pins(void)
 {
