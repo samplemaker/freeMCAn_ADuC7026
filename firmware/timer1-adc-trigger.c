@@ -28,10 +28,9 @@
  */
 
 
-/** Make sure we use the sub 1 second timer resolution */
-#define TIMER1_SUB_1SEC
+/* #define TIMEBASE */
 
-#include "global.h"
+#include "aduc7026.h"
 #include "main.h"
 #include "data-table.h"
 #include "perso-adc-int-global.h"
@@ -74,51 +73,15 @@ volatile uint16_t orig_skip_samples;
 volatile uint16_t skip_samples;
 
 
-/** ADC trigger source
- *
- *   0 free running mode
- *   2 external INT0
- *   5 timer1 compare match B
- *   ...
- */
-#define ADC_TRIGGER_SOURCE 5
-
-
-/** Timer1 compare output mode for channel A for non-PWM mode:
- *
- * Toggle LED pin 19 on ATmega644 DIP40 on compare match A.
- *
- *   0  OCnA disconnected
- *   1  toggle OCnA on compare match
- *   2  clear OCnA on compare match
- *   3  set OCnA on compare match
- */
-#define TIMER1_COMA_MODE 1
-
-
-/** Timer1 compare output mode for channel B for non-PWM mode:
- *
- * Toggle pin 18 on ATmega644 DIP40 on compare match B. Conflicts with
- * Pollin board usage for switch 3!
- */
-#define TIMER1_COMB_MODE 1
-
-
 /** Set up our IO pins */
 void timer1_adc_trigger_io_init(void)
-  __attribute__((naked))
-  __attribute__((section(".init5")));
-void timer1_adc_trigger_io_init(void)
 {
-  /* Toggled pin on port PD4 on compare match B. This is ATmega644
-   * DIP40 pin 18.  Conflicts with Pollin board usage for switch 3!
-   */
-  DDRD |= (_BV(DDD4));
-
-  /* Configure "measurement in progress LED"                      */
-  /* configure ATmega644 pin 19 as an output */
-  DDRD |= (_BV(DDD5));
+   /* \todo */
 }
+/** Put function into init section, register function pointer and
+ *  execute function at start up
+ */
+register_init5(timer1_adc_trigger_io_init);
 
 
 /** Configure 16 bit timer to trigger an ISR every 0.1 second
@@ -127,39 +90,22 @@ void timer1_adc_trigger_io_init(void)
  */
 void timer1_init(void)
 {
-  /* Derive sample rate (time base) as a multiple of the base
-     compare match value for 0.1sec. Write to output compare
-     reg. A                                                       */
-  OCR1A = (TIMER1_COMPARE_MATCH_VAL);
+  /** configure 32 bit Timer1  */
 
-  /* The ADC can only be triggered via compare register B.
-     Set the trigger point (compare match B) to 50% of
-     compare match A                                              */
-  OCR1B = (TIMER1_COMPARE_MATCH_VAL >> 1);
+  /* - Select appropriate clock source
+   * - Run timer in periodic mode (automatic reload from T1LD)
+   */
+  T1CON |= (_FS(TIMER1_PRESCALER, TIMER1_PRESCALER_VALUE) |
+            _FS(TIMER1_CLKSOURCE, TIMER1_CLK)             |
+            _BV(TIMER1_MODE) );
+  /* Force downcount, no capture */
+  T1CON &= ~ (_BV(TIMER1_COUNT_DIR) | _BV(TIMER1_CAPTURE_ENABLE));
 
-  /* Configure and start timer */
-  TCCR1A =
-    BITF(TIMER1_COMA_MODE, COM1A, 0) |
-    BITF(TIMER1_COMA_MODE, COM1A, 1) |
-    BITF(TIMER1_COMB_MODE, COM1B, 0) |
-    BITF(TIMER1_COMB_MODE, COM1B, 1) |
-    BITF(TIMER1_WGM_MODE,  WGM1, 0) |
-    BITF(TIMER1_WGM_MODE,  WGM1, 1);
-  TCCR1B =
-    BITF(TIMER1_PRESCALER,  CS1, 0) |
-    BITF(TIMER1_PRESCALER,  CS1, 1) |
-    BITF(TIMER1_PRESCALER,  CS1, 2) |
-    BITF(TIMER1_WGM_MODE,  WGM1, 2) |
-    BITF(TIMER1_WGM_MODE,  WGM1, 3);
-
-  /* we do not need to jump to any ISRs since we do everything
-     inside the ADC callback function                             */
-
-  /* output compare match B interrupt enable                      */
-  //TIMSK1 |= BIT(OCIE1B);
-
-  /* output compare match A interrupt enable                      */
-  //TIMSK1 |= _BV(OCIE1A);
+  /* Timer compare match value */
+  T1LD = TIMER1_LOAD_VALUE_DOWNCNT;
+  T1CON |= _BV(TIMER1_ENABLE);
+  /* Enable interrupt flag for Timer1 */
+  IRQEN |= _BV(INT_TIMER1);
 }
 
 
@@ -180,53 +126,42 @@ uint16_t get_duration(void)
 inline static
 void adc_init(void)
 {
-  uint16_t result;
+  /* - Set clock speed (default value is 0b001 = fADC/2)
+   * - ADC acquisition time (default value is 0b10 = eight clocks)
+   * - Power control: set ADC to normal mode
+   * - Set conversion mode:
+   *     Single ended (default): 0b00
+   *     (Vin- can be left floating)
+   *     Pseudo differential   : 0b10
+   *     (Ground must be connected to ADCNEG (Pin 9))
+   * - Choose trigger source :
+   *     #CONVstart:       MASK_000
+   *     TIMER1:           MASK_001
+   *     TIMER0:           MASK_010
+   *     SOFTWARE SINGLE:  MASK_011
+   *     SOFTWARE CONT:    MASK_100
+   *     PLA:              MASK_101
+   */
+  ADCCON = (_FS(ADC_CLOCK_SPEED, MASK_001)     |
+            _FS(ADC_ACQUISITION_TIME, MASK_10) |
+            _BV(ADC_POWER_CONTROL)             |
+            _FS(ADC_CONVERSION_MODE, MASK_00)  |
+            _FS(ADC_TRIGGER_SOURCE, MASK_001)    );
+  /* Use ADCbusy pin (NOTE: Conflicts with olimex board switch!)
+   * ADCCON |= _BV(ADC_ENABLE_ADCBUSY);
+   */
 
-  ADMUX =
-    /* select voltage reference: 0: external AREF Pin 32 as reference */
-    BITF(0, REFS, 1) |
-    BITF(0, REFS, 0) |
-    /* ADC input channel number: PIN 40 ADC0 -> ADMUX=0 */
-    BITF(0, MUX, 4) |
-    BITF(0, MUX, 3) |
-    BITF(0, MUX, 2) |
-    BITF(0, MUX, 1) |
-    BITF(0, MUX, 0) |
-    0;
-
-  /* ADC Control and Status Register A */
-  ADCSRA =
-    /* enable ADC & configure IO-Pins to ADC (ADC ENable) */
-    _BV(ADEN) |
-    BITF(ADC_PRESCALER, ADPS, 2) |
-    BITF(ADC_PRESCALER, ADPS, 1) |
-    BITF(ADC_PRESCALER, ADPS, 0) |
-    0;
-
-  /* dummy read out (first conversion takes some time) */
-  /* software triggered AD-Conversion */
-  ADCSRA |= _BV(ADSC);
-
-  /* wait until conversion is complete */
-  loop_until_bit_is_clear(ADCSRA, ADSC);
-
-  /* clear returned AD value, other next conversion value is not ovrtaken */
-  result = ADCW;
-
-  /* Enable AD conversion complete interrupt if I-Flag in sreg is set
-   * (-> ADC interrupt enable) */
-  ADCSRA |= _BV(ADIE);
-
-  /* Configure ADC trigger source:
-   * Select external trigger trigger ADC on Compare Match B of Timer1 */
-  ADCSRB =
-    BITF(ADC_TRIGGER_SOURCE, ADTS, 2) |
-    BITF(ADC_TRIGGER_SOURCE, ADTS, 1) |
-    BITF(ADC_TRIGGER_SOURCE, ADTS, 0) |
-    0;
-
-  /* ADC auto trigger enable: ADC will be started by trigger signal */
-  ADCSRA |= _BV(ADATE);
+  /* Channel selection: ADC0 = 00000 */
+  ADCCP = _FS(ADC_PCHANNEL_SELECTION, MASK_00000);
+  /* Set bit for internal bandgap reference.
+   * external reference  otherwise but must connect a voltage reference
+   * to pin 68 (Vref) */
+  REFCON |= _BV(REF_BANDGAP_ENABLE);
+  /* Engage adc */
+  ADCCON |=  _BV(ADC_ENABLE_CONVERION);
+  /* Enable ADC IRQ */
+  IRQEN |= _BV(INT_ADC_CHANNEL);
+  /* Poll for 'result is ready':  while (!ADCSTA){};*/
 }
 
 

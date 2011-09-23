@@ -17,10 +17,10 @@ OBJ_COMMON = main.o checksum.o uart-comm.o frame-comm.o packet-comm.o software-v
 OBJ_ADC_INT_MCA = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-mca-ext-trig.o timer1-countdown-and-stop.o timer1-get-duration.o timer1-init-simple.o  
 LDFLAGS_ADC_INT_MCA =$(LDFLAGS_COMMON) -Wl,-Map=firmware-adc-int-mca.map,--cref -g
 
-OBJ_ADC_INT_MCA_TIMED = $(OBJ_ADC_INT_MCA) $(OBJ_COMMON) perso-adc-int-mca-timed-trig.o timer1-adc-trigger.o
+OBJ_ADC_INT_MCA_TIMED = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-mca-timed-trig.o timer1-adc-trigger.o
 LDFLAGS_ADC_INT_MCA_TIMED =$(LDFLAGS_COMMON) -Wl,-Map=firmware-adc-int-mca-timed.map,--cref -g
 
-OBJ_ADC_INT_TIMED_SAMPLING = $(OBJ_ADC_INT_MCA) $(OBJ_COMMON) perso-adc-int-log-timed-trig.o timer1-adc-trigger.o data-table-all-other-memory.o
+OBJ_ADC_INT_TIMED_SAMPLING = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-log-timed-trig.o timer1-adc-trigger.o data-table-all-other-memory.o
 LDFLAGS_ADC_INT_TIMED_SAMPLING =$(LDFLAGS_COMMON) -Wl,-Map=firmware-adc-int-timed-sampling.map,--cref -g
 
 ########################################################################################

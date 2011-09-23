@@ -86,7 +86,7 @@
 #define TIMER1_CLK TIMER1_CORE_CLK
 
 /** Timeout time                            */
-#define TIMER1_INTERVAL 1000ULL             // [ms]
+#define TIMER1_INTERVAL 100ULL             // [ms]
 
 
 /** TIMER1 prescaler selection (32Bit timer)

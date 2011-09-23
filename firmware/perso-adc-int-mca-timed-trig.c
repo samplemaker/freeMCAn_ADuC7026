@@ -30,16 +30,11 @@
 
 #include <stdlib.h>
 
-#include <avr/io.h>
-#include <avr/interrupt.h>
-
-
-
 /** Histogram element size */
 #define ELEMENT_SIZE_IN_BYTES 3
 
 
-#include "global.h"
+#include "aduc7026.h"
 #include "perso-adc-int-global.h"
 #include "packet-comm.h"
 #include "table-element.h"
@@ -57,9 +52,6 @@
 
 
 /** Histogram table
- *
- * ATmega644P has 4Kbyte RAM.  When using 10bit ADC resolution,
- * MAX_COUNTER==1024 and 24bit values will still fit (3K table).
  *
  * For the definition of sizeof_table, see adc-int-histogram.c.
  *
@@ -94,19 +86,14 @@ PERSONALITY("adc-int-mca-timed",
   * Actually one could implement a low pass filter here before
   * downsampling to fullfill shannons sample theoreme
   */
-ISR(ADC_vect)
-{
+void ISR_ADC(void){
   /* downsampling of analog data via skip_samples */
   if (skip_samples == 0) {
-    /* Read analog value */
-    uint16_t result = ADCW;
-    /* cut off 2, 1 or 0 LSB */
-    const uint16_t index = result >> (10-ADC_RESOLUTION);
-    /* For 24bit values, the source code looks a little more complicated
-     * than just table[index]++ (even though the generated machine
-     * instructions are not).  Anyway, we needed to move the increment
-     * into a properly defined _inc function.
-     */
+    /* starting from bit 16 the result is stored in ADCDAT.
+       reading the ADCDATA also clears flag in ADCSTA */
+    const uint32_t result =  ADCDAT;
+    /* adjust to correct size */
+    const uint16_t index = (result >> (16 + 12 - ADC_RESOLUTION));
     volatile table_element_t *element = &(table[index]);
     table_element_inc(element);
     skip_samples = orig_skip_samples;
@@ -115,18 +102,12 @@ ISR(ADC_vect)
   }
 
   /* measurement duration */
-  if (GF_IS_CLEARED(GF_MEASUREMENT_FINISHED)) {
+  if (measurement_finished) {
     timer1_count--;
     if (timer1_count == 0) {
-      GF_SET(GF_MEASUREMENT_FINISHED);
+      measurement_finished = 1;
     }
   }
-
-  /** \todo really necessary? */
-  /* Clear interrupt flag of timer1 compare match A & B manually since there is no
-     TIMER1_COMPB_vect ISR executed                                      */
-  TIFR1 |= _BV(OCF1B);
-  //TIFR1 |= _BV(OCF1A);
 }
 
 
