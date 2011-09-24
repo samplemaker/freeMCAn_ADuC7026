@@ -37,31 +37,11 @@
 
 #ifndef __ASSEMBLER__
 
-#include <stdint.h>
 
 /** Forces a softreset
  *
  */
 #define soft_reset() (RSTSTA |= _BV(RST_SOFTRST))
-
-/** Untested delay loop macro in u-seconds
- *
- * Inital 32 bit ldr from literal pool in flash takes???
- *
- * Execution from flash: In ARM mode, where instructions are 32 bits, two cycles
- * are needed to fetch any instruction when CD = 0. In thumb mode, where
- * instructions are 16 bits, one cycle is needed to fetch any instruction
- * (see p. 50 ADUC datasheet)
- */
-/*
-#define delay_us(value){ \
-  register uint32_t tmp_reg = (-2 + (((value) * (F_HCLK)) >> 2ULL) / 1000000ULL);  \
-  asm volatile( \
-        "loop:	subs	%[tmp_reg], %[tmp_reg], #1 \n\t" \
-        "	bne	loop \n\t" \
-        : : [tmp_reg] "r" (tmp_reg)  : "cc" ); \
-} \
-*/
 
 /** Alignment to next higher value
  *
@@ -101,8 +81,8 @@
 /** Functional pointer to init functions employing 1xlink register size
  *
  */
-typedef uint32_t (*initcall_t)(void);
-//typedef int (*initcall_t)(void);
+typedef void (*initcall_t)(void);
+
 
 /** Used for gathering init functions and putting their code into an
  *  extra init section

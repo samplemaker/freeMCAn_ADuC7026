@@ -66,40 +66,6 @@ void disable_IRQs_usermode(void){
 
 }
 
-
-/*
-int atomic_inc(volatile int *ptr)
-{
-  int result, modified;
- 
-  asm volatile ("1:"                "\t@ loop label"    "\n\t"
-                "ldrex %0,[%1]"     "\t@ load value"    "\n\t"
-                "add   %0,%0,#1"    "\t@ increment it"  "\n\t"
-                "strex %2,%0,[%1]"  "\t@ attempt store" "\n\t"
-                "cmp   %2,#0"       "\t@ if not atomic" "\n\t"
-                "bne   1b"          "\t@ then repeat"   "\n\t"
-                : "=&r" (result)
-                : "r" (ptr), "r" (modified)
-                : "cc", "memory"
-               );
-  return result;
-}
-
-inline static
-uint8_t atomic_swap (uint8_t value, volatile uint8_t *flag)
-{
-  register uint8_t tmp_reg;
-  asm volatile( "\n\t"
-                "swpb %[tmp_reg], %[value], [%[flag]] \n\t"
-                : [flag] "=&r" (flag),
-                  [tmp_reg] "=&r" (tmp_reg)
-                : [value] "r" (value)
-                : "memory"
-              );
- return (tmp_reg);
-}
-*/
-
 #endif
 
 /** @} */

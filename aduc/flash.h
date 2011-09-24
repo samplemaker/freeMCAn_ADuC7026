@@ -25,11 +25,13 @@
 #ifndef FLASH_H
 #define FLASH_H
 
-#define NUM_BLOCKS 3
 
-#define BLOCKID_0 0
-#define BLOCKID_1 1
-#define BLOCKID_2 2
+enum {
+  BLOCKID_0,
+  BLOCKID_1,
+  BLOCKID_2,
+  NUM_BLOCKS
+};
 
 
 void eepflash_write(const char *src, const uint16_t user_len, const uint8_t block_id);
