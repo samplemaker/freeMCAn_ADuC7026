@@ -53,7 +53,7 @@ void ISR_WAKEUP_TIMER2(void)
   /* toggle a sign */
   TOG_LED1;
 
-  if (measurement_finished) {
+  if (!measurement_finished) {
     /** We do not touch #measurement_finished ever again after setting
      * it. */
     timer1_count--;

@@ -106,6 +106,19 @@ void ISR_WATCHDOG_TIMER3(void){
 }
 
 
+/* IRQEN:  Ones indicate that the interrupt request from 
+ *         the source is unmasked (use this to enable IRQs)
+ *
+ * IRQCLR: Write ones to clear the corresponding bit in IRQEN
+ *         (use this to mask an source - do not use IRQEN!)
+ *
+ * IRQSTA: Ones indicate that the sources have an interrupt 
+ *         enabled and pending. Use this in ISR for distribution.
+ *
+ * IRQSIG: Ones indicate that the IRQ source has an interrupt 
+ *         pending (regardless wheather it is masked or not)
+ */
+
 /** \brief IRQ - handler (coordinator) function
  *
  *  Redirects IRQ processing according to the IRQ-source (except SWI)
@@ -115,34 +128,34 @@ void _irq_handler(void)
 {
   /* which interrupt is enabled and pending?
    */
-  const uint32_t irq_status = IRQSTA;
-  if (bit_is_set(irq_status, INT_ADC_CHANNEL)){
+  if (bit_is_set(IRQSTA, INT_ADC_CHANNEL)){
     ISR_ADC();
   };
-  if (bit_is_set(irq_status, INT_TIMER0)){
+  if (bit_is_set(IRQSTA, INT_TIMER0)){
     ISR_TIMER0();
     /* clear timer0 interrupt flag at eoi */
-    // T0CLRI = 0x00;
+     T0CLRI = 0x00;
   };
-  if (bit_is_set(irq_status, INT_TIMER1)){
+  if (bit_is_set(IRQSTA, INT_TIMER1)){
     ISR_TIMER1();
     /* clear timer1 interrupt flag at eoi */
-    // T1CLRI = 0x00;
+    T1CLRI = 0x00;
   };
-  if (bit_is_set(irq_status, INT_WAKEUP_TIMER2)){
+  if (bit_is_set(IRQSTA, INT_WAKEUP_TIMER2)){
     ISR_WAKEUP_TIMER2();
     /* clear timer2 interrupt flag at eoi */
-    // T2CLRI = 0x00;
+     T2CLRI = 0x00;
   };
-  if (bit_is_set(irq_status, INT_WATCHDOG_TIMER3)){
+  if (bit_is_set(IRQSTA, INT_WATCHDOG_TIMER3)){
     ISR_WATCHDOG_TIMER3();
     /* clear timer3 interrupt flag at eoi */
-    // T3CLRI = 0x00;
+    T3CLRI = 0x00;
   };
-  if (bit_is_set(irq_status, INT_EXTERNAL_IRQ0)){
+  if (bit_is_set(IRQSTA, INT_EXTERNAL_IRQ0)){
     ISR_EXTINT0();
   };
 }
+
 
 
 /** Software interrupt handler. Enabling and disabling the global I-Flag

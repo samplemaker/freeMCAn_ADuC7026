@@ -88,7 +88,6 @@ PERSONALITY("adc-int-mca",
 #if DEBUG_ADC_TRIGGER
 void ISR_WATCHDOG_TIMER3(void){
   GP1DAT ^= _BV(GP_DATA_OUTPUT_Px5);
-  T3CLRI = 0x00;
 }
 inline static void 
 adctest_init(void){
