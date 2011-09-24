@@ -28,10 +28,11 @@
  * @{
  */
 
+#include "defs.h"
+#include "init.h"
 
 #include "packet-comm.h"
 #include "git-version.h"
-#include "defs.h"
 
 
 static

@@ -29,7 +29,7 @@
 
 #include "timer1-measurement.h"
 #include "main.h"
-#include "aduc7026.h"
+#include "aduc.h"
 
 #define TOG_LED1 (GP4DAT ^= _BV(GP_DATA_OUTPUT_Px1))
 

@@ -34,7 +34,7 @@
 #define ELEMENT_SIZE_IN_BYTES 3
 
 
-#include "aduc7026.h"
+#include "aduc.h"
 #include "perso-adc-int-global.h"
 #include "packet-comm.h"
 #include "table-element.h"

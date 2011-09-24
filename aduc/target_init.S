@@ -37,8 +37,8 @@
  * @{
  */
 
-#include "aduc7026.h"
-#include "reset.h"
+#include "aduc.h"
+#include "clock.h"
 
 .extern main
 .extern _irq_handler

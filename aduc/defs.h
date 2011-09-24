@@ -28,15 +28,18 @@
 #define DEFS_H
 
 
+
 #ifdef __ASSEMBLER__
+
 #define _MMR_SIZE_32(rel_address) rel_address
 #define _MMR_SIZE_16(rel_address) rel_address
 #define _MMR_SIZE_08(rel_address) rel_address
+
 #endif
 
 
-#ifndef __ASSEMBLER__
 
+#ifndef __ASSEMBLER__
 
 /** Forces a softreset
  *
@@ -51,79 +54,109 @@
 /** Access to 8,16,32-bit numbers by absolute adress
  *
  */
-#define _MMR_RW_ABS_32(abs_address) (*(volatile uint32_t *)(abs_address))
-#define _MMR_RW_ABS_16(abs_address) (*(volatile uint16_t *)(abs_address))
-#define _MMR_RW_ABS_08(abs_address) (*(volatile uint8_t *)(abs_address))
+#define _MMR_LMA_32(abs_address) (*(volatile uint32_t *)(abs_address))
+#define _MMR_LMA_16(abs_address) (*(volatile uint16_t *)(abs_address))
+#define _MMR_LMA_08(abs_address) (*(volatile uint8_t *)(abs_address))
 
 /** Memory mapped register access relative to absolute adress conversion
  *
  */
-#define _MMR_SIZE_32(rel_address) _MMR_RW_ABS_32((rel_address) + __MMR_BASE)
-#define _MMR_SIZE_16(rel_address) _MMR_RW_ABS_16((rel_address) + __MMR_BASE)
-#define _MMR_SIZE_08(rel_address) _MMR_RW_ABS_08((rel_address) + __MMR_BASE)
+#define _MMR_SIZE_32(rel_address) _MMR_LMA_32((rel_address) + __MMR_BASE)
+#define _MMR_SIZE_16(rel_address) _MMR_LMA_16((rel_address) + __MMR_BASE)
+#define _MMR_SIZE_08(rel_address) _MMR_LMA_08((rel_address) + __MMR_BASE)
 
 /** Field macro: Sets a bitmask as specified by argument
  *
  */
 #define _FS(num_shifts, value) ((value) << (num_shifts))
 
-/** Some modified defines from avrlibc to keep avr-freemcan code compliant
+/** Some modified defines from avrlibc to keep freemcan code compliant
  *
  */
 #define _BV(bit_no) (1 << (bit_no))
+
 #define bit_is_set(mmr, bit_no) ((mmr) & _BV(bit_no))
+
 #define bit_is_clear(mmr, bit_no) (!((mmr) & _BV(bit_no)))
+
 #define loop_until_bit_is_set(mmr, bit_no) do { }   \
         while (bit_is_clear(mmr, bit_no))
+
 #define loop_until_bit_is_clear(mmr, bit_no) do { } \
         while (bit_is_set(mmr, bit_no))
 
-/** Functional pointer to init functions employing 1xlink register size
+#endif /* __ASSEMBLER__ */
+
+
+
+
+/** Binary bitmasks used in user code and assembler
  *
  */
-typedef void (*initcall_t)(void);
+#define MASK_00000            0
+#define MASK_00001            1
+#define MASK_00010            2
+#define MASK_00011            3
+#define MASK_00100            4
+#define MASK_00101            5
+#define MASK_00110            6
+#define MASK_00111            7
+#define MASK_01000            8
+#define MASK_01001            9
+#define MASK_01010            10
+#define MASK_01011            11
+#define MASK_01100            12
+#define MASK_01101            13
+#define MASK_01110            14
+#define MASK_01111            15
+#define MASK_10000            16
+#define MASK_10001            17
+#define MASK_10010            18
+#define MASK_10011            19
+#define MASK_10100            20
+#define MASK_10101            21
+#define MASK_10110            22
+#define MASK_10111            23
+#define MASK_11000            24
+#define MASK_11001            25
+#define MASK_11010            26
+#define MASK_11011            27
+#define MASK_11100            28
+#define MASK_11101            29
+#define MASK_11110            30
+#define MASK_11111            31
 
+#define MASK_0000             0
+#define MASK_0001             1
+#define MASK_0010             2
+#define MASK_0011             3
+#define MASK_0100             4
+#define MASK_0101             5
+#define MASK_0110             6
+#define MASK_0111             7
+#define MASK_1000             8
+#define MASK_1001             9
+#define MASK_1010             10
+#define MASK_1011             11
+#define MASK_1100             12
+#define MASK_1101             13
+#define MASK_1110             14
+#define MASK_1111             15
 
-/** Used for gathering init functions and putting their code into an
- *  extra init section
- *
- *  Macro expands to:
- *  __attribute__ ((__section__(".init.text"))) __attribute__((__cold__))
- */
-#define __init       __section(.init.text) __cold
-#define __section(S) __attribute__ ((__section__(#S)))
-#define __cold       __attribute__((__cold__))
+#define MASK_000              0
+#define MASK_001              1
+#define MASK_010              2
+#define MASK_011              3
+#define MASK_100              4
+#define MASK_101              5
+#define MASK_110              6
+#define MASK_111              7
 
-/** Tagged function pointers will reside in an appropriate init section and
- *  called by do_initcalls() during startup
- *
- *  Macro expands to:
- *  static initcall_t __initcall_io_init6 __attribute__((used)) 
- *  __attribute__((__section__(".initcall" "6" ".init"))) = io_init;
- */
-#define register_init0(fn)    __define_initcall("0",fn,0)
-#define register_init1(fn)    __define_initcall("1",fn,1)
-#define register_init2(fn)    __define_initcall("2",fn,2)
-#define register_init3(fn)    __define_initcall("3",fn,3)
-#define register_init4(fn)    __define_initcall("4",fn,4)
-#define register_init5(fn)    __define_initcall("5",fn,5)
-#define register_init6(fn)    __define_initcall("6",fn,6)
-#define register_init7(fn)    __define_initcall("7",fn,7)
-#define register_init8(fn)    __define_initcall("8",fn,8)
+#define MASK_00               0
+#define MASK_01               1
+#define MASK_10               2
+#define MASK_11               3
 
-#define __used __attribute__((used))
-
-#define __define_initcall(level,fn,id)  \
-        static initcall_t __initcall_##fn##id __used \
-        __attribute__((__section__(".initcall" level ".init"))) = fn
-
-/* handle data in program space */
-#define PROGMEM __section(.prog_memory)
-
-/* for implementing stubs       */
-#define __weak __attribute__((weak))
-
-#endif
 
 /** @} */
 

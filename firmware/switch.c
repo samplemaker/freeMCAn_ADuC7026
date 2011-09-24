@@ -30,7 +30,10 @@
  */
 
 #include <stdint.h>
-#include "aduc7026.h"
+
+#include "aduc.h"
+#include "init.h"
+
 
 #define SWITCH_LOCKED     0x01
 #define SWITCH_UNPRESSED  0x00

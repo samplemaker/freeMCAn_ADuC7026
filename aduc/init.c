@@ -29,7 +29,7 @@
  *-----------------------------------------------------------------------------
  */
 
-#include "defs.h"
+#include "init.h"
 
 /*-----------------------------------------------------------------------------
  * Variables
@@ -46,7 +46,7 @@ extern initcall_t __initcall_start[], __initcall_end[];
 void __init do_initcalls(void);
 
 
-/** Execute functions in the init sections at start up
+/** Execute functions in .init sections at start up
  *
  * Taken and modified from linux-2.6.27.6 kernel-modul initialization
  */

@@ -1,5 +1,5 @@
-/** \file aduc/reset.h
- * \brief Reset configuration for startup code and core clock defintions
+/** \file aduc/clock.h
+ * \brief Power on configuration for startup code and core clock defintions
  *
  * \author Copyright (C) 2011 samplemaker
  *
@@ -23,8 +23,8 @@
  * @{
  */
 
-#ifndef RESET_H
-#define RESET_H
+#ifndef CLOCK_H
+#define CLOCK_H
 
 
 /** Boot set up for PLL and power control (if required)
@@ -86,4 +86,4 @@
 
 /** @} */
 
-#endif  /* !RESET_H */
+#endif  /* !CLOCK_H */

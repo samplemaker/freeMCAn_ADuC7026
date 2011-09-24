@@ -30,7 +30,7 @@
  */
 #include <stdint.h>
 
-#include "aduc7026.h"
+#include "aduc.h"
 #include "defs.h"
 #include "int.h"
 
@@ -39,8 +39,9 @@
  *-----------------------------------------------------------------------------
  */
 
-/* attribute used as replacement for empty ISR functions   */
-#define __stub __weak
+/* attribute used as ISR  replacement functions   */
+
+#define __stub __attribute__((weak))
 
 /*-----------------------------------------------------------------------------
  * Prototypes
@@ -59,42 +60,42 @@ void __stub ISR_EXTINT0(void);
 void __stub ISR_WATCHDOG_TIMER3(void);
 
 
-/** \brief IRQ - ADC
+/** \brief IRQ - ADC (empty stub)
  *
  *  Processing code for ADC IRQ
  */
 void ISR_ADC(void){
 }
 
-/** \brief IRQ - TIMER0
+/** \brief IRQ - TIMER0 (empty stub)
  *
  *  Processing code for TIMER0 IRQ
  */
 void ISR_TIMER0(void){
 }
 
-/** \brief IRQ - TIMER1
+/** \brief IRQ - TIMER1 (empty stub)
  *
  *  Processing code for TIMER1 IRQ
  */
 void ISR_TIMER1(void){
 }
 
-/** \brief IRQ - TIMER2
+/** \brief IRQ - TIMER2 (empty stub)
  *
  *  Processing code for TIMER2 IRQ
  */
 void ISR_WAKEUP_TIMER2(void){
 }
 
-/** \brief IRQ - INT0
+/** \brief IRQ - INT0 (empty stub)
  *
  *  Processing code for INT0 IRQ
  */
 void ISR_EXTINT0(void){
 }
 
-/** \brief IRQ - INT_WATCHDOG_TIMER3
+/** \brief IRQ - INT_WATCHDOG_TIMER3 (empty stub)
  *
  *  Processing code for TIMER3 IRQ
  */

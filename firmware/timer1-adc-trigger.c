@@ -30,7 +30,7 @@
 
 /* #define TIMEBASE */
 
-#include "aduc7026.h"
+#include "aduc.h"
 #include "main.h"
 #include "data-table.h"
 #include "perso-adc-int-global.h"

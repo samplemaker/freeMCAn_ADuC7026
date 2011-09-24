@@ -30,8 +30,11 @@
 
 
 #include <stdint.h>
-#include "aduc7026.h"
-#include "reset.h"
+
+#include "aduc.h"
+#include "clock.h"
+#include "init.h"
+
 #include "uart-defs.h"
 #include "uart-comm.h"
 #include "checksum.h"

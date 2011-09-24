@@ -27,7 +27,9 @@
  * @{
  */
 
-#include "aduc7026.h"
+#include "aduc.h"
+#include "init.h"
+
 #include "data-table.h"
 #include "timer1-constants.h"
 #include "timer1-measurement.h"

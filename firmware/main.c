@@ -77,18 +77,15 @@
  * @{
  */
 
-/*
-#include <avr/io.h>
-#include <avr/interrupt.h>
-#include <avr/wdt.h>
-#include <avr/eeprom.h>
-*/
-
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 
-#include "aduc7026.h"
+#include "aduc.h"
+#include "flash.h"
+#include "int.h"
+#include "init.h"
+
 #include "compiler.h"
 #include "uart-comm.h"
 #include "uart-printf.h"
@@ -102,8 +99,6 @@
 #include "main.h"
 #include "data-table.h"
 #include "switch.h"
-#include "flash.h"
-#include "int.h"
 
 /* Only try compiling for supported MCU types */
 /*#if defined(__AVR_ATmega644__) || defined(__AVR_ATmega644P__)

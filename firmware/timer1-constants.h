@@ -27,8 +27,7 @@
 #ifndef TIMER1_CONSTANTS_H
 #define TIMER1_CONSTANTS_H
 
-
-#include "reset.h"
+#include "clock.h"
 
 /**  Defines for TIMER0 (RTOS Timer)
  *
