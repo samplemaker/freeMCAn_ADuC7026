@@ -21,6 +21,9 @@
  * \defgroup aduc_interrupt Interrupt support (IRQ and SWI)
  * \ingroup ADUC
  *
+ * Interrupt handler implementations for asynchronous hardware interrupt
+ * requests (IRQ) and software interrupt (SWI)
+ *
  * @{
  */
 
@@ -119,22 +122,22 @@ void _irq_handler(void)
   if (bit_is_set(irq_status, INT_TIMER0)){
     ISR_TIMER0();
     /* clear timer0 interrupt flag at eoi */
-    T0CLRI = 0x00;
+    // T0CLRI = 0x00;
   };
   if (bit_is_set(irq_status, INT_TIMER1)){
     ISR_TIMER1();
     /* clear timer1 interrupt flag at eoi */
-    T1CLRI = 0x00;
+    // T1CLRI = 0x00;
   };
   if (bit_is_set(irq_status, INT_WAKEUP_TIMER2)){
     ISR_WAKEUP_TIMER2();
     /* clear timer2 interrupt flag at eoi */
-    T2CLRI = 0x00;
+    // T2CLRI = 0x00;
   };
   if (bit_is_set(irq_status, INT_WATCHDOG_TIMER3)){
     ISR_WATCHDOG_TIMER3();
     /* clear timer3 interrupt flag at eoi */
-    T3CLRI = 0x00;
+    // T3CLRI = 0x00;
   };
   if (bit_is_set(irq_status, INT_EXTERNAL_IRQ0)){
     ISR_EXTINT0();
@@ -145,19 +148,21 @@ void _irq_handler(void)
 /** Software interrupt handler. Enabling and disabling the global I-Flag
  *
  *  1.) The I-Flag in cpsr_c cannot be written in user mode but only in
- *	a priviledged mode.
- *  2.) Switch to supervisor mode by software interrupt.
- *  3.) Entering the SWI-exception the processor does:
- *      i.)   Save the address of the next instruction (return adr.)
- *            in the appropriate Link Register: (lr_svc = pc + 4)
- *      ii.)  spsr_svc = current cpsr
- *      iii.) Overwrite M-field in cpsr with the svc mode bits
- *      iv.)  Force ARM state
- *      v.)   Disable I & F - Flag in cpsr
- *      vi.)  Jump to exception vector address
- *  4.) The code gets the SWI argument and disables/enables the I-Flag
+ *	a priviledged mode. \n
+ *  2.) Switch to supervisor mode by software interrupt. \n
+ *  3.) Entering the SWI-exception the processor does: \n
+ *      3a.)  Save the address of the next instruction (return adr.)
+ *            in the appropriate Link Register: (lr_svc = pc + 4) \n
+ *      3b.)  spsr_svc = current cpsr \n
+ *      3c.)  Overwrite M-field in cpsr with the svc mode bits \n
+ *      3d.)  Force ARM state \n
+ *      3e.)  Disable I & F - Flag in cpsr \n
+ *      3f.)  Jump to exception vector address \n
+ *  4.) The code gets the SWI argument and disables/enables the I-Flag \n
  *
- *  Note: (13 sp, 14 lr, 15 pc)
+ *  Note: (13 sp, 14 lr, 15 pc). 
+ *  
+ *  Nothing to clobber since not in user context
  *
  *  See: ARM Compiler toolchain p. 116
  *

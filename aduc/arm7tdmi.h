@@ -21,17 +21,17 @@
  * \defgroup aduc_ARM7TDMI Defines for ADUC-ARM7TDMI digital core
  * \ingroup ADUC
  *
+ * ARM7TDMI specific defines: 
+ * Current program status register (cpsr) bit definitions and mode identifiers
+ *
  * @{
  */
 
 #ifndef ARM7TDMI_H
 #define ARM7TDMI_H
 
-/* ARM7TDMI specific defines
- * 
- */
 
-/** Current program status register (cpsr) bit definitions and mode identifiers
+/* Current program status register (cpsr) bit definitions and mode identifiers
  *
  * CPSR_c = [I F T M4 M3 M2 M1 M0]
  *

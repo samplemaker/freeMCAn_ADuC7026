@@ -106,7 +106,8 @@ void timer1_init(void)
   T1LD = TIMER1_LOAD_VALUE_DOWNCNT;
   T1CON |= _BV(TIMER1_ENABLE);
   /* Enable interrupt flag for Timer1 */
-  IRQEN |= _BV(INT_TIMER1);
+  //IRQEN |= _BV(INT_TIMER1);
+  IRQCLR |= _BV(INT_TIMER1);
 }
 
 
