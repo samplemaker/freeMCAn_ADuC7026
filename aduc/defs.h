@@ -41,11 +41,6 @@
 
 #ifndef __ASSEMBLER__
 
-/** Forces a softreset
- *
- */
-#define soft_reset() (RSTSTA |= _BV(RST_SOFTRST))
-
 /** Alignment to next higher value
  *
  */

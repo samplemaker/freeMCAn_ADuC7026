@@ -85,6 +85,7 @@
 #include "flash.h"
 #include "int.h"
 #include "init.h"
+#include "reset.h"
 
 #include "compiler.h"
 #include "uart-comm.h"
