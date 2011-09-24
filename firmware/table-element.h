@@ -83,36 +83,34 @@ uint8_t table_element_cmp_eq(volatile freemcan_uint24_t *element,
 inline static
 void table_element_inc(volatile freemcan_uint24_t *element)
 {
-  register uint32_t accu;
-  register uint32_t tmp_reg;
+  register uint32_t r0, r1;
   asm volatile("\n\t"
-               /* load three bytes with respect to endianess */
-               "mov   %[tmp_reg], #0                  \n\t"
-               "ldrb  %[accu],    [%[elem], #2]       \n\t"
-               "orr   %[tmp_reg], %[accu] ,LSL #16    \n\t"
-               "ldrb  %[accu],    [%[elem], #1]       \n\t"
-               "orr   %[tmp_reg], %[accu] ,LSL #8     \n\t"
-               "ldrb  %[accu],    [%[elem]]           \n\t"
-               "orr   %[tmp_reg], %[accu]             \n\t"
+               /* load three bytes with respect to endianess (MSB2LSB) */
+               "mov   %[r0], #0                     \n\t"
+               "ldrb  %[r1], [%[elem], #2]          \n\t"
+               "orr   %[r0], %[r1] ,LSL #16         \n\t"
+               "ldrb  %[r1], [%[elem], #1]          \n\t"
+               "orr   %[r0], %[r1] ,LSL #8          \n\t"
+               "ldrb  %[r1], [%[elem]]              \n\t"
+               "orr   %[r0], %[r1]                  \n\t"
                /* increase by one */
-               "add   %[tmp_reg], %[tmp_reg], #1      \n\t"
-               /* store three bytes with respect to endianess */
-               "strb  %[tmp_reg], [%[elem]]           \n\t"
-               "mov   %[tmp_reg], %[tmp_reg] ,LSR #8  \n\t"
-               "strb  %[tmp_reg], [%[elem], #1]       \n\t"
-               "mov   %[tmp_reg], %[tmp_reg] ,LSR #8  \n\t"
-               "strb  %[tmp_reg], [%[elem], #2]       \n\t"
+               "add   %[r0], %[r0], #1              \n\t"
+               /* store three bytes with respect to endianess (LSB2MSB) */
+               "strb  %[r0], [%[elem]]              \n\t"
+               "mov   %[r0], %[r0] ,LSR #8          \n\t"
+               "strb  %[r0], [%[elem], #1]          \n\t"
+               "mov   %[r0], %[r0] ,LSR #8          \n\t"
+               "strb  %[r0], [%[elem], #2]          \n\t"
                : /* output operands */
                  /* let compiler decide which registers to clobber */
-                 [accu] "=&r" (accu),
-                 /* temporary register */
-                 [tmp_reg] "=&r" (tmp_reg)
-               : /* input operands */
-                 [elem] "r" (element)
+                 [r1] "=&r" (r1), [r0] "=&r" (r0),
+                 /* input and output operand (treated inside output list) */
+                 [elem] "+r" (element)
+               : /* no input operands */
                  /* inform that we change the condition code flag */
                  /* : "cc"*/
                  /* store all cached values before and reload them after */
-                    : "memory"
+               : "memory"
   );
 }
 
