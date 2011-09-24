@@ -30,37 +30,51 @@
  * @{
  */
 
+#include "init.h"
 
 /* import the symbols in data type inspecific way */
-extern volatile char data_table[];
-extern volatile char data_table_end[];
-extern volatile char data_table[];
-
+extern char data_table[];
+extern char data_table_end[];
+extern char data_table[];
 
 /** Setup, needs to be called once on startup */
-void data_table_init(void)
-  __attribute__ ((naked))
-  __attribute__ ((section(".init5")));
-void data_table_init(void)
+void __init data_table_init(void)
 {
   /** As the table is outside of the memory area with the normal data,
    * its content will NOT be cleared by the default avr-libc startup
    * code.  So we clear the table memory ourselves.
    */
-  asm volatile("\t /* assembly code taken from GPLv2+ libgcc.S __do_clear_bss */ \n"
-               "\t	ldi     r17, hi8(data_table_end)\n"
-               "\t	ldi     r26, lo8(data_table)\n"
-               "\t	ldi     r27, hi8(data_table)\n"
-               "\t	rjmp    L%=_start\n"
-               "\tL%=_loop:\n"
-               "\t	st      X+, __zero_reg__\n"
-               "\tL%=_start:\n"
-               "\t	cpi     r26, lo8(data_table_end)\n"
-               "\t	cpc     r27, r17\n"
-               "\t	brne    L%=_loop\n"
-               ::
+  asm volatile("\n\t"  
+               "mov  r0, #0 \n\t"
+               "ldr  r1, =data_table \n\t"
+               "ldr  r2, =data_table_end \n\t"
+
+               "zero_table: \n\t"
+
+               "cmp  r1, r2 \n\t"
+               /* 
+               "stmltia r1!,{r0} \n\t"
+               "blt zero_table \n\t"
+                */
+               /* if r1<r2: *(r1)=r0 then r1+=4 */
+               "strlo r0,[r1], #4 \n\t"
+               /* branch if condition lower */
+               "blo  zero_table \n\t"
+
+               /* output operands */
+               :
+               /* input operands */
+               :
+               /* clobbers, change condition code flag, 
+                * store all cached values before and reload them after */
+               : "r0", "r1", "r2", "cc", "memory"
                );
 }
+
+/** Put function into init section, register function pointer and
+ *  execute function at start up
+ */
+register_init5(data_table_init);
 
 
 /** @} */

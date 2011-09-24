@@ -30,23 +30,17 @@
 
 #include <stdlib.h>
 
-#include <avr/io.h>
-#include <avr/interrupt.h>
-
 
 
 /** Histogram element size */
 #define ELEMENT_SIZE_IN_BYTES 2
 
-/** Make sure we use the sub 1 second timer resolution */
-#define TIMER1_SUB_1SEC
-
-
-#include "global.h"
+#include "aduc7026.h"
 #include "perso-adc-int-global.h"
 #include "packet-comm.h"
 #include "table-element.h"
 #include "data-table.h"
+
 #include "timer1-adc-trigger.h"
 #include "timer1-constants.h"
 #include "main.h"
@@ -138,15 +132,19 @@ void data_table_print_status(void)
  * Actually one could implement a low pass filter here before
  * downsampling to fullfill shannons sample theoreme
  */
-ISR(ADC_vect)
-{
+void ISR_ADC(void){
   /* downsampling of analog data as a multiple of timer1_multiple      */
-  const uint16_t result = ADCW;
+  /* starting from bit 16 the result is stored in ADCDAT.
+     reading the ADCDATA also clears flag in ADCSTA */
+  const uint32_t result =  ADCDAT;
+
   if (skip_samples == 0) {
     /* Read analog value */
-    if (GF_IS_CLEARED(GF_MEASUREMENT_FINISHED)) {
+    if (!measurement_finished) {
+      /* adjust to correct size */
+      const uint16_t value = (result >> (16 + 12 - ADC_RESOLUTION));
       /* Write to current position in table */
-      *table_cur = result >> (10-ADC_RESOLUTION);
+      *table_cur = value;
       table_cur++;
       data_table_info.size += sizeof(*table_cur);
       skip_samples = orig_skip_samples;
@@ -154,61 +152,34 @@ ISR(ADC_vect)
         /* switch off any compare matches on B to stop sampling     */
         timer1_halt();
         /* tell main() that measurement is over                     */
-        GF_SET(GF_MEASUREMENT_FINISHED);
+        measurement_finished = 1;
       }
     }
   } else {
     skip_samples--;
   }
-
-  /** \todo really necessary? */
-  /* Clear interrupt flag of timer1 compare match B manually since there is no
-     TIMER1_COMPB_vect ISR executed but the ADC is triggered on rising edge
-     of interrupt flag                                                */
-  TIFR1 |= _BV(OCF1B);
-  //TIFR1 |= _BV(OCF1A);
 }
 
 
-/** Switch off trigger B to stop any sampling of the analog signal
+/** Switch off trigger to stop any sampling of the analog signal
  *
  *
  */
 inline static
 void timer1_halt(void)
 {
-  const uint8_t old_tccr1b = TCCR1B;
-  /* pause the clock */
-  TCCR1B &= ~(_BV(CS12) | _BV(CS11) | _BV(CS10));
-  /* Switch off trigger B to avoid an additional sampling of data */
-  OCR1B = TIMER1_COMPARE_MATCH_VAL+1;
-  /* blinking for measurement is over */
-  OCR1A = TIMER1_COMPARE_MATCH_VAL;
-  /* start counting from 0, needs clock to be paused */
-  TCNT1 = 0;
-  /* unpause the clock */
-  TCCR1B = old_tccr1b;
+  T1CON &=~ _BV(TIMER1_ENABLE);
 }
 
 
-/** Reconfigure Timer to show the user that the measurement has been finished
+/** Show the user that the measurement has been finished
  *
  *
  */
 inline static
 void timer1_init_quick(void)
 {
-  const uint8_t old_tccr1b = TCCR1B;
-  /* pause the clock */
-  TCCR1B &= ~(_BV(CS12) | _BV(CS11) | _BV(CS10));
-  /* Switch off trigger B to avoid an additional sampling of data */
-  OCR1B = TIMER1_COMPARE_MATCH_VAL_MEASUREMENT_OVER+1;
-  /* blinking for measurement is over */
-  OCR1A = TIMER1_COMPARE_MATCH_VAL_MEASUREMENT_OVER;
-  /* start counting from 0, needs clock to be paused */
-  TCNT1 = 0;
-  /* unpause the clock */
-  TCCR1B = old_tccr1b;
+/* \todo */
 }
 
 

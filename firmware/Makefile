@@ -4,10 +4,15 @@ OBJCPY=$(ARMPATH)arm-elf-objcopy
 OBJDUMP=$(ARMPATH)arm-elf-objdump
 
 LIBADUC = ../aduc/
-CCFLAGS=  -mcpu=arm7tdmi -gstabs -Os -g -Wall -Wextra -Wstrict-prototypes -std=gnu99
+CCFLAGS=  -mcpu=arm7tdmi -gstabs -g -Wall -Wextra -Wstrict-prototypes -std=gnu99
+########################################################################################
+# uncomment if you want to have optimized code
+# comment if you want to resonably debug the code
+# CCFLAGS +=- Os
+########################################################################################
 ASMFLAGS= -mcpu=arm7tdmi -I. -x assembler-with-cpp -gstabs -Wall -Wextra
 CINCS = -I../include -I$(LIBADUC)
-LDFLAGS_COMMON = -mcpu=arm7tdmi -std=gnu99 -Os -I. -T$(LIBADUC)project.ld -nostartfiles 
+LDFLAGS_COMMON = -mcpu=arm7tdmi -std=gnu99 -Os -I. -nostartfiles 
 
 OBJ_LIBADUC = $(LIBADUC)flash.o  $(LIBADUC)init.o  $(LIBADUC)int.o  $(LIBADUC)target_init.o
 OBJ_COMMON = main.o checksum.o uart-comm.o frame-comm.o packet-comm.o software-version.o switch.o
@@ -15,17 +20,17 @@ OBJ_COMMON = main.o checksum.o uart-comm.o frame-comm.o packet-comm.o software-v
 ########################################################################################
 
 OBJ_ADC_INT_MCA = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-mca-ext-trig.o timer1-countdown-and-stop.o timer1-get-duration.o timer1-init-simple.o  
-LDFLAGS_ADC_INT_MCA =$(LDFLAGS_COMMON) -Wl,-Map=firmware-adc-int-mca.map,--cref -g
+LDFLAGS_ADC_INT_MCA =$(LDFLAGS_COMMON) -T$(LIBADUC)project.ld -Wl,-Map=firmware-adc-int-mca.map,--cref -g
 
 OBJ_ADC_INT_MCA_TIMED = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-mca-timed-trig.o timer1-adc-trigger.o
-LDFLAGS_ADC_INT_MCA_TIMED =$(LDFLAGS_COMMON) -Wl,-Map=firmware-adc-int-mca-timed.map,--cref -g
+LDFLAGS_ADC_INT_MCA_TIMED =$(LDFLAGS_COMMON) -T$(LIBADUC)project.ld -Wl,-Map=firmware-adc-int-mca-timed.map,--cref -g
 
 OBJ_ADC_INT_TIMED_SAMPLING = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-log-timed-trig.o timer1-adc-trigger.o data-table-all-other-memory.o
-LDFLAGS_ADC_INT_TIMED_SAMPLING =$(LDFLAGS_COMMON) -Wl,-Map=firmware-adc-int-timed-sampling.map,--cref -g
+LDFLAGS_ADC_INT_TIMED_SAMPLING =$(LDFLAGS_COMMON) -T$(LIBADUC)project.ld data-table-all-other-memory.x -Wl,--defsym=MIN_STACK_SIZE=780 -Wl,--defsym=MALLOC_HEAP_SIZE=500 -Wl,-Map=firmware-adc-int-timed-sampling.map,--cref -g
 
 ########################################################################################
 
-all: firmware-adc-int-mca firmware-adc-int-mca-timed
+all: firmware-adc-int-mca firmware-adc-int-mca-timed firmware-adc-int-timed-sampling
 
 firmware-adc-int-mca:	$(OBJ_ADC_INT_MCA)
 	$(CC) $(LDFLAGS_ADC_INT_MCA) -o firmware-adc-int-mca.elf $^
