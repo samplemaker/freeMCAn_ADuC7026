@@ -37,36 +37,37 @@ extern char data_table[];
 extern char data_table_end[];
 extern char data_table[];
 
-/** Setup, needs to be called once on startup */
+/** Zero table
+ * 
+ * Since table is not located within .bss it is not initialized.
+ * We have to do this on our own.
+ * Needs to be called once on startup.
+ *
+ * Note: Code will zero data starting at ADDR $r1
+ *       and ending at ADDR $r2. ADDR $r2 is not cleared itself.
+ *
+ */
 void __init data_table_init(void)
 {
-  /** As the table is outside of the memory area with the normal data,
-   * its content will NOT be cleared by the default avr-libc startup
-   * code.  So we clear the table memory ourselves.
-   */
   asm volatile("\n\t"  
-               "mov  r0, #0 \n\t"
-               "ldr  r1, =data_table \n\t"
-               "ldr  r2, =data_table_end \n\t"
+               "mov  r0, #0                              \n\t"
+               "ldr  r1, =data_table                     \n\t"
+               "ldr  r2, =data_table_end                 \n\t"
 
-               "zero_table: \n\t"
+               "zero_table:                              \n\t"
+               "cmp  r1, r2                              \n\t"
+               /* if (r1-r2)<0 (N, V flag): *(r1)=r0 then r1+=4 */
+               "stmltia r1!, {r0}                        \n\t"
+               "blt zero_table                           \n\t"
 
-               "cmp  r1, r2 \n\t"
-               /* 
-               "stmltia r1!,{r0} \n\t"
-               "blt zero_table \n\t"
-                */
-               /* if r1<r2: *(r1)=r0 then r1+=4 */
-               "strlo r0,[r1], #4 \n\t"
-               /* branch if condition lower */
-               "blo  zero_table \n\t"
+               /* if (r1-r2)<0 (C flag):  *(r1)=r0 then r1+=4
+               "strlo r0,[r1], #4                        \n\t"
+               "blo  zero_table                          \n\t"  */
 
-               /* output operands */
-               :
-               /* input operands */
-               :
-               /* clobbers, change condition code flag, 
-                * store all cached values before and reload them after */
+               : /* output operands */
+               : /* input operands */
+                 /* clobbers, change condition code flag, 
+                  * store all cached values before and reload them after */
                : "r0", "r1", "r2", "cc", "memory"
                );
 }

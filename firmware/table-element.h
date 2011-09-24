@@ -87,7 +87,7 @@ void table_element_inc(volatile freemcan_uint24_t *element)
   register uint32_t tmp_reg;
   asm volatile("\n\t"
                /* load three bytes with respect to endianess */
-               "eor   %[tmp_reg], %[tmp_reg]          \n\t"
+               "mov   %[tmp_reg], #0                  \n\t"
                "ldrb  %[accu],    [%[elem], #2]       \n\t"
                "orr   %[tmp_reg], %[accu] ,LSL #16    \n\t"
                "ldrb  %[accu],    [%[elem], #1]       \n\t"
