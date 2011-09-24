@@ -31,6 +31,8 @@
 /* #define TIMEBASE */
 
 #include "aduc.h"
+#include "init.h"
+
 #include "main.h"
 #include "data-table.h"
 #include "perso-adc-int-global.h"
