@@ -93,7 +93,6 @@
 #include "packet-comm.h"
 #include "frame-defs.h"
 #include "packet-defs.h"
-#include "wdt-softreset.h"
 #include "timer1-measurement.h"
 #include "timer1-get-duration.h"
 #include "main.h"
@@ -286,7 +285,7 @@ firmware_state_t firmware_handle_measurement_finished(const firmware_state_t pst
     break;
   default:
     send_text("invalid state transition");
-    wdt_soft_reset();
+    soft_reset();
     break;
   }
 }
@@ -378,7 +377,7 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
       break;
     case FRAME_CMD_RESET:
       send_state(PSTR_RESET);
-      wdt_soft_reset();
+      soft_reset();
       break;
     }
     break;
@@ -445,7 +444,7 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
       break;
     case FRAME_CMD_RESET:
       send_state(PSTR_RESET);
-      wdt_soft_reset();
+      soft_reset();
       break;
     default:
       send_table(PACKET_VALUE_TABLE_RESEND);
@@ -456,7 +455,7 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
     break;
   }
   send_text("STP_ERROR");
-  wdt_soft_reset();
+  soft_reset();
 }
 
 

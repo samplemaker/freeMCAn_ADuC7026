@@ -25,7 +25,7 @@ LDFLAGS_ADC_INT_TIMED_SAMPLING =$(LDFLAGS_COMMON) -Wl,-Map=firmware-adc-int-time
 
 ########################################################################################
 
-all: firmware-adc-int-mca
+all: firmware-adc-int-mca firmware-adc-int-mca-timed
 
 firmware-adc-int-mca:	$(OBJ_ADC_INT_MCA)
 	$(CC) $(LDFLAGS_ADC_INT_MCA) -o firmware-adc-int-mca.elf $^
@@ -132,7 +132,7 @@ data-table-all-other-memory.o : data-table-all-other-memory.c $(HEADERS)
 
 clean:
 	$(RM) *.o *.bin *.map *.hex *.elf *.lss
-	$(RM) $(LIBADUC)*.o 
+	$(RM) $(LIBADUC)*.o *.lst
 	$(RM) main
 	$(RM) -r ./dox/
 

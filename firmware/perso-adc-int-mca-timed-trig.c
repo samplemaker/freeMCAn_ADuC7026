@@ -39,7 +39,6 @@
 #include "packet-comm.h"
 #include "table-element.h"
 #include "data-table.h"
-#include "wdt-softreset.h"
 #include "timer1-adc-trigger.h"
 #include "main.h"
 

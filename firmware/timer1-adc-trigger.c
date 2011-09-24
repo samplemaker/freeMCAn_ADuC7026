@@ -37,7 +37,6 @@
 #include "timer1-adc-trigger.h"
 #include "timer1-constants.h"
 #include "packet-comm.h"
-#include "wdt-softreset.h"
 
 
 /** timer counter
@@ -184,7 +183,7 @@ void personality_start_measurement_sram(void)
      *
     if (orig_timer1_count <= 1) {
       send_text_P(PSTR("Unsupported timer value <= 1"));
-      wdt_soft_reset();
+      soft_reset();
     }
     */
 

@@ -33,7 +33,6 @@
 #include "data-table.h"
 #include "timer1-constants.h"
 #include "timer1-measurement.h"
-#include "wdt-softreset.h"
 #include "packet-comm.h"
 
 /** Set up our IO pins */
@@ -65,7 +64,7 @@ void timer1_init(const uint16_t timer1_value)
   /** Safeguard: We cannot handle 0 or 1 count measurements. */
   if (orig_timer1_count <= 1) {
     send_text("Unsupported timer value <= 1");
-    wdt_soft_reset();
+    soft_reset();
   }
 
  /** Configure 32 bit Timer2 (used for timer base) */
