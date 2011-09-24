@@ -18,7 +18,7 @@
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA
  *
- * \defgroup ADUC
+ * \defgroup aduc_linker_cmd Linker command definitions for ADUC bare silicon
  * \ingroup ADUC
  *
  * @{

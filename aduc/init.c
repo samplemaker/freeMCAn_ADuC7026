@@ -1,4 +1,4 @@
-/** \file ./init.c
+/** \file aduc/init.c
  * \brief Module initialization
  *
  * \author Copyright (C) 2011 samplemaker
@@ -18,8 +18,8 @@
  *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301 USA
  *
- * \defgroup LIB_INIT
- * \ingroup Library
+ * \defgroup aduc_init Modul initialization at start up
+ * \ingroup ADUC
  *
  * @{
  */

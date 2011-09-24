@@ -1,4 +1,4 @@
-/** \file ./aduc7026.h
+/** \file aduc/aduc7026.h
  * \brief Bit defines and memory mapped registers for ADUC7026
  *
  * \author Copyright (C) 2011 samplemaker
@@ -18,7 +18,7 @@
  *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301 USA
  *
- * \defgroup ADUC
+ * \defgroup aduc_MMR Memory mapped register defines for ADUC bare silicon
  * \ingroup ADUC
  *
  * @{

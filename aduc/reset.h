@@ -1,4 +1,4 @@
-/** \file ./reset.h
+/** \file aduc/reset.h
  * \brief Reset configuration for startup code and core clock defintions
  *
  * \author Copyright (C) 2011 samplemaker
@@ -18,8 +18,7 @@
  *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301 USA
  *
- * \defgroup ADUC
- * \ingroup ADUC
+ * \ingroup aduc_target_init
  *
  * @{
  */

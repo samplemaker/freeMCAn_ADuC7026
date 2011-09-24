@@ -1,4 +1,4 @@
-/** \file ./int.h
+/** \file aduc/int.h
  * \brief Interrupt handling
  *
  * \author Copyright (C) 2011 samplemaker
@@ -18,7 +18,9 @@
  *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301 USA
  *
- * \addtogroup LIB_IRQ
+ *
+ * \ingroup aduc_interrupt
+ *
  *
  * @{
  */

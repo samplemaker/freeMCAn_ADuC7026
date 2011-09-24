@@ -1,4 +1,4 @@
-/** \file ./flash.c
+/** \file aduc/flash.c
  * \brief Driver support for eeprom in flash emulation
  *
  * \author Copyright (C) 2011 samplemaker
@@ -18,8 +18,9 @@
  *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301 USA
  *
- * \defgroup LIB_FLASH
- * \ingroup Library
+ *
+ * \defgroup aduc_flash Flash driver for eeprom in flash emulation
+ * \ingroup ADUC
  *
  * Implements driver functions for storing data into flash
  *

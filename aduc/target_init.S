@@ -1,4 +1,4 @@
-/** \file /aduc/target_init.S
+/** \file aduc/target_init.S
  * \brief ADUC-port specific target initialization and IRQ functions
  *
  * \author Copyright (C) 2011 samplemaker
@@ -31,7 +31,7 @@
  * ADuC7019/20/21/22/24/25/26/27/28/29 (REV. D)"
  * http://www.analog.com/static/imported-files/data_sheets/ADuC7019_20_21_22_24_25_26_27_28_29.pdf
  *
- * \defgroup ADUC
+ * \defgroup aduc_target_init Startup code for ADUC bare silicon
  * \ingroup ADUC
  *
  * @{

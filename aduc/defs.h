@@ -1,4 +1,4 @@
-/** \file ./defs.h
+/** \file aduc/defs.h
  * \brief Various macro defines
  *
  * \author Copyright (C) 2011 samplemaker
@@ -18,7 +18,7 @@
  *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301 USA
  *
- * \defgroup ADUC
+ * \defgroup aduc_generic_defines Generic macros
  * \ingroup ADUC
  *
  * @{
