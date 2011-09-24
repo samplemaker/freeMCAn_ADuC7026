@@ -132,7 +132,7 @@ data-table-all-other-memory.o : data-table-all-other-memory.c $(HEADERS)
 
 clean:
 	$(RM) *.o *.bin *.map *.hex *.elf *.lss
-	$(RM) $(LIBADUC)*.o *.lst
+	$(RM) $(LIBADUC)*.o $(LIBADUC)*.lst
 	$(RM) main
 	$(RM) -r ./dox/
 
