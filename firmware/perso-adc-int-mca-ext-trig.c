@@ -30,11 +30,12 @@
 
 #include <stdlib.h>
 
-/** Histogram element size */
-#define ELEMENT_SIZE_IN_BYTES 3
-
 #include "aduc.h"
 #include "init.h"
+
+
+/** Histogram element size */
+#define ELEMENT_SIZE_IN_BYTES 3
 
 #include "main.h"
 #include "perso-adc-int-global.h"
@@ -48,7 +49,6 @@
 /* \todo : comment following lines to have the "real working code" */
 #include "timer1-constants.h"
 #define DEBUG_ADC_TRIGGER 1
-
 
 
 /** Number of elements in the histogram table */
@@ -85,11 +85,43 @@ PERSONALITY("adc-int-mca",
             ELEMENT_SIZE_IN_BYTES);
 
 
+/** Power up ADC
+ *
+ * Note: The ADC must be powered up for at least
+ * 5 μs before it converts correctly
+ */
+inline static
+void adc_power_up(void)
+{
+  ADCCON = (_BV(ADC_POWER_CONTROL));
+}
+
+
+/** Initialize peripherals and wake up hardware
+ *
+ * Configure peak hold capacitor reset pin.
+ * Wake up ADC
+ */
+static
+void __init personality_io_init(void)
+{
+  /* wake up adc */
+  adc_power_up();
+
+  // \todo reset pin
+}
+/** Put function into init section, register function pointer and
+ *  execute function at start up
+ */
+register_init5(personality_io_init);
+
+
+
 #if DEBUG_ADC_TRIGGER
 void ISR_WATCHDOG_TIMER3(void){
   GP1DAT ^= _BV(GP_DATA_OUTPUT_Px5);
 }
-inline static void 
+inline static void
 adctest_init(void){
   /* clear watch dog and force down counting */
   T3CON &=~ ( _BV(TIMER3_COUNT_DIR) |
@@ -108,21 +140,6 @@ adctest_init(void){
 #endif
 
 
-/** Initialize peripherals
- *
- * Configure peak hold capacitor reset pin.
- */
-static
-void __init personality_io_init(void)
-{
-  // \todo reset pin
-}
-/** Put function into init section, register function pointer and
- *  execute function at start up
- */
-register_init5(personality_io_init);
-
-
 /** AD conversion complete interrupt entry point
  *
  * This function is called when an A/D conversion has completed.
@@ -133,22 +150,21 @@ void ISR_ADC(void){
   /* pull pin to discharge peak hold capacitor                    */
   /** \todo worst case calculation: runtime & R7010 */
   // \todo
- 
+
   /* starting from bit 16 the result is stored in ADCDAT.
      reading the ADCDATA also clears flag in ADCSTA */
   const uint32_t result =  ADCDAT;
-
   /* adjust to correct size */
   const uint16_t index = (result >> (16 + 12 - ADC_RESOLUTION));
 
- volatile table_element_t *element = &(table[index]);
+  volatile table_element_t *element = &(table[index]);
   table_element_inc(element);
 
   /* set pin to GND and release peak hold capacitor   */
   // \todo
 
 }
-  
+
 
 /** Programmable logic array used for edged triggering the ADC
  *
@@ -161,7 +177,7 @@ void ISR_ADC(void){
  * is level triggered (not edge) at #CONVstart
  */
 inline static
-void adc_int_trigger_src_conf(void)
+void adc_pla_trigger(void)
 {
 
   /* PLAs triggering the adc:
@@ -233,7 +249,7 @@ void adc_int_trigger_src_conf(void)
  *
  */
 inline static
-void adc_int_init(void)
+void adc_init(void)
 {
   /* - Set clock speed (default value is 0b001 = fADC/2)
    * - ADC acquisition time (default value is 0b10 = eight clocks)
@@ -276,18 +292,17 @@ void adc_int_init(void)
 
 /** ADC subsystem and trigger setup */
 inline static
-void adc_init(void)
+void hw_init(void)
 {
-  adc_int_trigger_src_conf();
-  adc_int_init();
+  adc_pla_trigger();
+  adc_init();
 }
-
 
 void personality_start_measurement_sram(void)
 {
   const void *voidp = &pparam_sram.params[0];
   const uint16_t *timer1_value = voidp;
-  adc_init();
+  hw_init();
   #if DEBUG_ADC_TRIGGER
     adctest_init();
   #endif

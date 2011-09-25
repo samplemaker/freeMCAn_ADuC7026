@@ -31,14 +31,13 @@
 #include "main.h"
 #include "aduc.h"
 
-#define TOG_LED1 (GP4DAT ^= _BV(GP_DATA_OUTPUT_Px1))
 
 volatile uint16_t timer1_count;
 
 volatile uint16_t orig_timer1_count;
 
 
-/** 16 Bit timer ISR
+/** 32 Bit timer ISR
  *
  * When timer has elapsed, the global #timer1_flag (8bit, therefore
  * atomic read/writes) is set.
@@ -51,7 +50,8 @@ volatile uint16_t orig_timer1_count;
 void ISR_WAKEUP_TIMER2(void)
 {
   /* toggle a sign */
-  TOG_LED1;
+  #define TOG_LED_TIMER (GP4DAT ^= _BV(GP_DATA_OUTPUT_Px1))
+  TOG_LED_TIMER;
 
   if (!measurement_finished) {
     /** We do not touch #measurement_finished ever again after setting

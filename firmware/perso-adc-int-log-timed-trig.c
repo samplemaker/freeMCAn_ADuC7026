@@ -30,12 +30,12 @@
 
 #include <stdlib.h>
 
-
+#include "aduc.h"
+#include "init.h"
 
 /** Histogram element size */
 #define ELEMENT_SIZE_IN_BYTES 2
 
-#include "aduc7026.h"
 #include "perso-adc-int-global.h"
 #include "packet-comm.h"
 #include "table-element.h"
@@ -105,10 +105,7 @@ volatile table_element_t *volatile table_cur = table;
  *
  * \bug (copied from geiger-time-series.c)
  */
-void data_table_print_status(void)
-  __attribute__ ((naked))
-  __attribute__ ((section(".init8")));
-void data_table_print_status(void)
+void __init data_table_print_status(void)
 {
 #ifdef VERBOSE_STARTUP_MESSAGES
   uprintf("<data_table_print_status>");
@@ -123,6 +120,10 @@ void data_table_print_status(void)
   uprintf("</data_table_print_status>");
 #endif
 }
+/** Put function into init section, register function pointer and
+ *  execute function at start up
+ */
+register_init8(data_table_print_status);
 
 
 /** AD conversion complete interrupt entry point

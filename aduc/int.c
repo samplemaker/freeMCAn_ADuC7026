@@ -106,16 +106,16 @@ void ISR_WATCHDOG_TIMER3(void){
 }
 
 
-/* IRQEN:  Ones indicate that the interrupt request from 
+/* IRQEN:  Ones indicate that the interrupt request from
  *         the source is unmasked (use this to enable IRQs)
  *
  * IRQCLR: Write ones to clear the corresponding bit in IRQEN
  *         (use this to mask an source - do not use IRQEN!)
  *
- * IRQSTA: Ones indicate that the sources have an interrupt 
+ * IRQSTA: Ones indicate that the sources have an interrupt
  *         enabled and pending. Use this in ISR for distribution.
  *
- * IRQSIG: Ones indicate that the IRQ source has an interrupt 
+ * IRQSIG: Ones indicate that the IRQ source has an interrupt
  *         pending (regardless wheather it is masked or not)
  */
 
@@ -130,30 +130,30 @@ void _irq_handler(void)
    */
   if (bit_is_set(IRQSTA, INT_ADC_CHANNEL)){
     ISR_ADC();
-  };
+  }
   if (bit_is_set(IRQSTA, INT_TIMER0)){
     ISR_TIMER0();
     /* clear timer0 interrupt flag at eoi */
-     T0CLRI = 0x00;
-  };
+    T0CLRI = 0x00;
+  }
   if (bit_is_set(IRQSTA, INT_TIMER1)){
     ISR_TIMER1();
     /* clear timer1 interrupt flag at eoi */
     T1CLRI = 0x00;
-  };
+  }
   if (bit_is_set(IRQSTA, INT_WAKEUP_TIMER2)){
     ISR_WAKEUP_TIMER2();
     /* clear timer2 interrupt flag at eoi */
      T2CLRI = 0x00;
-  };
+  }
   if (bit_is_set(IRQSTA, INT_WATCHDOG_TIMER3)){
     ISR_WATCHDOG_TIMER3();
     /* clear timer3 interrupt flag at eoi */
     T3CLRI = 0x00;
-  };
+  }
   if (bit_is_set(IRQSTA, INT_EXTERNAL_IRQ0)){
     ISR_EXTINT0();
-  };
+  }
 }
 
 
@@ -173,8 +173,8 @@ void _irq_handler(void)
  *      3f.)  Jump to exception vector address \n
  *  4.) The code gets the SWI argument and disables/enables the I-Flag \n
  *
- *  Note: (13 sp, 14 lr, 15 pc). 
- *  
+ *  Note: (13 sp, 14 lr, 15 pc).
+ *
  *  Nothing to clobber since not in user context
  *
  *  See: ARM Compiler toolchain p. 116
@@ -193,7 +193,7 @@ void _swi_handler(void)
                "tst    r1, #" STR(T_FLAG)                   " \n\t"
                /* Yes: Load SVC instruction halfword             */
                "ldrneh r0, [lr,#-2]                           \n\t"
-               /* Extract comment field                          */ 
+               /* Extract comment field                          */
                "bicne  r0, r0, #0xFF00                        \n\t"
                /* No: Occured in ARM state                       */
                "ldreq  r0, [lr,#-4]                           \n\t"
@@ -207,7 +207,7 @@ void _swi_handler(void)
                "swi_end:                                      \n\t"
                /* Store condition field with updated  I-Flag     */
                "msr    spsr_c, r1                             \n\t"
-               /* Return to instruction following the SVC instr. 
+               /* Return to instruction following the SVC instr.
                   ^ in this context means restore CPSR from SPSR */
                "ldmfd  sp!, {r0-r12,pc}^                      \n\t"
 
@@ -218,7 +218,7 @@ void _swi_handler(void)
                "swi_disable_irq:                              \n\t"
                "orr    r1, r1, #" STR(I_FLAG)               " \n\t"
                "b      swi_end                                \n\t"
-               :: /* Nothing to do: 
+               :: /* Nothing to do:
                      No used registers, no operands!             */
   );
 }

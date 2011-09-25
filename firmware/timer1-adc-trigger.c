@@ -73,16 +73,33 @@ volatile uint16_t orig_timer1_count;
 volatile uint16_t orig_skip_samples;
 volatile uint16_t skip_samples;
 
-
-/** Set up our IO pins */
-void timer1_adc_trigger_io_init(void)
+/** Power up ADC
+ *
+ * Note: The ADC must be powered up for at least
+ * 5 μs before it converts correctly
+ */
+inline static
+void adc_power_up(void)
 {
-   /* \todo */
+  ADCCON = (_BV(ADC_POWER_CONTROL));
+}
+
+/** Initialize peripherals and wake up hardware
+ *
+ * Configure used IO pins
+ * Wake up ADC
+ */
+void timer1_adc_trigger_init(void)
+{
+  /* \todo */
+
+  /* wake up adc */
+  adc_power_up();
 }
 /** Put function into init section, register function pointer and
  *  execute function at start up
  */
-register_init5(timer1_adc_trigger_io_init);
+register_init5(timer1_adc_trigger_init);
 
 
 /** Configure 16 bit timer to trigger an ISR every 0.1 second
@@ -111,7 +128,8 @@ void timer1_init(void)
 }
 
 
-/** \todo Should give out a reasonable value */
+/** \todo Should give out a reasonable value
+    2011/09/25 Samplemaker: Could use 32 bit timer2 on ADUC for timebase */
 uint16_t get_duration(void)
 {
   return 0;
