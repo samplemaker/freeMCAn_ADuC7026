@@ -43,8 +43,8 @@
  *-----------------------------------------------------------------------------
  */
 
-/* attribute used for ISR replacement functions */
-#define __isr_stub(replacement) __attribute__ ((weak, alias (STR(replacement))));
+/* attributes used for interrupt service request stubs (ISR interface) */
+#define __isr_stub(default_handler) __attribute__ ((weak, alias (STR(default_handler))))
 
 /*-----------------------------------------------------------------------------
  * Prototypes
@@ -53,21 +53,25 @@
 
 void ISR_TRAP(void);
 
-
-/* Empty stubs for ISR code pointing to ISR_TRAP
- *
- * The real code must be implemented elsewhere
+/* Interface for external ISR code pointing to ISR_TRAP
+ * as the default handler. Tob replaced by real code. Real
+ * code must be implemented in foreign modules
  */
-void ISR_ADC()             __isr_stub(ISR_TRAP)
-void ISR_TIMER0()          __isr_stub(ISR_TRAP)
-void ISR_TIMER1()          __isr_stub(ISR_TRAP)
-void ISR_WAKEUP_TIMER2()   __isr_stub(ISR_TRAP)
-void ISR_EXTINT0()         __isr_stub(ISR_TRAP)
-void ISR_WATCHDOG_TIMER3() __isr_stub(ISR_TRAP)
+void ISR_ADC(void)              __isr_stub(ISR_TRAP);
+void ISR_TIMER0(void)           __isr_stub(ISR_TRAP);
+void ISR_TIMER1(void)           __isr_stub(ISR_TRAP);
+void ISR_WAKEUP_TIMER2(void)    __isr_stub(ISR_TRAP);
+void ISR_EXTINT0(void)          __isr_stub(ISR_TRAP);
+void ISR_WATCHDOG_TIMER3(void)  __isr_stub(ISR_TRAP);
 
 
-/* ISR trap if no external modul is specified but IRQ is
- * unmasked */
+/** Default handler ISR trap
+ *
+ * If no external code is specified to serve the IRQ respectively
+ * and if the corresponding IRQ is unmasked the program is
+ * hooked at this point
+ *
+ */
 void ISR_TRAP(void){
   while (1){}
 }
@@ -86,9 +90,9 @@ void ISR_TRAP(void){
  *         pending (regardless wheather it is masked or not)
  */
 
-/** \brief IRQ - handler (coordinator) function
+/** IRQ - handler (coordinator) function
  *
- *  Redirects IRQ processing according to the IRQ-source (except SWI)
+ *  Redirects IRQ processing according to the IRQ-source
  */
 void __attribute__ ((interrupt("IRQ"))) _irq_handler(void);
 void _irq_handler(void)
