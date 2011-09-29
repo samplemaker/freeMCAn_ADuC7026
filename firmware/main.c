@@ -79,7 +79,6 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
 
 #include "aduc.h"
 #include "flash.h"

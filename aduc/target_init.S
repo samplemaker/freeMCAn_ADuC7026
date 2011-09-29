@@ -96,20 +96,20 @@ fiq_handler:	.word	_fiq_handler
 /* Power on reset init handled inside this file (non weak)     */
 
 	.weak	_und_handler
-	.set	_und_handler, _xcpt_endless
+	.set	_und_handler, _xcptn_trap
 	.weak	_swi_handler
-	.equ	_swi_handler, _xcpt_endless
+	.equ	_swi_handler, _xcptn_trap
 	.weak	_pabt_handler
-	.set	_pabt_handler, _xcpt_endless
+	.set	_pabt_handler, _xcptn_trap
 	.weak	_dabt_handler
-	.set	_dabt_handler, _xcpt_endless
+	.set	_dabt_handler, _xcptn_trap
 	.weak	_irq_handler
-	.equ	_irq_handler, _xcpt_endless
+	.equ	_irq_handler, _xcptn_trap
 	.weak	_fiq_handler
-	.set	_fiq_handler, _xcpt_endless
+	.set	_fiq_handler, _xcptn_trap
 
-_xcpt_endless:
-	b	_xcpt_endless
+_xcptn_trap:
+	b	_xcptn_trap
 
 .ascii "freeMCAn ADUC / (C) 2011 samplemaker and Hans Ulrich Niedermann"
 

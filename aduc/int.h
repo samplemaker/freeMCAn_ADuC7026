@@ -29,17 +29,18 @@
 #define INT_H
 
 /* used by software interrupt handler */
-#define ENABLE_GLOBALIRQ_BY_SWI   0x01
-#define DISABLE_GLOBALIRQ_BY_SWI  0x02
+#define SWI_ENABLE_IRQ   0x01
+#define SWI_DISABLE_IRQ  0x02
 
 #ifndef __ASSEMBLER__
 
+#if !defined(STR) && !defined(_STR1)
 /* macros used for synthesizing asm inline macros */
 #define STR1(x)  #x
 #define STR(x)  STR1(x)
+#endif 
 
-
-/** \brief Enable interrupts within nonpriviledged usermode
+/** \brief Enable interrupts within non-/priviledged usermode
  *
  *  Trigger a software interrupt and switch to supervisor mode
  *  to manipulate the I-Flag in cpsr.
@@ -47,13 +48,10 @@
  */
 inline static
 void enable_IRQs_usermode(void){
-  /* makes nothing but
-   * asm volatile ("SVC 0xab" ::);
-   */
-  asm volatile ( STR(SVC ENABLE_GLOBALIRQ_BY_SWI) ::);
+  asm volatile ( "SVC " STR(SWI_ENABLE_IRQ) ::);
 }
 
-/** \brief Disable interrupts within nonpriviledged usermode
+/** \brief Disable interrupts within non-/priviledged usermode
  *
  *  Trigger a software interrupt and switch to supervisor mode
  *  to manipulate the I-Flag in cpsr.
@@ -61,11 +59,7 @@ void enable_IRQs_usermode(void){
  */
 inline static
 void disable_IRQs_usermode(void){
-  /* makes nothing but
-   * asm volatile ("SVC 0x0" ::);
-   */
-  asm volatile ( STR(SVC DISABLE_GLOBALIRQ_BY_SWI) ::);
-
+  asm volatile ( "SVC " STR(SWI_DISABLE_IRQ) ::);
 }
 
 #endif

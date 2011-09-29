@@ -31,6 +31,7 @@
  * Includes
  *-----------------------------------------------------------------------------
  */
+
 #include <stdint.h>
 
 #include "aduc.h"
@@ -42,67 +43,33 @@
  *-----------------------------------------------------------------------------
  */
 
-/* attribute used as ISR  replacement functions   */
-
-#define __stub __attribute__((weak))
+/* attribute used for ISR replacement functions */
+#define __isr_stub(replacement) __attribute__ ((weak, alias (STR(replacement))));
 
 /*-----------------------------------------------------------------------------
  * Prototypes
  *-----------------------------------------------------------------------------
  */
 
+void ISR_TRAP(void);
 
-/* Empty stubs. Real code may be implemented in another module.
+
+/* Empty stubs for ISR code pointing to ISR_TRAP
  *
+ * The real code must be implemented elsewhere
  */
-void __stub ISR_ADC(void);
-void __stub ISR_TIMER0(void);
-void __stub ISR_TIMER1(void);
-void __stub ISR_WAKEUP_TIMER2(void);
-void __stub ISR_EXTINT0(void);
-void __stub ISR_WATCHDOG_TIMER3(void);
+void ISR_ADC()             __isr_stub(ISR_TRAP)
+void ISR_TIMER0()          __isr_stub(ISR_TRAP)
+void ISR_TIMER1()          __isr_stub(ISR_TRAP)
+void ISR_WAKEUP_TIMER2()   __isr_stub(ISR_TRAP)
+void ISR_EXTINT0()         __isr_stub(ISR_TRAP)
+void ISR_WATCHDOG_TIMER3() __isr_stub(ISR_TRAP)
 
 
-/** \brief IRQ - ADC (empty stub)
- *
- *  Processing code for ADC IRQ
- */
-void ISR_ADC(void){
-}
-
-/** \brief IRQ - TIMER0 (empty stub)
- *
- *  Processing code for TIMER0 IRQ
- */
-void ISR_TIMER0(void){
-}
-
-/** \brief IRQ - TIMER1 (empty stub)
- *
- *  Processing code for TIMER1 IRQ
- */
-void ISR_TIMER1(void){
-}
-
-/** \brief IRQ - TIMER2 (empty stub)
- *
- *  Processing code for TIMER2 IRQ
- */
-void ISR_WAKEUP_TIMER2(void){
-}
-
-/** \brief IRQ - INT0 (empty stub)
- *
- *  Processing code for INT0 IRQ
- */
-void ISR_EXTINT0(void){
-}
-
-/** \brief IRQ - INT_WATCHDOG_TIMER3 (empty stub)
- *
- *  Processing code for TIMER3 IRQ
- */
-void ISR_WATCHDOG_TIMER3(void){
+/* ISR trap if no external modul is specified but IRQ is
+ * unmasked */
+void ISR_TRAP(void){
+  while (1){}
 }
 
 
@@ -157,7 +124,6 @@ void _irq_handler(void)
 }
 
 
-
 /** Software interrupt handler. Enabling and disabling the global I-Flag
  *
  *  1.) The I-Flag in cpsr_c cannot be written in user mode but only in
@@ -199,11 +165,12 @@ void _swi_handler(void)
                "ldreq  r0, [lr,#-4]                           \n\t"
                /* Clear top 8 bits of SVC instruction            */
                "biceq  r0, r0, #0xFF000000                    \n\t"
-               "cmp    r0, #" STR(ENABLE_GLOBALIRQ_BY_SWI)  " \n\t"
+               "cmp    r0, #" STR(SWI_ENABLE_IRQ)           " \n\t"
                "beq swi_enable_irq                            \n\t"
-               "cmp    r0, #" STR(DISABLE_GLOBALIRQ_BY_SWI) " \n\t"
+               "cmp    r0, #" STR(SWI_DISABLE_IRQ)          " \n\t"
                "beq swi_disable_irq                           \n\t"
 
+               /* exit including default case if SWI is unknown  */
                "swi_end:                                      \n\t"
                /* Store condition field with updated  I-Flag     */
                "msr    spsr_c, r1                             \n\t"
@@ -218,8 +185,8 @@ void _swi_handler(void)
                "swi_disable_irq:                              \n\t"
                "orr    r1, r1, #" STR(I_FLAG)               " \n\t"
                "b      swi_end                                \n\t"
-               :: /* Nothing to do:
-                     No used registers, no operands!             */
+               :: /* Nothing to do since complete context is
+                     handled by code entry and exit        */
   );
 }
 
