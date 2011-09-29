@@ -51,11 +51,11 @@
  *-----------------------------------------------------------------------------
  */
 
-void ISR_TRAP(void);
+static void ISR_TRAP(void);
 
 /* Interface for external ISR code pointing to ISR_TRAP
- * as the default handler. Tob replaced by real code. Real
- * code must be implemented in foreign modules
+ * as the default handler. To be replaced by real handlers. 
+ * Code must be implemented in foreign modules
  */
 void ISR_ADC(void)              __isr_stub(ISR_TRAP);
 void ISR_TIMER0(void)           __isr_stub(ISR_TRAP);
@@ -72,9 +72,7 @@ void ISR_WATCHDOG_TIMER3(void)  __isr_stub(ISR_TRAP);
  * hooked at this point
  *
  */
-void ISR_TRAP(void){
-  while (1){}
-}
+static void ISR_TRAP(void){ while (1){;} }
 
 
 /* IRQEN:  Ones indicate that the interrupt request from
@@ -131,7 +129,7 @@ void _irq_handler(void)
 /** Software interrupt handler. Enabling and disabling the global I-Flag
  *
  *  1.) The I-Flag in cpsr_c cannot be written in user mode but only in
- *	a priviledged mode. \n
+ *      a priviledged mode. \n
  *  2.) Switch to supervisor mode by software interrupt. \n
  *  3.) Entering the SWI-exception the processor does: \n
  *      3a.)  Save the address of the next instruction (return adr.)
