@@ -99,7 +99,7 @@ void timer1_adc_trigger_init(void)
 /** Put function into init section, register function pointer and
  *  execute function at start up
  */
-register_init5(timer1_adc_trigger_init);
+module_init(timer1_adc_trigger_init, 5);
 
 
 /** Configure 16 bit timer to trigger an ISR every 0.1 second

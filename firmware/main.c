@@ -135,7 +135,7 @@ void __init main_io_init_unused_pins(void)
 /** Put function into init section, register function pointer and
  *  execute function at start up
  */
-register_init5(main_io_init_unused_pins);
+module_init(main_io_init_unused_pins, 5);
 
 
 /**

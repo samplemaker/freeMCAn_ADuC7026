@@ -123,7 +123,7 @@ void __init data_table_print_status(void)
 /** Put function into init section, register function pointer and
  *  execute function at start up
  */
-register_init8(data_table_print_status);
+module_init(data_table_print_status, 8);
 
 
 /** AD conversion complete interrupt entry point

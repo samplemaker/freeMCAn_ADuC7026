@@ -113,7 +113,7 @@ void __init personality_io_init(void)
 /** Put function into init section, register function pointer and
  *  execute function at start up
  */
-register_init5(personality_io_init);
+module_init(personality_io_init, 5);
 
 
 

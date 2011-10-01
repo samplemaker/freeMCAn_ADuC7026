@@ -129,7 +129,7 @@ void __init uart_init(void)
 /** Put function into init section, register function pointer and
  *  execute function at start up
  */
-register_init5(uart_init);
+module_init(uart_init, 5);
 
 
 

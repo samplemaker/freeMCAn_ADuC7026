@@ -54,7 +54,7 @@ void __init timer1_simple_io_init(void)
 /** Put function into init section, register function pointer and
  *  execute function at start up
  */
-register_init5(timer1_simple_io_init);
+module_init(timer1_simple_io_init, 5);
 
 
 

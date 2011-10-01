@@ -49,7 +49,7 @@ void __init software_version_send(void)
 /** Put function into init section, register function pointer and
  *  execute function at start up
  */
-register_init8(software_version_send);
+module_init(software_version_send, 8);
 
 
 /** @} */

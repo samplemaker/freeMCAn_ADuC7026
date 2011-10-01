@@ -57,7 +57,7 @@ void __init switch_init(void)
 /** Put function into init section, register function pointer and
  *  execute function at start up
  */
-register_init5(switch_init);
+module_init(switch_init, 5);
 
 
 /** Acquire "start of measurement command by hardware button"

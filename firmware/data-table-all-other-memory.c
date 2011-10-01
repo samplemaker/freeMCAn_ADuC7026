@@ -75,7 +75,7 @@ void __init data_table_init(void)
 /** Put function into init section, register function pointer and
  *  execute function at start up
  */
-register_init5(data_table_init);
+module_init(data_table_init, 5);
 
 
 /** @} */
