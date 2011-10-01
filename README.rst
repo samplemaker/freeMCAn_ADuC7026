@@ -8,7 +8,14 @@ freemcan
 What is freemcan?
 -----------------
 
-(FIXME) freemcan is stuff.
+The basic approach of freeMCAn was to implement a multi channel analyzer
+software on bare silicon chips like ATMega or ADUC. Improved over time
+freeMCAn is no longer only a so called "multi channel analyzer". It employs 
+moreover several functions of a data logger like data time recording 
+(oscilloscope functionality) and statistics counting.
+
+This software port of freeMCAn is related to the ADUC7026 silicon device.
+Note: There are other variants for other devices like ATMEGA.
 
 
 Why the name?
@@ -43,10 +50,15 @@ Software Requirements
 ~~~~~~~~~~~~~~~~~~~~~
 
   * GNU make_
-  * avr-gcc_ based AVR toolchain
-  * avr-binutils_ >= 2.19 (we use INSERT AFTER in linker scripts)
   * POSIX/GNU/Linux/Unix host system
   * gcc_ compiler for host system
+
+Toolchain: freeMCAn - ADUC is known to be build on Fedora with newlib 
+and gcc based on an ARM7 Toolchain:
+  * binutils-2.21.tar.gz
+  * insight-6.8-1a.tar.bz2
+  * gcc-4.4.6.tar.bz2
+  * newlib-1.19.0.tar.gz
 
 For building the internal code documentation (mostly of interest to
 hackers), you additionally need
@@ -59,8 +71,6 @@ need
 
   * sloccount_
 
-.. _avr-gcc:   http://gcc.gnu.org/
-.. _avr-binutils: http://sourceware.org/binutils/
 .. _doxygen:   http://www.stack.nl/~dimitri/doxygen/index.html
 .. _gcc:       http://gcc.gnu.org/
 .. _graphviz:  http://www.graphviz.org/
@@ -90,9 +100,11 @@ Hacking
 Subdirectory Contents
 ~~~~~~~~~~~~~~~~~~~~~
 
+   ADUC/
+           Driver for ADUC7026 microcontroller
 
    firmware/
-           The device firmware for Atmel ATmega644 microcontroller
+           The device firmware for ADUC7026 microcontroller
 
    code-comparison/
            Some common tasks our firmware needs written in portable C
@@ -114,13 +126,3 @@ Subdirectory Contents
 
 Ideas
 -----
-
-  * cbi/sbi do not modify SREG. That makes it easy to write an ISR
-    without saving any registers, like e.g.::
-
-       foo_vector:         /* ISR entry: 5 clock cycles */
-                 sbi foo,bar          /* 2 clock cycles */
-                 reti                 /* 5 clock cycles */
-
-    for doing the reset timing stuff, potentially at ADC trigger, and
-    after timer IRQ counted delay later, or similar stuff.
