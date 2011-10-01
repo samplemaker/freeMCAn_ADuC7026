@@ -75,6 +75,7 @@ SECTIONS
     *(.initcall5.init)
     *(.initcall6.init)
     *(.initcall7.init)
+    *(.initcall8.init)
     __initcall_end = . ;
     . = ALIGN(4);
   } >flash

@@ -34,28 +34,22 @@
 #include "packet-comm.h"
 #include "git-version.h"
 
+/* will expand to:
+ * (__extension__({static char __c[] = ("string"); &__c[0];}))
+ */
+# define PSTR(s) (__extension__({static char __c[] = (s); &__c[0];}))
+
 
 static
 void __init software_version_send(void)
 {
-
-/*  
-  # define PSTR(s) (__extension__({static char __c[] PROGMEM = (s); &__c[0];}))
-  send_text((__extension__({static char __c[] __attribute__((__progmem__)) =
-            ("freemcan " ""); &__c[0];})));
-*/
-  // \todo
-
-  //send_text("freemcan" GIT_VERSION);
-send_text("freemcan");
-  //send_text(GIT_VERSION);
+  send_text(PSTR("freemcan" GIT_VERSION));
 }
 
 /** Put function into init section, register function pointer and
  *  execute function at start up
  */
 register_init8(software_version_send);
-
 
 
 /** @} */
