@@ -1,3 +1,6 @@
+
+include ../common.mk
+
 ARMPATH=~/DevelToolbin/binaries/armThumb-4.4.6/bin/
 CC=$(ARMPATH)arm-elf-gcc
 OBJCPY=$(ARMPATH)arm-elf-objcopy
@@ -8,18 +11,18 @@ CCFLAGS=  -mcpu=arm7tdmi -gstabs -g -Wall -Wextra -Wstrict-prototypes -std=gnu99
 ########################################################################################
 # uncomment if you want to have optimized code
 # comment if you want to resonably debug the code
-# CCFLAGS +=- Os
+CCFLAGS += -Os
 ########################################################################################
 ASMFLAGS= -mcpu=arm7tdmi -I. -x assembler-with-cpp -gstabs -Wall -Wextra
 CINCS = -I../include -I$(LIBADUC)
-LDFLAGS_COMMON = -mcpu=arm7tdmi -std=gnu99 -Os -I. -nostartfiles 
+LDFLAGS_COMMON = -mcpu=arm7tdmi -std=gnu99 -Os -I. -nostartfiles
 
 OBJ_LIBADUC = $(LIBADUC)flash.o  $(LIBADUC)init.o  $(LIBADUC)int.o  $(LIBADUC)target_init.o
 OBJ_COMMON = main.o checksum.o uart-comm.o frame-comm.o packet-comm.o software-version.o switch.o
 
 ########################################################################################
 
-OBJ_ADC_INT_MCA = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-mca-ext-trig.o timer1-countdown-and-stop.o timer1-get-duration.o timer1-init-simple.o  
+OBJ_ADC_INT_MCA = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-mca-ext-trig.o timer1-countdown-and-stop.o timer1-get-duration.o timer1-init-simple.o
 LDFLAGS_ADC_INT_MCA =$(LDFLAGS_COMMON) -T$(LIBADUC)project.ld -Wl,-Map=firmware-adc-int-mca.map,--cref -g
 
 OBJ_ADC_INT_MCA_TIMED = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-mca-timed-trig.o timer1-adc-trigger.o
