@@ -38,7 +38,7 @@
  * total: 2 kbyte = 1k x 16 bit
  * range: 0x8F800 .. 0x8FFFF
  *
- * flash page (sector size) is 512 byte
+ * flash sector size is 512 byte
  *
  */
 
@@ -142,34 +142,39 @@ SECTIONS
     PROVIDE (__heap_start = .) ;
   }  >ram
 
-/* gather for empty space after .data for eepflash and eepflash_cpy copy page
- *
- */
-/* 
-  _eepflash_start = _data_load_end;
-  _eepflash_start = ALIGN(_eepflash_start, 1024); 
-  _eepflash_size = (__flash_end__ - _eepflash_start) / 2;
-  _eepflash_end = _eepflash_start + _eepflash_size;
-  _eepflash_cpy_start = _eepflash_end;
-  _eepflash_cpy_end = __flash_end__;
-  _eepflash_cpy_size = (_eepflash_cpy_end - _eepflash_cpy_start);
-*/
-  _eepflash_start = 0x8c800;
-  _eepflash_start = ALIGN(_eepflash_start, 1024); 
-  _eepflash_size = 0x400;
-  _eepflash_end = _eepflash_start + _eepflash_size;
-  _eepflash_cpy_start = _eepflash_end;
-  _eepflash_cpy_size = _eepflash_size;
-  _eepflash_cpy_end = _eepflash_cpy_start + _eepflash_cpy_size;
+
+  /* _eepflash_section1_start = 0x8c800;
+   * _eepflash_section_size = (__flash_end__ - _eepflash_section1_start) / 2;
+   */
+
+  /* locate to 30 sectors above the end of flash code & data */
+  _eepflash_section1_start = _data_load_end + 30*512;
+  /* rectify this address */
+  _eepflash_section1_start = ALIGN(_eepflash_section1_start, 512);
+  /* flash section size: 
+   * store 2 x 11 bit data table, 3byte each element plus some extra space 
+   * for additional data and overhead ~ 24 + 2 sectors before sections1 & 2
+   * are swapped
+   */
+  _eepflash_section_size = 26*512;
+  _eepflash_section1_end = _eepflash_section1_start + _eepflash_section_size;
+  _eepflash_section2_start = _eepflash_section1_end;
+  _eepflash_section2_end = _eepflash_section2_start + _eepflash_section_size;
 
 
-/* to avoid orphaned sections are placed somewhere in this area we put one
+/* to avoid orphaned sections are placed somewhere in this area and 
+ * to check wheather we are running out of flash space we put one
  * empty output section to force a linker error if something goes wrong
  */
-  .empty _eepflash_start :
+  .reserved_eepflash _eepflash_section1_start :
   {
-    . = . + _eepflash_size;        /* eepflash data area             */
-    . = . + _eepflash_cpy_size;    /* eepflash copy page (same size) */
+    /* eepflash section1 and section2 */    
+    . = . + 2*_eepflash_section_size;
+    /* ADuC7019/ADuC702x Silicon Anomaly List:
+     * Access to Flash Address 0x0008F7FF Causes a Data Abort [er022] 
+     * --> avoid last sector to be allocated for eepflash 
+     */
+    . = . + 512;
   }  >flash
 
   /* Stabs debugging sections.  */

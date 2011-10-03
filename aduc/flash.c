@@ -22,7 +22,8 @@
  * \defgroup aduc_flash Flash driver for eeprom in flash emulation
  * \ingroup ADUC
  *
- * Implements driver functions for storing data into flash
+ * Implements driver functions for storing data into flash.
+ * Note: Eepflash is nonreentrant!
  *
  * @{
  */
@@ -35,6 +36,7 @@
 #include <stdint.h>
 
 #include "aduc.h"
+#include "init.h"
 #include "flash.h"
 
 /*-----------------------------------------------------------------------------
@@ -46,13 +48,13 @@
  *
  *  2^9 = 512 bytes per sector
  */
-#define FLASH_SECTOR_DEFS 9
+#define FLASH_SIZE_CONVERSIONS 9
 
 /** Macros for sector size calculation
  *
  */
-#define MEM_TO_NUMSECTOR(value) ((value) >> (FLASH_SECTOR_DEFS))
-#define FLASH_SECTOR_SIZE ((1UL) << (FLASH_SECTOR_DEFS))
+#define FLASHADDR_TO_NUMSECTOR(addr, start) (((addr) - (start)) >> (FLASH_SIZE_CONVERSIONS))
+#define FLASH_SECTOR_SIZE ((1UL) << (FLASH_SIZE_CONVERSIONS))
 
 /** uint8_t pattern for marking a block as valid
  *
@@ -64,9 +66,32 @@
  *-----------------------------------------------------------------------------
  */
 
+
 extern char __flash_start__[];
-extern char _eepflash_start[], _eepflash_end[];
-extern char _eepflash_cpy_start[], _eepflash_cpy_end[];
+extern char _eepflash_section1_start[], _eepflash_section1_end[];
+extern char _eepflash_section2_start[], _eepflash_section2_end[];
+
+
+typedef enum {
+  false = 0,
+  true  = 1
+} BOOL;
+
+
+/** \brief Hold most recent flash section address
+ *
+ * Hold alternate and active flash section address
+ */
+struct flash_sections_struct {
+  char *alternate_start;
+  char *alternate_end;
+  char *active_start;
+  char *active_end;
+};
+
+typedef struct flash_sections_struct flash_sections_t;
+
+static flash_sections_t flash_sections;
 
 /** \brief eepflash block header
  *
@@ -80,10 +105,6 @@ struct block_header_struct {
 
 typedef struct block_header_struct block_header_t;
 
-typedef enum {
-  false = 0,
-  true  = 1
-} BOOL;
 
 
 /*-----------------------------------------------------------------------------
@@ -92,9 +113,16 @@ typedef enum {
  */
 
 
+
+/*-----------------------------------------------------------------------------
+ * Low level functions (direct hardware access)
+ *-----------------------------------------------------------------------------
+ */
+
+
 /** Low level function to erase flash sectors
  *
- * Erase all pages indexed by argument
+ * Erase all sectors indexed by argument
  */
 static int8_t
 hw_erase(const uint8_t sector_start, const uint8_t sector_end){
@@ -174,6 +202,10 @@ hw_write(const char *src,  const char *dst, const uint16_t len){
   return true;
 }
 
+/*-----------------------------------------------------------------------------
+ * Abtraction layer functions
+ *-----------------------------------------------------------------------------
+ */
 
 /** Set valid_marker in eepflash block header descriptor
  *
@@ -195,13 +227,64 @@ header_check_valid (const block_header_t *header)
 }
 
 
-/** Returns pointer to next empty space inside eepflash working page
+static
+void __init eepflash_init(void){
+
+  /* check if there are valid markers inside section 2 */
+  block_header_t *header = (block_header_t *)(_eepflash_section2_start);
+
+  if (header_check_valid(header)){
+    /* yes: mark section two as active and section one as alternate */
+    flash_sections.active_start = _eepflash_section2_start;
+    flash_sections.active_end = _eepflash_section2_end;
+    flash_sections.alternate_start = _eepflash_section1_start;
+    flash_sections.alternate_end = _eepflash_section1_end;
+  } else
+  {
+    /* no: maybe flash is empty at all or currently section one is in use,
+     * then mark section one as active and section two as alternate
+     */
+    flash_sections.active_start = _eepflash_section1_start;
+    flash_sections.active_end = _eepflash_section1_end;
+    flash_sections.alternate_start = _eepflash_section2_start;
+    flash_sections.alternate_end = _eepflash_section2_end;
+  };
+}
+
+module_init(eepflash_init, 0);
+
+
+inline static
+void eepflash_swap_and_erase_sections(void){
+
+  /* erase current active section (working section) */
+  const uint8_t sector_start =
+    FLASHADDR_TO_NUMSECTOR(flash_sections.active_start, __flash_start__ );
+  const uint8_t sector_end =
+    FLASHADDR_TO_NUMSECTOR(flash_sections.active_end, __flash_start__) - 1;
+
+  hw_erase(sector_start, sector_end);
+
+  /* exchange section addresses */
+  char *temp;
+
+  temp = flash_sections.active_start;
+  flash_sections.active_start = flash_sections.alternate_start;
+  flash_sections.alternate_start = temp;
+
+  temp = flash_sections.active_end;
+  flash_sections.active_end = flash_sections.alternate_end;
+  flash_sections.alternate_end = temp;
+}
+
+
+/** Returns pointer to next empty space inside eepflash active working area
  *
  * Implemented as linear search
  */
 inline static void
 blocks_seek_end(char **end){
-  char *cur_pos = _eepflash_start;
+  char *cur_pos = flash_sections.active_start;
   /* get the first header */
   block_header_t *header_next = (block_header_t *)(cur_pos);
   while (header_check_valid(header_next)){
@@ -225,8 +308,8 @@ blocks_seek_end(char **end){
 inline static int8_t
 blocks_getblock(char **block, const uint8_t block_id){
   BOOL valid_block_found = false;
-  /* from beginning of the eepflash section */
-  char *cur_pos = _eepflash_start;
+  /* from beginning of the active eepflash section */
+  char *cur_pos = flash_sections.active_start;
   /* get first header */
   block_header_t *header = (block_header_t *)(cur_pos);
   /* for all valid header */
@@ -249,14 +332,15 @@ blocks_getblock(char **block, const uint8_t block_id){
 }
 
 
-/** Perform a cleanup into copy page and write data back to eepflash
+/** Perform a cleanup into alternate flash section and swap
+ * alternate and active section
  *
  */
 inline static void
 blocks_cleanup(char **end){
-  /* copy most recent and valid block from working page to copy page */
+  /* copy most recent and valid block from active section to alternate section */
   char *cur_src;
-  char *cur_dst = _eepflash_cpy_start;
+  char *cur_dst = flash_sections.alternate_start;
   /* for each block ID */
   for (uint8_t block_id = 0; block_id < NUM_BLOCKS; block_id++){
     if (blocks_getblock((char **)&cur_src, block_id)){
@@ -267,33 +351,21 @@ blocks_cleanup(char **end){
           we must align to get the true length           */
       const uint16_t block_len = _ALIGN(header->data_size, 2) +
                                  sizeof(block_header_t);
-      /* copy most recent block to copy page */
+      /* copy most recent block to alternate section */
       hw_write(cur_src, cur_dst, block_len);
       cur_dst += block_len;
     }
     /* else: no block found -> therefore nothing to do */
   }
-  /* erase working page (eepflash sectors) */
-  const uint8_t wp_sector_start =
-                MEM_TO_NUMSECTOR(_eepflash_start - __flash_start__ );
-  const uint8_t wp_sector_end =
-                MEM_TO_NUMSECTOR(_eepflash_end - __flash_start__) - 1;
-  hw_erase(wp_sector_start, wp_sector_end);
-  /* write copy page to eepflash           */
-  const uint16_t cpy_data_length = cur_dst - _eepflash_cpy_start;
-  hw_write(_eepflash_cpy_start, _eepflash_start, cpy_data_length);
-  /* erase copy page                       */
-  const uint8_t cp_sector_start =
-                MEM_TO_NUMSECTOR(_eepflash_cpy_start - __flash_start__);
-  const uint8_t cp_sector_end =
-                MEM_TO_NUMSECTOR(_eepflash_cpy_end - __flash_start__) - 1;
-  /* \todo:
-   * actually it is not necessary to erase the complete copy page
-   * but only sectors where used data resides
-   * -> _eepflash_cpy_start + cpy_data_length */
-  hw_erase(cp_sector_start, cp_sector_end);
-  /* point to next free space in flash */
-  *end = (_eepflash_start - _eepflash_cpy_start) + cur_dst;
+
+  /* swap working sections:
+   * current active section gets alternate (and will be erased) and alternate
+   * gets active
+   */
+  eepflash_swap_and_erase_sections();
+
+  /* return free area in (now) active flash section */
+  *end = cur_dst;
 }
 
 
@@ -325,8 +397,7 @@ eepflash_read(char **data, uint16_t *user_len, const uint8_t block_id){
  *
  * If len is odd the true data stored is aligned (round up). Correct
  * length will be recovered since correct len is stored inside the header
- * If eepflash area is full a clean up into copy page and write
- * back into working page is performed.
+ * If active eepflash section is full a clean up into alternate section is performed
  */
 void
 eepflash_write(const char *src, const uint16_t user_len, const uint8_t block_id){
@@ -343,13 +414,13 @@ eepflash_write(const char *src, const uint16_t user_len, const uint8_t block_id)
      data length */
   const uint16_t data_len = _ALIGN(user_len, 2);
   /* if we are running out of space ... */
-  if ((cur_pos + sizeof(block_header_t) + data_len) > _eepflash_end){
+  if ((cur_pos + sizeof(block_header_t) + data_len) > flash_sections.active_end){
     /* ... perform a cleanup and seek to the end */
     blocks_cleanup((char **)&cur_pos);
   }
-  /* if user wants to write more data than possible this will crash */
-  if ((cur_pos + sizeof(block_header_t) + data_len) > _eepflash_end) {
-    /* don't write any data or cause error handling ARM exception */
+  /* if user wants to write still more data than possible this will crash */
+  if ((cur_pos + sizeof(block_header_t) + data_len) > flash_sections.active_end) {
+    /* abort write or cause error handling ARM exception */
   }
   else {
     /* write header of new block                           */
