@@ -371,26 +371,60 @@ blocks_cleanup(char **end){
 
 /** Returns most recent valid block-data with respect to BLOCKID
  *
- * Returns false if no valid block was found, true elsewise
+ *  Returns false if no valid block was found, true elsewise
  *
- * Note: Returnpointer points to the correct data until
- * a new eepflash_write is forced.
  */
 int8_t
-eepflash_read(char **data, uint16_t *user_len, const uint8_t block_id){
-  if (blocks_getblock(data, block_id)){
+eepflash_copy_block(char *p_ram, const uint8_t block_id){
+  char *p_flash;
+
+  if (blocks_getblock((char **)&p_flash, block_id)){
+
     /* get header */
-    block_header_t *header = (block_header_t *)(*data);
-    /* get virtual datasize (user datasize of data) */
-    *user_len = header->data_size;
-    /* adjust *data to the start of the data field */
-    *data = *data + sizeof(block_header_t);
+    block_header_t *header = (block_header_t *)(p_flash);
+    /* point to data in flash */
+    char *p_data = p_flash + sizeof(block_header_t);
+    /* point to the end of user-data (might be smaller than the written data) */
+    const char *p_end = (char *) (p_data + header->data_size);
+
+   /* point to destiny in ram */
+    char *p_dst = p_ram; 
+   /* copy data from flash to ram */
+
+    while (p_data != p_end)
+      *(p_dst++) = *(p_data++);
+
     return true;
   }
   else{
     return false;
   }
 }
+
+
+/** Returns flash pointer to most recent valid block-data
+  * with respect to BLOCKID
+  *
+  * Returns false if no valid block was found, true elsewise
+  *
+  * Note: Returnpointer points to the correct data until
+  * a new eepflash_write is forced.
+  */
+ int8_t
+ eepflash_read(char **data, uint16_t *user_len, const uint8_t block_id){
+   if (blocks_getblock(data, block_id)){
+     /* get header */
+     block_header_t *header = (block_header_t *)(*data);
+     /* get virtual datasize (user datasize of data) */
+     *user_len = header->data_size;
+     /* adjust *data to the start of the data field */
+     *data = *data + sizeof(block_header_t);
+     return true;
+   }
+   else{
+     return false;
+   }
+ }
 
 
 /** Write a block with BLOCKID into eepflash

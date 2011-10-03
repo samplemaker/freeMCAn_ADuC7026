@@ -143,8 +143,6 @@ module_init(main_io_init_unused_pins, 5);
  * param set.
  */
 personality_param_t pparam_sram;
- /* personality_param_t pparam_eeprom;
-BARE_COMPILE_TIME_ASSERT(sizeof(pparam_sram) == sizeof(pparam_eeprom)); */
 
 
 /** Send value table packet to controller via serial port (layer 3).
@@ -213,22 +211,7 @@ void send_eeprom_params_in_sram(void)
 
 void params_copy_from_eeprom_to_sram(void)
 {
-  /* fetch data from flash */
-  char *param_eeprom;
-  uint16_t num_chars;
-  eepflash_read((char **)&param_eeprom,
-                &num_chars, BLOCKID_0);
-  /* copy data from flash to ram */
-  char *p_dst = (char *)&pparam_sram;
-  const char *p_end = (char *) (param_eeprom + num_chars);
-  while (param_eeprom != p_end)
-    *(p_dst++) = *(param_eeprom++);
-
-/* \todo
-  dirty hack - implement "eeprom_read_block" in flash.c !
-  eeprom_read_block(&pparam_sram, &pparam_eeprom,
-                    sizeof(pparam_sram));
-*/
+  eepflash_copy_block((char *)&pparam_sram, BLOCK0);
 }
 
 
@@ -353,12 +336,7 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
       /* The param length has already been checked by the frame parser */
       send_state("PARAMS_TO_EEPROM");
 
-/* \todo
-      eeprom_update_block(&pparam_sram, &pparam_eeprom,
-                          sizeof(pparam_eeprom));
-*/
-      eepflash_write((char *)&pparam_sram,
-                     sizeof(pparam_sram), BLOCKID_0);
+      eepflash_write((char *)&pparam_sram, sizeof(pparam_sram), BLOCK0);
 
       send_state(PSTR_READY);
       return STP_READY;

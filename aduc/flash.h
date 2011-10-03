@@ -28,15 +28,14 @@
 
 
 enum {
-  BLOCKID_0,
-  BLOCKID_1,
-  BLOCKID_2,
+  BLOCK0,
+  BLOCK1,
   NUM_BLOCKS
 };
 
 
 void eepflash_write(const char *src, const uint16_t user_len, const uint8_t block_id);
-int8_t eepflash_read(char **dst, uint16_t *len, const uint8_t block_id);
+int8_t eepflash_copy_block(char *p_ram, const uint8_t block_id);
 
 
 /** @} */
