@@ -142,25 +142,28 @@ SECTIONS
     PROVIDE (__heap_start = .) ;
   }  >ram
 
+/** eepflash configuration
+ *
+ */
 
-  /* _eepflash_section1_start = 0x8c800;
-   * _eepflash_section_size = (__flash_end__ - _eepflash_section1_start) / 2;
-   */
+  /* locate to 30 sectors above the end of flash code & data 
+  _eepflash_section1_start = _data_load_end + 30*512; */
+  _eepflash_section1_start = 0x85000;
 
-  /* locate to 30 sectors above the end of flash code & data */
-  _eepflash_section1_start = _data_load_end + 30*512;
   /* rectify this address */
   _eepflash_section1_start = ALIGN(_eepflash_section1_start, 512);
+
   /* flash section size: 
    * store 2 x 11 bit data table, 3byte each element plus some extra space 
    * for additional data and overhead ~ 24 + 2 sectors before sections1 & 2
    * are swapped
    */
   _eepflash_section_size = 26*512;
+  /* _eepflash_section_size = (__flash_end__ - _eepflash_section1_start) / 2;  */
+
   _eepflash_section1_end = _eepflash_section1_start + _eepflash_section_size;
   _eepflash_section2_start = _eepflash_section1_end;
   _eepflash_section2_end = _eepflash_section2_start + _eepflash_section_size;
-
 
 /* to avoid orphaned sections are placed somewhere in this area and 
  * to check wheather we are running out of flash space we put one
@@ -176,6 +179,7 @@ SECTIONS
      */
     . = . + 512;
   }  >flash
+
 
   /* Stabs debugging sections.  */
   .stab            0 : { *(.stab) }
