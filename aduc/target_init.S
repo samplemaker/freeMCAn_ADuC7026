@@ -129,9 +129,10 @@ _init_target:
  *
  * See: ADUC7026 datasheet p. 55
  *
+ * Note: Default after power on reset is PLL clocking mode. No need to 
+ *       to touch PLLCON MMR.
+ *
  */
-
-#if RESET_POWER_AND_PLL_AT_BOOT
 	ldr	r0, =__MMR_BASE
 	mov	r1, #0x01	@ Access to POWCON needs special sequence
 	str	r1, [r0, #POWKEY1]
@@ -139,7 +140,6 @@ _init_target:
 	str	r1, [r0, #POWCON]
 	mov	r1, #0xF4
 	str	r1, [r0, #POWKEY2]
-#endif
 
 /** Setup stack pointers and FIQ/IRQ bits
  *

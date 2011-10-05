@@ -27,16 +27,9 @@
 #define CLOCK_H
 
 
-/** Boot set up for PLL and power control (if required)
- *
- */
-#define RESET_POWER_AND_PLL_AT_BOOT  1
-
 /* CD = 0 (No clock divider), PC = 0 (Active Mode) */
 #define POWCON_RESET_CFG             0x0    
-/* MDCLK = 1 (PLL, Default configuration )
-#define PLLCON_RESET_CFG             0x1    
-*/
+
 
 #ifndef __ASSEMBLER__
 
@@ -71,15 +64,11 @@
  *   0: run core with 41.78 Mhz
  *   1: run core with 41.78/2 Mhz
  *   2: run core with 41.78/4 Mhz
- *   3: run core with 41.78/8 Mhz -> default without boot
+ *   3: run core with 41.78/8 Mhz -> default 
  *   ...
  *
  */
-#if RESET_POWER_AND_PLL_AT_BOOT
-  #define F_HCLK (F_UCLK / (1ULL << ((POWCON_RESET_CFG) & 0x7)) )
-#else
-  #define F_HCLK 5222500ULL
-#endif
+#define F_HCLK (F_UCLK / (1ULL << ((POWCON_RESET_CFG) & 0x7)) )
 
 
 #endif
