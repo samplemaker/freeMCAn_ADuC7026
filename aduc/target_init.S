@@ -125,19 +125,14 @@ _xcptn_trap:
 
 _init_target:
 
-/** Initialize / reset phase lock loop and power control
+/** Initialize / reset clock divider in power control
  *
  * See: ADUC7026 datasheet p. 55
  *
  */
+
 #if RESET_POWER_AND_PLL_AT_BOOT
 	ldr	r0, =__MMR_BASE
-	mov	r1, #0xaa	@ Access to PLLCON needs special sequence
-	str	r1, [r0, #PLLKEY1]
-	mov	r1, #PLLCON_RESET_CFG
-	str	r1, [r0, #PLLCON]
-	mov	r1, #0x55
-	str	r1, [r0, #PLLKEY2]
 	mov	r1, #0x01	@ Access to POWCON needs special sequence
 	str	r1, [r0, #POWKEY1]
 	mov	r1, #POWCON_RESET_CFG
