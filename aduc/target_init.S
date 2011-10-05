@@ -48,12 +48,12 @@
 /** Stack sizes in operating modes
  *
  */
-	.equ	STACKSIZE_UND, 4
-	.equ	STACKSIZE_SVC, 256
-	.equ	STACKSIZE_ABT, 4
-	.equ	STACKSIZE_FIQ, 4
-	.equ	STACKSIZE_IRQ, 256
-	.equ	STACKSIZE_USR, 256
+	.set	STACKSIZE_UND, 4
+	.set	STACKSIZE_SVC, 256
+	.set	STACKSIZE_ABT, 4
+	.set	STACKSIZE_FIQ, 4
+	.set	STACKSIZE_IRQ, 256
+	.set	STACKSIZE_USR, 256
 
 .code 32
 .align 0
@@ -98,13 +98,13 @@ fiq_handler:	.word	_fiq_handler
 	.weak	_und_handler
 	.set	_und_handler, _xcptn_trap
 	.weak	_swi_handler
-	.equ	_swi_handler, _xcptn_trap
+	.set	_swi_handler, _xcptn_trap
 	.weak	_pabt_handler
 	.set	_pabt_handler, _xcptn_trap
 	.weak	_dabt_handler
 	.set	_dabt_handler, _xcptn_trap
 	.weak	_irq_handler
-	.equ	_irq_handler, _xcptn_trap
+	.set	_irq_handler, _xcptn_trap
 	.weak	_fiq_handler
 	.set	_fiq_handler, _xcptn_trap
 
@@ -129,7 +129,7 @@ _init_target:
  *
  * See: ADUC7026 datasheet p. 55
  *
- * Note: Default after power on reset is PLL clocking mode. No need to 
+ * Note: Default is PLL clocking mode after power on reset. No need to 
  *       to touch PLLCON MMR.
  *
  */
@@ -197,8 +197,8 @@ zero_bss:
 	ldr	r2, =_data_load_end	@ r2 = addr(end of .data => ram)
 copy_data:
 	cmp	r0, r2			@ if (r0-r2)<0 (N, V flag):
-	ldmltia	r0!,{r3}		@ if cond then r3=*(r1) then r1+=4
-	stmltia	r1!,{r3}		@ if cond then *(r0)=r3 then r0+=4
+	ldmltia	r0!,{r3}		@ if cond then r3=*(r0) then r0+=4
+	stmltia	r1!,{r3}		@ if cond then *(r1)=r3 then r1+=4
 	blt	copy_data		@ branch if condition
 
 /** Execute initialization code and jump to main
