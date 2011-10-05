@@ -35,8 +35,9 @@
 
 /* CD = 0 (No clock divider), PC = 0 (Active Mode) */
 #define POWCON_RESET_CFG             0x0    
-/* MDCLK = 1 (PLL, Default configuration )         */
+/* MDCLK = 1 (PLL, Default configuration )
 #define PLLCON_RESET_CFG             0x1    
+*/
 
 
 #ifndef __ASSEMBLER__
