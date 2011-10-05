@@ -180,9 +180,9 @@ _init_target:
 	ldr	r1, =__bss_start__	@ r1 = addr(start of .bss section)
 	ldr	r2, =__bss_end__	@ r2 = addr(end of .bss section)
 zero_bss:
-        cmp	r1, r2			@ (r1 ==<> r2) ?
-	strlo	r0, [r1], #4		@ if r1<r2: *(r1)=r0 then r1+=4
-	blo	zero_bss		@ branch if condition lower
+        cmp	r1, r2			@ if (r1-r2)<0 (N, V flag):
+	stmltia	r1!, {r0} 		@ if cond then *(r1)=r0 then r1+=4
+	blt	zero_bss		@ branch if condition
 
 /** Initialize variables in RAM
  *
@@ -196,10 +196,10 @@ zero_bss:
 	ldr	r1, =_data		@ r1 = addr(start of .data => ram)
 	ldr	r2, =_data_load_end	@ r2 = addr(end of .data => ram)
 copy_data:
-	cmp	r0, r2			@ (r0 ==<> r2) ?
-	ldrlo	r3, [r0], #4		@ if r0<r2: r3=*(r0) then r0+=4
-	strlo	r3, [r1], #4		@ if r0<r2: *(r1)=r3 then r1+=4
-	blo	copy_data		@ branch if condition lower
+	cmp	r0, r2			@ if (r0-r2)<0 (N, V flag):
+	ldmltia	r0!,{r3}		@ if cond then r3=*(r1) then r1+=4
+	stmltia	r1!,{r3}		@ if cond then *(r0)=r3 then r0+=4
+	blt	copy_data		@ branch if condition
 
 /** Execute initialization code and jump to main
  *
