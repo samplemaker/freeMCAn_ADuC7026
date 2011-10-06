@@ -38,7 +38,6 @@
  */
 
 #include "aduc.h"
-#include "clock.h"
 
 .extern main
 .extern _irq_handler

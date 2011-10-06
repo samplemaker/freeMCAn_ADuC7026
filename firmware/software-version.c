@@ -28,7 +28,6 @@
  * @{
  */
 
-#include "defs.h"
 #include "init.h"
 
 #include "packet-comm.h"

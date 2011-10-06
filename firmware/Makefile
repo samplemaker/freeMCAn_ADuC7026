@@ -17,7 +17,7 @@ ASMFLAGS= -mcpu=arm7tdmi -I. -x assembler-with-cpp -gstabs -Wall -Wextra
 CINCS = -I../include -I$(LIBADUC)
 LDFLAGS_COMMON = -mcpu=arm7tdmi -std=gnu99 -Os -I. -nostartfiles
 
-OBJ_LIBADUC = $(LIBADUC)flash.o  $(LIBADUC)init.o  $(LIBADUC)int.o  $(LIBADUC)target_init.o
+OBJ_LIBADUC = $(LIBADUC)flash.o  $(LIBADUC)init.o  $(LIBADUC)interrupt.o  $(LIBADUC)target_init.o
 OBJ_COMMON = main.o checksum.o uart-comm.o frame-comm.o packet-comm.o software-version.o switch.o
 
 ########################################################################################
@@ -66,7 +66,7 @@ $(LIBADUC)target_init.o : $(LIBADUC)target_init.S
 $(LIBADUC)flash.o : $(LIBADUC)flash.c $(HEADERS)
 	$(CC) $(CCFLAGS) $(CINCS) $< -std=gnu99 -mthumb -mthumb-interwork -c -o $@
 
-$(LIBADUC)int.o : $(LIBADUC)int.c $(HEADERS)
+$(LIBADUC)interrupt.o : $(LIBADUC)interrupt.c $(HEADERS)
 	$(CC) $(CCFLAGS) $(CINCS) $< -std=gnu99 -marm -mthumb-interwork -c -o $@
 
 $(LIBADUC)init.o : $(LIBADUC)init.c $(HEADERS)

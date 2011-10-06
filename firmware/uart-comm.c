@@ -32,7 +32,6 @@
 #include <stdint.h>
 
 #include "aduc.h"
-#include "clock.h"
 #include "init.h"
 
 #include "uart-defs.h"

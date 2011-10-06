@@ -82,7 +82,6 @@
 
 #include "aduc.h"
 #include "flash.h"
-#include "int.h"
 #include "init.h"
 #include "reset.h"
 

@@ -29,6 +29,8 @@
 
 #include "arm7tdmi.h"
 #include "aduc7026.h"
+#include "clock.h"
+#include "interrupt.h"
 
 /** @} */
 
