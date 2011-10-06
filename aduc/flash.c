@@ -48,13 +48,13 @@
  *
  *  2^9 = 512 bytes per sector
  */
-#define FLASH_SIZE_CONVERSIONS 9
+#define FLASH_SIZE_CONVERSION 9
 
 /** Macros for sector size calculation
  *
  */
-#define FLASHADDR_TO_NUMSECTOR(addr, start) (((addr) - (start)) >> (FLASH_SIZE_CONVERSIONS))
-#define FLASH_SECTOR_SIZE ((1UL) << (FLASH_SIZE_CONVERSIONS))
+#define FLASHADDR_TO_NUMSECTOR(addr, start) (((addr) - (start)) >> (FLASH_SIZE_CONVERSION))
+#define FLASH_SECTOR_SIZE ((1UL) << (FLASH_SIZE_CONVERSION))
 
 /** uint8_t pattern for marking a block as valid
  *
@@ -333,17 +333,17 @@ blocks_getblock(char **block, const uint8_t block_id){
 
 
 /** Perform a cleanup into alternate flash section and swap
- * alternate and active section
+ * alternate and active section. Expunge block with block_id.
  *
  */
 inline static void
-blocks_cleanup(char **end){
+blocks_cleanup(char **end, const uint8_t expunge_id){
   /* copy most recent and valid block from active section to alternate section */
   char *cur_src;
   char *cur_dst = flash_sections.alternate_start;
   /* for each block ID */
   for (uint8_t block_id = 0; block_id < NUM_BLOCKS; block_id++){
-    if (blocks_getblock((char **)&cur_src, block_id)){
+    if (blocks_getblock((char **)&cur_src, block_id) && (block_id != expunge_id)){
       /* get header */
       block_header_t *header = (block_header_t *)(cur_src);
        /* since FEE provides only even block length but the user may
@@ -402,29 +402,28 @@ eepflash_copy_block(char *p_ram, const uint8_t block_id){
 }
 
 
-/** Returns flash pointer to most recent valid block-data
-  * with respect to BLOCKID
-  *
-  * Returns false if no valid block was found, true elsewise
-  *
-  * Note: Returnpointer points to the correct data until
-  * a new eepflash_write is forced.
-  */
- int8_t
- eepflash_read(char **data, uint16_t *user_len, const uint8_t block_id){
-   if (blocks_getblock(data, block_id)){
-     /* get header */
-     block_header_t *header = (block_header_t *)(*data);
-     /* get virtual datasize (user datasize of data) */
-     *user_len = header->data_size;
-     /* adjust *data to the start of the data field */
-     *data = *data + sizeof(block_header_t);
-     return true;
-   }
-   else{
-     return false;
-   }
- }
+/** Returns most recent valid block-data with respect to BLOCKID
+ *
+ * Returns false if no valid block was found, true elsewise
+ *
+ * Note: Returnpointer points to the correct data until
+ * a new eepflash_write is forced.
+ */
+int8_t
+eepflash_read(char **data, uint16_t *user_len, const uint8_t block_id){
+  if (blocks_getblock(data, block_id)){
+    /* get header */
+    block_header_t *header = (block_header_t *)(*data);
+    /* get virtual datasize (user datasize of data) */
+    *user_len = header->data_size;
+    /* adjust *data to the start of the data field */
+    *data = *data + sizeof(block_header_t);
+    return true;
+  }
+  else{
+    return false;
+  }
+}
 
 
 /** Write a block with BLOCKID into eepflash
@@ -450,7 +449,7 @@ eepflash_write(const char *src, const uint16_t user_len, const uint8_t block_id)
   /* if we are running out of space ... */
   if ((cur_pos + sizeof(block_header_t) + data_len) > flash_sections.active_end){
     /* ... perform a cleanup and seek to the end */
-    blocks_cleanup((char **)&cur_pos);
+    blocks_cleanup((char **)&cur_pos, block_id);
   }
   /* if user wants to write still more data than possible this will crash */
   if ((cur_pos + sizeof(block_header_t) + data_len) > flash_sections.active_end) {
