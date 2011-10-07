@@ -1,4 +1,3 @@
-
 include ../common.mk
 
 ARMPATH=~/DevelToolbin/binaries/armThumb-4.4.6/bin/
@@ -7,14 +6,23 @@ OBJCPY=$(ARMPATH)arm-elf-objcopy
 OBJDUMP=$(ARMPATH)arm-elf-objdump
 
 LIBADUC = ../aduc/
+
 CCFLAGS=  -mcpu=arm7tdmi -gstabs -g -Wall -Wextra -Wstrict-prototypes -std=gnu99
-########################################################################################
-# uncomment if you want to have optimized code
-# comment if you want to resonably debug the code
+# uncomment if you want to have optimized code otherwise resonably debug the code
 CCFLAGS += -Os
-########################################################################################
+
+# options generating the linker command file
+CCLFAGS_LCMD = -E -nostdinc -P -C
+LCMDBASEFILE = $(LIBADUC)project.lds
+LCMDBASEINFILE = $(LIBADUC)project.lds.S
+
+# options generating startup code
 ASMFLAGS= -mcpu=arm7tdmi -I. -x assembler-with-cpp -gstabs -Wall -Wextra
+
+# include directory
 CINCS = -I../include -I$(LIBADUC)
+
+# linker flags used in all personalities
 LDFLAGS_COMMON = -mcpu=arm7tdmi -std=gnu99 -Os -I. -nostartfiles
 
 OBJ_LIBADUC = $(LIBADUC)flash.o  $(LIBADUC)init.o  $(LIBADUC)interrupt.o  $(LIBADUC)target_init.o
@@ -23,17 +31,17 @@ OBJ_COMMON = main.o checksum.o uart-comm.o frame-comm.o packet-comm.o software-v
 ########################################################################################
 
 OBJ_ADC_INT_MCA = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-mca-ext-trig.o timer1-countdown-and-stop.o timer1-get-duration.o timer1-init-simple.o
-LDFLAGS_ADC_INT_MCA =$(LDFLAGS_COMMON) -T$(LIBADUC)project.ld -Wl,-Map=firmware-adc-int-mca.map,--cref -g
+LDFLAGS_ADC_INT_MCA =$(LDFLAGS_COMMON) -T$(LCMDBASEFILE) -Wl,-Map=firmware-adc-int-mca.map,--cref -g
 
 OBJ_ADC_INT_MCA_TIMED = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-mca-timed-trig.o timer1-adc-trigger.o
-LDFLAGS_ADC_INT_MCA_TIMED =$(LDFLAGS_COMMON) -T$(LIBADUC)project.ld -Wl,-Map=firmware-adc-int-mca-timed.map,--cref -g
+LDFLAGS_ADC_INT_MCA_TIMED =$(LDFLAGS_COMMON) -T$(LCMDBASEFILE) -Wl,-Map=firmware-adc-int-mca-timed.map,--cref -g
 
 OBJ_ADC_INT_TIMED_SAMPLING = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-log-timed-trig.o timer1-adc-trigger.o data-table-all-other-memory.o
-LDFLAGS_ADC_INT_TIMED_SAMPLING =$(LDFLAGS_COMMON) -T$(LIBADUC)project.ld data-table-all-other-memory.x -Wl,--defsym=MIN_STACK_SIZE=780 -Wl,--defsym=MALLOC_HEAP_SIZE=500 -Wl,-Map=firmware-adc-int-timed-sampling.map,--cref -g
+LDFLAGS_ADC_INT_TIMED_SAMPLING =$(LDFLAGS_COMMON) -T$(LCMDBASEFILE) data-table-all-other-memory.x -Wl,--defsym=MIN_STACK_SIZE=780 -Wl,--defsym=MALLOC_HEAP_SIZE=500 -Wl,-Map=firmware-adc-int-timed-sampling.map,--cref -g
 
 ########################################################################################
 
-all: firmware-adc-int-mca firmware-adc-int-mca-timed firmware-adc-int-timed-sampling
+all: $(LCMDBASEFILE) firmware-adc-int-mca firmware-adc-int-mca-timed firmware-adc-int-timed-sampling
 
 firmware-adc-int-mca:	$(OBJ_ADC_INT_MCA)
 	$(CC) $(LDFLAGS_ADC_INT_MCA) -o firmware-adc-int-mca.elf $^
@@ -60,8 +68,12 @@ firmware-adc-int-timed-sampling:	$(OBJ_ADC_INT_TIMED_SAMPLING)
 #%.o : %.c $(HEADERS)
 #	$(CC) $(CCFLAGS) $< -std=gnu99 -marm -c -o $@
 
+# rule generating the linker command file
+$(LCMDBASEFILE) : $(LCMDBASEINFILE)
+	$(CC) $(CCLFAGS_LCMD) $< -c -o $@
+
 $(LIBADUC)target_init.o : $(LIBADUC)target_init.S
-	$(CC) $(ASMFLAGS) $< -Wa,-adhlns=../aduc/target_init.lst, $(CINCS) -c -o $@
+	$(CC) $(ASMFLAGS) $< -Wa,-adhlns=$(LIBADUC)target_init.lst, $(CINCS) -c -o $@
 
 $(LIBADUC)flash.o : $(LIBADUC)flash.c $(HEADERS)
 	$(CC) $(CCFLAGS) $(CINCS) $< -std=gnu99 -mthumb -mthumb-interwork -c -o $@
@@ -140,7 +152,7 @@ data-table-all-other-memory.o : data-table-all-other-memory.c $(HEADERS)
 
 clean:
 	$(RM) *.o *.bin *.map *.hex *.elf *.lss
-	$(RM) $(LIBADUC)*.o $(LIBADUC)*.lst
+	$(RM) $(LIBADUC)*.o $(LIBADUC)*.lst $(LIBADUC)*.lds
 	$(RM) main
 	$(RM) -r ./dox/
 
