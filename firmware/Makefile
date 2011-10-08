@@ -7,20 +7,18 @@ OBJDUMP=$(ARMPATH)arm-elf-objdump
 
 LIBADUC = ../aduc/
 
+# include directory
+CINCS = -I../include -I$(LIBADUC)
+
 CCFLAGS=  -mcpu=arm7tdmi -gstabs -g -Wall -Wextra -Wstrict-prototypes -std=gnu99
 # uncomment if you want to have optimized code otherwise resonably debug the code
 CCFLAGS += -Os
 
 # options generating the linker command file
-CCLFAGS_LCMD = -E -nostdinc -P -C
-LCMDBASEFILE = $(LIBADUC)project.lds
-LCMDBASEINFILE = $(LIBADUC)project.lds.S
+CCLFAGS_LCMD = -E -nostdinc -P -C $(CINCS)
 
 # options generating startup code
 ASMFLAGS= -mcpu=arm7tdmi -I. -x assembler-with-cpp -gstabs -Wall -Wextra
-
-# include directory
-CINCS = -I../include -I$(LIBADUC)
 
 # linker flags used in all personalities
 LDFLAGS_COMMON = -mcpu=arm7tdmi -std=gnu99 -Os -I. -nostartfiles
@@ -31,31 +29,44 @@ OBJ_COMMON = main.o checksum.o uart-comm.o frame-comm.o packet-comm.o software-v
 ########################################################################################
 
 OBJ_ADC_INT_MCA = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-mca-ext-trig.o timer1-countdown-and-stop.o timer1-get-duration.o timer1-init-simple.o
-LDFLAGS_ADC_INT_MCA =$(LDFLAGS_COMMON) -T$(LCMDBASEFILE) -Wl,-Map=firmware-adc-int-mca.map,--cref -g
+LDFLAGS_ADC_INT_MCA =$(LDFLAGS_COMMON) -T$(LIBADUC)project.lds -Wl,-Map=firmware-adc-int-mca.map,--cref -g
 
 OBJ_ADC_INT_MCA_TIMED = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-mca-timed-trig.o timer1-adc-trigger.o
-LDFLAGS_ADC_INT_MCA_TIMED =$(LDFLAGS_COMMON) -T$(LCMDBASEFILE) -Wl,-Map=firmware-adc-int-mca-timed.map,--cref -g
+LDFLAGS_ADC_INT_MCA_TIMED =$(LDFLAGS_COMMON) -T$(LIBADUC)project.lds -Wl,-Map=firmware-adc-int-mca-timed.map,--cref -g
 
 OBJ_ADC_INT_TIMED_SAMPLING = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-log-timed-trig.o timer1-adc-trigger.o data-table-all-other-memory.o
-LDFLAGS_ADC_INT_TIMED_SAMPLING =$(LDFLAGS_COMMON) -T$(LCMDBASEFILE) data-table-all-other-memory.x -Wl,--defsym=MIN_STACK_SIZE=780 -Wl,--defsym=MALLOC_HEAP_SIZE=500 -Wl,-Map=firmware-adc-int-timed-sampling.map,--cref -g
+LDFLAGS_ADC_INT_TIMED_SAMPLING =$(LDFLAGS_COMMON) -T$(LIBADUC)project.lds data_table_empty_ram.lds -Wl,--defsym=MALLOC_HEAP_SIZE=500 -Wl,-Map=firmware-adc-int-timed-sampling.map,--cref -g
 
 ########################################################################################
 
-all: $(LCMDBASEFILE) firmware-adc-int-mca firmware-adc-int-mca-timed firmware-adc-int-timed-sampling
+### call for linkerfiles and firmware compile & link ###
 
-firmware-adc-int-mca:	$(OBJ_ADC_INT_MCA)
+all: firmware-adc-int-mca firmware-adc-int-mca-timed firmware-adc-int-timed-sampling
+
+firmware-adc-int-mca: $(LIBADUC)project.lds firmware-adc-int-mca-elf
+
+firmware-adc-int-mca-timed: $(LIBADUC)project.lds firmware-adc-int-mca-timed-elf
+
+firmware-adc-int-timed-sampling: $(LIBADUC)project.lds data_table_empty_ram.lds firmware-adc-int-timed-sampling-elf
+
+
+########################################################################################
+
+### firmware compile and link ###
+
+firmware-adc-int-mca-elf:	$(OBJ_ADC_INT_MCA)
 	$(CC) $(LDFLAGS_ADC_INT_MCA) -o firmware-adc-int-mca.elf $^
 	$(OBJCPY) --output-target ihex firmware-adc-int-mca.elf firmware-adc-int-mca.hex
 	$(OBJCPY) --output-target binary firmware-adc-int-mca.elf firmware-adc-int-mca.bin
 	$(OBJDUMP) -h -S firmware-adc-int-mca.elf > firmware-adc-int-mca.lss
 
-firmware-adc-int-mca-timed:	$(OBJ_ADC_INT_MCA_TIMED)
+firmware-adc-int-mca-timed-elf:	$(OBJ_ADC_INT_MCA_TIMED)
 	$(CC) $(LDFLAGS_ADC_INT_MCA_TIMED) -o firmware-adc-int-mca-timed.elf $^
 	$(OBJCPY) --output-target ihex firmware-adc-int-mca-timed.elf firmware-adc-int-mca-timed.hex
 	$(OBJCPY) --output-target binary firmware-adc-int-mca-timed.elf firmware-adc-int-mca-timed.bin
 	$(OBJDUMP) -h -S firmware-adc-int-mca-timed.elf > firmware-adc-int-mca-timed.lss
 
-firmware-adc-int-timed-sampling:	$(OBJ_ADC_INT_TIMED_SAMPLING)
+firmware-adc-int-timed-sampling-elf:	$(OBJ_ADC_INT_TIMED_SAMPLING)
 	$(CC) $(LDFLAGS_ADC_INT_TIMED_SAMPLING) -o firmware-adc-int-timed-sampling.elf $^
 	$(OBJCPY) --output-target ihex firmware-adc-int-timed-sampling.elf firmware-adc-int-timed-sampling.hex
 	$(OBJCPY) --output-target binary firmware-adc-int-timed-sampling.elf firmware-adc-int-timed-sampling.bin
@@ -68,8 +79,8 @@ firmware-adc-int-timed-sampling:	$(OBJ_ADC_INT_TIMED_SAMPLING)
 #%.o : %.c $(HEADERS)
 #	$(CC) $(CCFLAGS) $< -std=gnu99 -marm -c -o $@
 
-# rule generating the linker command file
-$(LCMDBASEFILE) : $(LCMDBASEINFILE)
+# rule generating the aduc base linker command file
+$(LIBADUC)project.lds : $(LIBADUC)project.lds.S
 	$(CC) $(CCLFAGS_LCMD) $< -c -o $@
 
 $(LIBADUC)target_init.o : $(LIBADUC)target_init.S
@@ -141,6 +152,10 @@ perso-adc-int-mca-timed-trig.o : perso-adc-int-mca-timed-trig.c $(HEADERS)
 ########################################################################################
 
 ### Rule for OBJ_ADC_INT_TIMED_SAMPLING ###
+
+# rule linker command files augmenting the base linker command file
+data_table_empty_ram.lds :  data_table_empty_ram.lds.S
+	$(CC) $(CCLFAGS_LCMD) $< -c -o $@
 
 perso-adc-int-log-timed-trig.o : perso-adc-int-log-timed-trig.c $(HEADERS)
 	$(CC) $(CCFLAGS) $(CINCS) $< -std=gnu99 -marm -mthumb-interwork -c -o $@

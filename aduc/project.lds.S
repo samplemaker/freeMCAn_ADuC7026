@@ -1,4 +1,4 @@
-/** \file /aduc/project.ld
+/** \file /aduc/project.lds.S
  * \brief ADUC-port specific linker command file
  *
  * \author Copyright (C) 2011 samplemaker

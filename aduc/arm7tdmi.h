@@ -22,7 +22,8 @@
  * \ingroup ADUC
  *
  * ARM7TDMI specific defines: 
- * Current program status register (cpsr) bit definitions and mode identifiers
+ * Current program status register (cpsr) bit definitions and mode identifiers.
+ * Stack.
  *
  * @{
  */
@@ -30,6 +31,22 @@
 #ifndef ARM7TDMI_H
 #define ARM7TDMI_H
 
+/* Entire project stack sizes
+ *
+ */
+#define STACKSIZE_UND  4
+#define STACKSIZE_SVC  256
+#define STACKSIZE_ABT  4
+#define STACKSIZE_FIQ  4
+#define STACKSIZE_IRQ  256
+#define STACKSIZE_USR  256
+
+
+#define STACK_SIZE_TOTAL ((STACKSIZE_UND) + (STACKSIZE_SVC) + (STACKSIZE_ABT) \
+                        + (STACKSIZE_FIQ) + (STACKSIZE_IRQ) + (STACKSIZE_USR))
+
+
+#ifndef IN_LINKERCOMMAND_FILE
 
 /* Current program status register (cpsr) bit definitions and mode identifiers
  *
@@ -42,33 +59,46 @@
 /** IRQ Mask
  */
 #define I_FLAG  0x80
+
 /** FIQ Mask
  */
 #define F_FLAG  0x40
+
 /** Arm <> Thumb state Mask
  */
 #define T_FLAG  0x20
+
 /** User Mode Mask
  */
 #define M_USR   0x10
+
 /** Fast Interrupt Mode Mask
  */
 #define M_FIQ   0x11
+
 /** Interrupt Mode Mask
  */
 #define M_IRQ   0x12
+
 /** Supervisor Mode Mask
  */
 #define M_SVC   0x13
+
 /** Abort Mode Mask
  */
 #define M_ABT   0x17
+
 /** Undefined Mode Mask
  */
 #define M_UND   0x1B
+
 /** System Mode Mask
  */
 #define M_SYS   0x1F
+
+
+#endif
+
 
 /** @} */
 

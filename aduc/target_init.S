@@ -40,19 +40,10 @@
 #include "aduc.h"
 
 .extern main
+.extern do_initcalls
 .extern _irq_handler
 .extern _swi_handler
-.extern do_initcalls
 
-/** Stack sizes in operating modes
- *
- */
-	.set	STACKSIZE_UND, 4
-	.set	STACKSIZE_SVC, 256
-	.set	STACKSIZE_ABT, 4
-	.set	STACKSIZE_FIQ, 4
-	.set	STACKSIZE_IRQ, 256
-	.set	STACKSIZE_USR, 256
 
 .code 32
 .align 0
