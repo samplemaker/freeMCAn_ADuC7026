@@ -1,4 +1,4 @@
-/** \file aduc/int.h
+/** \file aduc/interrupt.h
  * \brief Interrupt handling
  *
  * \author Copyright (C) 2011 samplemaker
@@ -62,7 +62,7 @@ void disable_IRQs_usermode(void){
   asm volatile ( "SVC " STR(SWI_DISABLE_IRQ) ::);
 }
 
-#endif
+#endif /* !__ASSEMBLER__ */
 
 /** @} */
 

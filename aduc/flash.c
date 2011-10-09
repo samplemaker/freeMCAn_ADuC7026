@@ -44,17 +44,10 @@
  *-----------------------------------------------------------------------------
  */
 
-/** ADUC flash sector size definition
- *
- *  2^9 = 512 bytes per sector
- */
-#define FLASH_SIZE_CONVERSION 9
-
-/** Macros for sector size calculation
+/** Macros for sector calculations
  *
  */
-#define FLASHADDR_TO_NUMSECTOR(addr, start) (((addr) - (start)) >> (FLASH_SIZE_CONVERSION))
-#define FLASH_SECTOR_SIZE ((1UL) << (FLASH_SIZE_CONVERSION))
+#define FLASHADDR_TO_SECTORNO(addr, start) (((addr) - (start)) >> (FLASH_SECTOR_CONFIG))
 
 /** uint8_t pattern for marking a block as valid
  *
@@ -259,9 +252,9 @@ void eepflash_swap_and_erase_sections(void){
 
   /* erase current active section (working section) */
   const uint8_t sector_start =
-    FLASHADDR_TO_NUMSECTOR(flash_sections.active_start, __flash_start__ );
+    FLASHADDR_TO_SECTORNO(flash_sections.active_start, __flash_start__ );
   const uint8_t sector_end =
-    FLASHADDR_TO_NUMSECTOR(flash_sections.active_end, __flash_start__) - 1;
+    FLASHADDR_TO_SECTORNO(flash_sections.active_end, __flash_start__) - 1;
 
   hw_erase(sector_start, sector_end);
 

@@ -43,7 +43,8 @@
  */
 
 /* attributes used for interrupt service request stubs (ISR interface) */
-#define __isr_stub(default_handler) __attribute__ ((weak, alias (STR(default_handler))))
+#define __stub(default_handler) \
+        __attribute__ ((weak, alias (STR(default_handler))))
 
 /*-----------------------------------------------------------------------------
  * Prototypes
@@ -56,12 +57,12 @@ static void ISR_TRAP(void);
  * as the default handler. To be replaced by real handlers. 
  * Code must be implemented in foreign modules
  */
-void ISR_ADC(void)              __isr_stub(ISR_TRAP);
-void ISR_TIMER0(void)           __isr_stub(ISR_TRAP);
-void ISR_TIMER1(void)           __isr_stub(ISR_TRAP);
-void ISR_WAKEUP_TIMER2(void)    __isr_stub(ISR_TRAP);
-void ISR_EXTINT0(void)          __isr_stub(ISR_TRAP);
-void ISR_WATCHDOG_TIMER3(void)  __isr_stub(ISR_TRAP);
+void ISR_ADC(void)			__stub(ISR_TRAP);
+void ISR_TIMER0(void)			__stub(ISR_TRAP);
+void ISR_TIMER1(void)			__stub(ISR_TRAP);
+void ISR_WAKEUP_TIMER2(void)		__stub(ISR_TRAP);
+void ISR_EXTINT0(void)			__stub(ISR_TRAP);
+void ISR_WATCHDOG_TIMER3(void)		__stub(ISR_TRAP);
 
 
 /** Default handler ISR trap
@@ -71,7 +72,7 @@ void ISR_WATCHDOG_TIMER3(void)  __isr_stub(ISR_TRAP);
  * hooked at this point
  *
  */
-static void ISR_TRAP(void){ while (1){;} }
+static void ISR_TRAP(void){ while (1){} }
 
 
 /* IRQEN:  Ones indicate that the interrupt request from

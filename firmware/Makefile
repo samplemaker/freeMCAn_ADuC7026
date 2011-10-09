@@ -1,7 +1,7 @@
 include ../common.mk
 
-ARMPATH=~/DevelToolbin/binaries/armThumb-4.4.6-interwork/bin/
-#ARMPATH=~/DevelToolbin/binaries/armThumb-4.4.6/bin/
+#ARMPATH=~/DevelToolbin/binaries/armThumb-4.4.6-interwork/bin/
+ARMPATH=~/DevelToolbin/binaries/armThumb-4.4.6/bin/
 CC=$(ARMPATH)arm-elf-gcc
 OBJCPY=$(ARMPATH)arm-elf-objcopy
 OBJDUMP=$(ARMPATH)arm-elf-objdump
@@ -26,6 +26,16 @@ LDFLAGS_COMMON = -mcpu=arm7tdmi -Os -I. -nostartfiles
 
 OBJ_LIBADUC = $(LIBADUC)flash.o  $(LIBADUC)init.o  $(LIBADUC)interrupt.o  $(LIBADUC)target_init.o
 OBJ_COMMON = main.o checksum.o uart-comm.o frame-comm.o packet-comm.o software-version.o switch.o
+
+# Notes:
+#   * Run "make BUILD_FREEMCAN_PRINTF=yes" to build the printf code
+#     into the firmware.
+#   * Adds lots of code (approx. 16kb flash) und uses lots of ram
+
+ifeq ($(BUILD_FREEMCAN_PRINTF),yes)
+OBJ_COMMON += uart-printf.o syscalls.o
+CCFLAGS += -DHAVE_UPRINTF_IMPLEMENTATION
+endif
 
 ########################################################################################
 
@@ -126,6 +136,15 @@ packet-comm.o : packet-comm.c $(HEADERS)
 
 timer1-adc-trigger.o : timer1-adc-trigger.c $(HEADERS)
 	$(CC) $(CCFLAGS) $(CINCS) $< -marm -mthumb-interwork -c -o $@
+
+### Specials like printf ###
+
+syscalls.o : syscalls.c $(HEADERS)
+	$(CC) $(CCFLAGS) $(CINCS) $< -marm -mthumb-interwork -c -o $@
+
+uart-printf.o : uart-printf.c $(HEADERS)
+	$(CC) $(CCFLAGS) $(CINCS) $< -marm -mthumb-interwork -c -o $@
+
 
 ########################################################################################
 

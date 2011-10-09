@@ -31,8 +31,7 @@
 #ifndef ARM7TDMI_H
 #define ARM7TDMI_H
 
-/* Entire project stack sizes
- *
+/* Project stack sizes for all processor modes
  */
 #define STACKSIZE_UND  4
 #define STACKSIZE_SVC  256
@@ -41,9 +40,18 @@
 #define STACKSIZE_IRQ  256
 #define STACKSIZE_USR  256
 
-
+/** Total stack size used
+ */
 #define STACK_SIZE_TOTAL ((STACKSIZE_UND) + (STACKSIZE_SVC) + (STACKSIZE_ABT) \
                         + (STACKSIZE_FIQ) + (STACKSIZE_IRQ) + (STACKSIZE_USR))
+
+/** 2^9 = 512 bytes per flash sector
+ */
+#define FLASH_SECTOR_CONFIG 9
+
+/** Flash sector size definition
+ */
+#define FLASH_SECTOR_SIZE (1 << (FLASH_SECTOR_CONFIG))
 
 
 #ifndef IN_LINKERCOMMAND_FILE
@@ -97,7 +105,7 @@
 #define M_SYS   0x1F
 
 
-#endif
+#endif /* !IN_LINKERCOMMAND_FILE */
 
 
 /** @} */

@@ -71,7 +71,7 @@
 #define F_HCLK (F_UCLK / (1ULL << ((POWCON_RESET_CFG) & 0x7)) )
 
 
-#endif
+#endif /* !__ASSEMBLER__ */
 
 /** @} */
 
