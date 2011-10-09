@@ -26,11 +26,11 @@
 #ifndef INIT_H
 #define INIT_H
 
-#if !defined(STR) && !defined(_STR1)
+#if !defined(STR) && !defined(STR1)
 /* macros used for stringification */
 #define STR1(x)  #x
 #define STR(x)  STR1(x)
-#endif 
+#endif
 
 
 /** Functional pointer to init functions employing 1xlink register size

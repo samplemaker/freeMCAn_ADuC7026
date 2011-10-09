@@ -42,6 +42,11 @@
  *
  */
 
+#define IN_LINKERCOMMAND_FILE
+
+#include <arm7tdmi.h>
+
+
 MEMORY
 {
   flash   (rx) : ORIGIN = 0x00080000, LENGTH = 62k
@@ -142,10 +147,15 @@ SECTIONS
     PROVIDE (__heap_start = .) ;
   }  >ram
 
+ .reserved_stack :
+  {
+    . = . + STACK_SIZE_TOTAL ;
+  }  >ram
+
+
 /** eepflash configuration
  *
  */
-
   /* locate to 30 sectors above the end of flash code & data 
   _eepflash_section1_start = _data_load_end + 30*512; */
   _eepflash_section1_start = 0x85000;

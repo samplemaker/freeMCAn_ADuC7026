@@ -34,11 +34,11 @@
 
 #ifndef __ASSEMBLER__
 
-#if !defined(STR) && !defined(_STR1)
+#if !defined(STR) && !defined(STR1)
 /* macros used for synthesizing asm inline macros */
 #define STR1(x)  #x
 #define STR(x)  STR1(x)
-#endif 
+#endif
 
 /** \brief Enable interrupts within non-/priviledged usermode
  *
