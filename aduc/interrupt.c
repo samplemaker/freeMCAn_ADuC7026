@@ -1,4 +1,4 @@
-/** \file aduc/int.c
+/** \file aduc/interrupt.c
  * \brief Interrupt handling
  *
  * \author Copyright (C) 2011 samplemaker
@@ -153,42 +153,43 @@ void __attribute__ ((naked)) _swi_handler(void);
 void _swi_handler(void)
 {
   asm volatile("\n\t"
-               /* Save workspace and current return address      */
-               "stmfd  sp!,{r0-r12,lr}                        \n\t"
-               /* Get old user mode cpsr from spsr_svc           */
-               "mrs    r1, spsr                               \n\t"
-               /* SWI occurred in Thumb state?                   */
-               "tst    r1, #" STR(T_FLAG)                   " \n\t"
-               /* Yes: Load SVC instruction halfword             */
-               "ldrneh r0, [lr,#-2]                           \n\t"
-               /* Extract comment field                          */
-               "bicne  r0, r0, #0xFF00                        \n\t"
-               /* No: Occured in ARM state                       */
-               "ldreq  r0, [lr,#-4]                           \n\t"
-               /* Clear top 8 bits of SVC instruction            */
-               "biceq  r0, r0, #0xFF000000                    \n\t"
-               "cmp    r0, #" STR(SWI_ENABLE_IRQ)           " \n\t"
-               "beq swi_enable_irq                            \n\t"
-               "cmp    r0, #" STR(SWI_DISABLE_IRQ)          " \n\t"
-               "beq swi_disable_irq                           \n\t"
+               /* Save workspace and current return address */
+               "stmfd	sp!,{r0-r12,lr}\n\t"
+               /* Get old user mode cpsr from spsr_svc */
+               "mrs	r1, spsr\n\t"
+               /* SWI occurred in Thumb state? */
+               "tst	r1, #" STR(T_FLAG) "\n\t"
+               /* Yes: Load SVC instruction halfword */
+               "ldrneh	r0, [lr,#-2]\n\t"
+               /* Extract comment field */
+               "bicne	r0, r0, #0xFF00\n\t"
+               /* No: Occured in ARM state */
+               "ldreq	r0, [lr,#-4]\n\t"
+               /* Clear top 8 bits of SVC instruction */
+               "biceq	r0, r0, #0xFF000000\n\t"
+               "cmp	r0, #" STR(SWI_ENABLE_IRQ) "\n\t"
+               "beq	swi_enable_irq\n\t"
+               "cmp	r0, #" STR(SWI_DISABLE_IRQ) "\n\t"
+               "beq	swi_disable_irq\n\t"
 
-               /* exit including default case if SWI is unknown  */
-               "swi_end:                                      \n\t"
-               /* Store condition field with updated  I-Flag     */
-               "msr    spsr_c, r1                             \n\t"
+               /* exit including default case if SWI is unknown */
+               "swi_end:\n\t"
+               /* Store condition field with updated  I-Flag */
+               "msr	spsr_c, r1\n\t"
                /* Return to instruction following the SVC instr.
                   ^ in this context means restore CPSR from SPSR */
-               "ldmfd  sp!, {r0-r12,pc}^                      \n\t"
+               "ldmfd	sp!, {r0-r12,pc}^ \n\t"
 
-               "swi_enable_irq:                               \n\t"
-               "bic    r1, r1, #" STR(I_FLAG)               " \n\t"
-               "b      swi_end                                \n\t"
+               "swi_enable_irq:\n\t"
+               "bic	r1, r1, #" STR(I_FLAG) "\n\t"
+               "b	swi_end\n\t"
 
-               "swi_disable_irq:                              \n\t"
-               "orr    r1, r1, #" STR(I_FLAG)               " \n\t"
-               "b      swi_end                                \n\t"
-               :: /* Nothing to do since complete context is
-                     handled by code entry and exit        */
+               "swi_disable_irq:\n\t"
+               "orr	r1, r1, #" STR(I_FLAG) "\n\t"
+               "b	swi_end\n\t"
+               :: /* context is handled by code prologue and epilogue
+                     therefore no clobbers and no need to write and
+                     reload cached memory values  */
   );
 }
 
