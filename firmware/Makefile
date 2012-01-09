@@ -1,7 +1,7 @@
 include ../common.mk
 
 #ARMPATH=~/DevelToolbin/binaries/armThumb-4.4.6-interwork/bin/
-ARMPATH=~/DevelToolbin/binaries/armThumb-4.4.6/bin/
+ARMPATH=~/DevelToolbin/binaries/armThumb-4.6.2/bin/
 CC=$(ARMPATH)arm-elf-gcc
 OBJCPY=$(ARMPATH)arm-elf-objcopy
 OBJDUMP=$(ARMPATH)arm-elf-objdump
@@ -94,8 +94,10 @@ make-adc-int-timed-sampling:	$(OBJ_ADC_INT_TIMED_SAMPLING)
 $(LIBADUC)project.lds : $(LIBADUC)project.lds.S
 	$(CC) $(CCLFAGS_LCMD) $< -c -o $@
 
+# \todo: something changed during update from gcc 4.4.6 to gcc 4.6.2
 $(LIBADUC)target_init.o : $(LIBADUC)target_init.S
-	$(CC) $(ASMFLAGS) $< -Wa,-adhlns=$(LIBADUC)target_init.lst, $(CINCS) -c -o $@
+	$(CC) $(ASMFLAGS) $< $(CINCS) -c -o $@
+#	$(CC) $(ASMFLAGS) $< -Wa,-adhlns=$(LIBADUC)target_init.lst, $(CINCS) -c -o $@
 
 $(LIBADUC)flash.o : $(LIBADUC)flash.c $(HEADERS)
 	$(CC) $(CCFLAGS) $(CINCS) $< -mthumb -mthumb-interwork -c -o $@

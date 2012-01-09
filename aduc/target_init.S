@@ -62,14 +62,14 @@
  *
  */
 _vector:
-	ldr	pc, init_target		@ Reset -> Supervisor
-	ldr	pc, und_handler		@ Undefined Instruction -> Undefinded
-	ldr	pc, swi_handler		@ Software Interrupt -> Supervisor
-	ldr	pc, pabt_handler	@ Prefetch Abort -> Abort
-	ldr	pc, dabt_handler	@ Data Abort -> Abort
-	nop				@ Reserved -> Reserved
-	ldr	pc, irq_handler		@ IRQ -> IRQ
-	ldr	pc, fiq_handler		@ FIQ -> FIQ
+	ldr	pc, init_target		/* Reset -> Supervisor */
+	ldr	pc, und_handler		/* Undefined Instruction -> Undefinded */
+	ldr	pc, swi_handler		/* Software Interrupt -> Supervisor */
+	ldr	pc, pabt_handler	/* Prefetch Abort -> Abort */
+	ldr	pc, dabt_handler	/* Data Abort -> Abort */
+	nop				/* Reserved -> Reserved */
+	ldr	pc, irq_handler		/* IRQ -> IRQ */
+	ldr	pc, fiq_handler		/* FIQ -> FIQ */
 
 /* Handler functions may be implemented in foreign modules
  * without doing any changes here
@@ -124,7 +124,7 @@ _init_target:
  *
  */
 	ldr	r0, =__MMR_BASE
-	mov	r1, #0x01	@ Access to POWCON needs special sequence
+	mov	r1, #0x01	/* Access to POWCON needs special sequence */
 	str	r1, [r0, #POWKEY1]
 	mov	r1, #POWCON_RESET_CFG
 	str	r1, [r0, #POWCON]
@@ -166,13 +166,13 @@ _init_target:
  *
  * Note: Requires ALIGN(4).
  */
-	mov	r0, #0			@ r0 = 0
-	ldr	r1, =__bss_start__	@ r1 = addr(start of .bss section)
-	ldr	r2, =__bss_end__	@ r2 = addr(end of .bss section)
+	mov	r0, #0			/* r0 = 0 */
+	ldr	r1, =__bss_start__	/* r1 = addr(start of .bss section) */
+	ldr	r2, =__bss_end__	/* r2 = addr(end of .bss section) */
 zero_bss:
-        cmp	r1, r2			@ if (r1-r2)<0 (N, V flag):
-	stmltia	r1!, {r0} 		@ if cond then *(r1)=r0 then r1+=4
-	blt	zero_bss		@ branch if condition
+        cmp	r1, r2			/* if (r1-r2)<0 (N, V flag): */
+	stmltia	r1!, {r0} 		/* if cond then *(r1)=r0 then r1+=4 */
+	blt	zero_bss		/* branch if condition */
 
 /** Initialize variables in RAM
  *
@@ -182,27 +182,27 @@ zero_bss:
  * Note: Requires ALIGN(4).
  *
  */
-	ldr	r0, =_data_load_start	@ r0 = addr(end of .text => fash)
-	ldr	r1, =_data		@ r1 = addr(start of .data => ram)
-	ldr	r2, =_data_load_end	@ r2 = addr(end of .data => ram)
+	ldr	r0, =_data_load_start	/* r0 = addr(end of .text => fash) */
+	ldr	r1, =_data		/* r1 = addr(start of .data => ram) */
+	ldr	r2, =_data_load_end	/* r2 = addr(end of .data => ram) */
 copy_data:
-	cmp	r0, r2			@ if (r0-r2)<0 (N, V flag):
-	ldmltia	r0!,{r3}		@ if cond then r3=*(r0) then r0+=4
-	stmltia	r1!,{r3}		@ if cond then *(r1)=r3 then r1+=4
-	blt	copy_data		@ branch if condition
+	cmp	r0, r2			/* if (r0-r2)<0 (N, V flag): */
+	ldmltia	r0!,{r3}		/* if cond then r3=*(r0) then r0+=4 */
+	stmltia	r1!,{r3}		/* if cond then *(r1)=r3 then r1+=4 */
+	blt	copy_data		/* branch if condition */
 
 /** Execute initialization code and jump to main
  *
  */
 	ldr	r0,=do_initcalls
-	mov	lr,pc			@ set return address
-	bx	r0			@ execute _init section code
+	mov	lr,pc			/* set return address */
+	bx	r0			/* execute _init section code */
 
 	ldr	r0,=main
-	mov	lr,pc			@ set return address
-	bx	r0			@ could be thumb / never return
+	mov	lr,pc			/* set return address */
+	bx	r0			/* could be thumb / never return */
 
-	b	.			@ should never come here
+	b	.			/* should never come here */
 
 .size    _init_target, . - _init_target
 .endfunc
