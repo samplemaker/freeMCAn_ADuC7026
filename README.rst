@@ -8,14 +8,21 @@ freemcan
 What is freemcan?
 -----------------
 
-The basic approach of freeMCAn was to implement a multi channel analyzer
-software on bare silicon chips like ATMega or ADUC. Improved over time
-freeMCAn is no longer only a so called "multi channel analyzer". It employs 
-moreover several functions of a data logger like data time recording 
-(oscilloscope functionality) and statistics counting.
+Originally the basic approach of freeMCAn was to implement a multi channel
+analyzer software used for e.g. gamma spectroscopy on easy obtainable silicon
+chips like ATMega (Atmel) or ADuC (Analog Devices). Improved over time
+freeMCAn is no longer only a so called "multi channel analyzer". Moreover
+it employs several functions of a data logger like data time
+recording (the software provides an oscilloscope functionality) and
+statistics counting.
 
-This software port of freeMCAn is related to the ADUC7026 silicon device.
-Note: There are other variants for other devices like ATMEGA.
+There are two different software ports available:
+
+  * Related to the ADuC7026 (Analog Devices) w. ARM7TDMI core:
+    https://github.com/samplemaker/FreeMCAn_on_ADUC7026
+
+  * Related to the ATMega644 (Atmel) silicon device:
+    https://github.com/ndim/freemcan
 
 
 Why the name?
@@ -53,12 +60,17 @@ Software Requirements
   * POSIX/GNU/Linux/Unix host system
   * gcc_ compiler for host system
 
-Toolchain: freeMCAn - ADUC is known to be build on Fedora with newlib 
-and gcc based on an ARM7 Toolchain:
-  * binutils-2.21.tar.gz
-  * insight-6.8-1a.tar.bz2
-  * gcc-4.4.6.tar.bz2
-  * newlib-1.19.0.tar.gz
+Toolchain: freeMCAn-ADuC is known to be build on Fedora 16 with newlib
+and gcc based on an ARM Toolchain derived from following packages:
+
+  * binutils-2.22
+  * gcc-4.6.2
+  * newlib-1.19.0
+  * insight-6.8-1a
+
+Note: FreeMCAn_ADUC7026 comes with a full target initialization and
+has its own asic driver. That means beside a compiler (gcc) and a
+standard c-library (newlib) no additional software is needed.
 
 For building the internal code documentation (mostly of interest to
 hackers), you additionally need
@@ -100,11 +112,16 @@ Hacking
 Subdirectory Contents
 ~~~~~~~~~~~~~~~~~~~~~
 
-   ADUC/
-           Driver for ADUC7026 microcontroller
+   aduc/
+           Software driver for ADuC7026 / ARM7TDMI microcontroller
+
+   aduc_docs/
+           Some extra documentation. E.g. configuration of the
+           level to edge ADC-trigger via PLA
 
    firmware/
-           The device firmware for ADUC7026 microcontroller
+           The device firmwares for ADuC7026 microcontroller
+           (multichannel analyzing, oscilloscope ...)
 
    code-comparison/
            Some common tasks our firmware needs written in portable C
@@ -115,13 +132,7 @@ Subdirectory Contents
    hostware/
            All the software running on the PC host. For lack of a
            better word, we called it "hostware" to distinguish it from
-           the "firmware".
-
-   emulator/
-           Simple attempt at emulating the device connected to a
-           device file by having an Erlang program connected to a
-           Unix domain socket.
-
+           the "firmware". The firmware is running inside a linux terminal
 
 
 Ideas
