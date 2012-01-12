@@ -210,7 +210,7 @@ void send_eeprom_params_in_sram(void)
 
 void params_copy_from_eeprom_to_sram(void)
 {
-  eepflash_copy_block((char *)&pparam_sram, BLOCK0);
+  eepflash_copy_block((char *)&pparam_sram, EEPFLASH_FRAME_CMD_PARAMS);
 }
 
 
@@ -335,7 +335,8 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
       /* The param length has already been checked by the frame parser */
       send_state("PARAMS_TO_EEPROM");
 
-      eepflash_write((char *)&pparam_sram, sizeof(pparam_sram), BLOCK0);
+      eepflash_write((char *)&pparam_sram, sizeof(pparam_sram),
+                     EEPFLASH_FRAME_CMD_PARAMS);
 
       send_state(PSTR_READY);
       return STP_READY;

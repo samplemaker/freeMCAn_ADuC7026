@@ -27,9 +27,11 @@
 #define FLASH_H
 
 
+/* Eepflash memory service identifier. Define here various BLOCKIDs */
 enum {
-  BLOCK0,
-  BLOCK1,
+  EEPFLASH_FRAME_CMD_PARAMS,
+  EEPFLASH_HISTOGRAM_TABLE,
+  /* Termination is need by the EEPFLASH tools */
   EEPFLASH_NUM_USED_BLOCKS
 };
 
