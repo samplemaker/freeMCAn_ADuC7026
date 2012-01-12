@@ -30,7 +30,7 @@
 enum {
   BLOCK0,
   BLOCK1,
-  NUM_BLOCKS
+  EEPFLASH_NUM_USED_BLOCKS
 };
 
 
