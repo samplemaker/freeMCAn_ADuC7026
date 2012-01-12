@@ -60,7 +60,7 @@
  *  not yet written (NULL pointer)
  *
  */
-#define BLOCKMNGR_CURBLOCK_IS_VOID (char *)(0xffff)
+#define BLOCKMNGR_BLOCK_IS_VOID (char *)(0xffff)
 
 
 /*-----------------------------------------------------------------------------
@@ -105,15 +105,15 @@ typedef struct {
 
 /** \brief Holds address of most recent blocks in the flash queue
  *
- * curblock_start == 0xFFFF indicates a block is NA (not yet
+ * block_start == 0xFFFF indicates a block is NA (not yet
  * written) assuming that we will never have a block located
  * above 64k. However this saves EEPFLASH_NUM_USED_BLOCKS
  * bytes RAM (int8 indicator wheather a block is already written)
  */
 typedef struct blockmngr_struct {
   /* pointer to start of most recent block with block_id */
-  char *curblock_start[EEPFLASH_NUM_USED_BLOCKS];
-  /* bytes already written or flash space already occupied */
+  char *block_start[EEPFLASH_NUM_USED_BLOCKS];
+  /* points to end of data queue already written into flash */
   char *block_queue_end;
 } blockmngr_t;
 
@@ -235,9 +235,9 @@ blockheader_check_valid (const blockheader_t *header)
 inline static
 void blockmngr_reset_blocks(void){
  /* mark all blocks as invalid (set block address to
-    BLOCKMNGR_CURBLOCK_IS_VOID) */
-  for (uint8_t i = 0; i < EEPFLASH_NUM_USED_BLOCKS; i ++){
-     blockmngr.curblock_start[i] = BLOCKMNGR_CURBLOCK_IS_VOID;
+    BLOCKMNGR_BLOCK_IS_VOID) */
+  for (uint8_t block_id = 0; block_id < EEPFLASH_NUM_USED_BLOCKS; block_id ++){
+     blockmngr.block_start[block_id] = BLOCKMNGR_BLOCK_IS_VOID;
   }
 }
 
@@ -253,22 +253,22 @@ void blockmngr_reset_blocks(void){
 inline static
 void blockmngr_update_blocks(void){
   /* from beginning of the active eepflash section */
-  char *p_blk = flashsections.active_start;
+  char *p_block = flashsections.active_start;
   /* extract first header */
-  blockheader_t *header = (blockheader_t *)(p_blk);
+  blockheader_t *header = (blockheader_t *)(p_block);
   /* for all valid blocks */
   while (blockheader_check_valid(header)){
     /* last found is most recent */
-    blockmngr.curblock_start[header->block_id] = p_blk;
+    blockmngr.block_start[header->block_id] = p_block;
     /* jump to next header. since FEE writes only an even block
        length but the user may have specified an odd length
        we must align to get the written data field length */
-    p_blk += _ALIGN(header->data_size, 2) +
+    p_block += _ALIGN(header->data_size, 2) +
              sizeof(blockheader_t);
     /* get next header */
-    header = (blockheader_t *)(p_blk);
+    header = (blockheader_t *)(p_block);
   }
-  blockmngr.block_queue_end = p_blk;
+  blockmngr.block_queue_end = p_block;
 }
 
 
@@ -332,12 +332,12 @@ void flashsections_swap(void){
  * true elsewise
  */
 inline static int8_t
-blockmngr_get_block(char **block, const uint8_t block_id){
-  if (blockmngr.curblock_start[block_id] == BLOCKMNGR_CURBLOCK_IS_VOID){
+blockmngr_get_block(char **p_block, const uint8_t block_id){
+  if (blockmngr.block_start[block_id] == BLOCKMNGR_BLOCK_IS_VOID){
     return false;
   }
   else {
-    *block = blockmngr.curblock_start[block_id];
+    *p_block = blockmngr.block_start[block_id];
     return true;
   }
 }
@@ -348,7 +348,7 @@ blockmngr_get_block(char **block, const uint8_t block_id){
  * Expunge block with block_id == expunge_id
  */
 inline static void
-flashsections_cleanup(char **end, const uint8_t expunge_id){
+flashsections_cleanup(char **p_queue_end, const uint8_t expunge_id){
   /* copy all recent and valid blocks from active section to
      alternate section */
   char *p_src;
@@ -372,7 +372,7 @@ flashsections_cleanup(char **end, const uint8_t expunge_id){
     /* else: no block found -> nothing to do */
   }
   /* return pointer to next vacant area in the active flash section */
-  *end = p_dst;
+  *p_queue_end = p_dst;
 }
 
 /*-----------------------------------------------------------------------------
@@ -415,9 +415,9 @@ eepflash_copy_block(char *p_ram, const uint8_t block_id){
  * active and alternate sections will be swapped
  */
 void
-eepflash_write(const char *src, const uint16_t user_len, const uint8_t block_id){
+eepflash_write(const char *p_ram, const uint16_t user_len, const uint8_t block_id){
   /* seek to the end of the flash queue */
-  char *p_blk = blockmngr.block_queue_end;
+  char *p_block = blockmngr.block_queue_end;
   /* create a new blockheader with block_id and data length as
      specified by user (length may be even or odd) */
   blockheader_t blockheader;
@@ -428,9 +428,9 @@ eepflash_write(const char *src, const uint16_t user_len, const uint8_t block_id)
      (round up) */
   const uint16_t data_len = _ALIGN(user_len, 2);
   /* if we are running out of space ... */
-  if ((p_blk + sizeof(blockheader_t) + data_len) > flashsections.active_end){
+  if ((p_block + sizeof(blockheader_t) + data_len) > flashsections.active_end){
     /* ... perform a cleanup and seek to the end */
-    flashsections_cleanup((char **)&p_blk, block_id);
+    flashsections_cleanup((char **)&p_block, block_id);
     /* swap working <-> alternate section */
     flashsections_swap();
     /* mark all blocks as invalid (reset ram pointer table) */
@@ -439,7 +439,7 @@ eepflash_write(const char *src, const uint16_t user_len, const uint8_t block_id)
     blockmngr_update_blocks();
   }
   /* if user wants to write still more data than possible */
-  if ((p_blk + sizeof(blockheader_t) + data_len) > flashsections.active_end) {
+  if ((p_block + sizeof(blockheader_t) + data_len) > flashsections.active_end) {
 
    /* \todo: Cause ARM exception (e.g. abort) and halt target
              in exception trap */
@@ -447,12 +447,12 @@ eepflash_write(const char *src, const uint16_t user_len, const uint8_t block_id)
   }
   else {
     /* write header of new block */
-    flash_write((char *)&blockheader, p_blk, sizeof(blockheader_t));
+    flash_write((char *)&blockheader, p_block, sizeof(blockheader_t));
     /* write data field of new block */
-    flash_write(src, p_blk + sizeof(blockheader_t), user_len);
+    flash_write(p_ram, p_block + sizeof(blockheader_t), user_len);
     /* update ram table pointing to most recent blocks */
-    blockmngr.curblock_start[block_id] = p_blk;
-    blockmngr.block_queue_end = p_blk + sizeof(blockheader_t) + data_len;
+    blockmngr.block_start[block_id] = p_block;
+    blockmngr.block_queue_end = p_block + sizeof(blockheader_t) + data_len;
   }
 }
 
