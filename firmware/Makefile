@@ -11,7 +11,7 @@ LIBADUC = ../aduc/
 # include directory
 CINCS = -I../include -I$(LIBADUC)
 
-CCFLAGS=  -mcpu=arm7tdmi -gstabs -g -Wall -Wextra -Wstrict-prototypes -std=gnu99
+CCFLAGS=  -mcpu=arm7tdmi -gstabs -Wall -Wextra -Wstrict-prototypes -std=gnu99
 # uncomment if you want to have optimized code otherwise resonably debug the code
 CCFLAGS += -Os
 
@@ -40,13 +40,13 @@ endif
 ########################################################################################
 
 OBJ_ADC_INT_MCA = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-mca-ext-trig.o timer1-countdown-and-stop.o timer1-get-duration.o timer1-init-simple.o
-LDFLAGS_ADC_INT_MCA =$(LDFLAGS_COMMON) -T$(LIBADUC)project.lds -Wl,-Map=firmware-adc-int-mca.map,--cref -g
+LDFLAGS_ADC_INT_MCA =$(LDFLAGS_COMMON) -T$(LIBADUC)project.lds -Wl,-Map=firmware-adc-int-mca.map,--cref -gstabs
 
 OBJ_ADC_INT_MCA_TIMED = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-mca-timed-trig.o timer1-adc-trigger.o
-LDFLAGS_ADC_INT_MCA_TIMED =$(LDFLAGS_COMMON) -T$(LIBADUC)project.lds -Wl,-Map=firmware-adc-int-mca-timed.map,--cref -g
+LDFLAGS_ADC_INT_MCA_TIMED =$(LDFLAGS_COMMON) -T$(LIBADUC)project.lds -Wl,-Map=firmware-adc-int-mca-timed.map,--cref -gstabs
 
 OBJ_ADC_INT_TIMED_SAMPLING = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-log-timed-trig.o timer1-adc-trigger.o data-table-all-other-memory.o
-LDFLAGS_ADC_INT_TIMED_SAMPLING =$(LDFLAGS_COMMON) -T$(LIBADUC)project.lds data_table_empty_ram.lds -Wl,--defsym=MALLOC_HEAP_SIZE=500 -Wl,-Map=firmware-adc-int-timed-sampling.map,--cref -g
+LDFLAGS_ADC_INT_TIMED_SAMPLING =$(LDFLAGS_COMMON) -T$(LIBADUC)project.lds data_table_empty_ram.lds -Wl,--defsym=MALLOC_HEAP_SIZE=500 -Wl,-Map=firmware-adc-int-timed-sampling.map,--cref -gstabs
 
 ########################################################################################
 
