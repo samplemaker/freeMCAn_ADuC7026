@@ -23,7 +23,7 @@
  * \ingroup ADUC
  *
  * Implements a driver for storing non volatile data into flash
- * Note: Eepflash-write is nonreentrant!
+ * Note: eepflash_write() is nonreentrant!
  * Note: CRC checks and error handling is not supported!
  *
  * @{
@@ -49,9 +49,9 @@
  *
  */
 #define MEMSIZE_TO_NUMSECTOR(end, start) \
-                           (((end) - (start)) >> (FLASH_SECTOR_CONFIG))
+                            (((end) - (start)) >> (FLASH_SECTOR_CONFIG))
 
-/** uint8_t pattern for marking a block as written in the flash
+/** uint8_t pattern indicating a block is written in the flash
  *
  */
 #define BLOCKHEADER_BLOCK_IS_VALID 0xaa
@@ -94,11 +94,20 @@ static flashsections_t flashsections;
 
 /** \brief eepflash block header
  *
- * Size of header must be even and structure must be packed
+ * The data is written in a linear row into the flash. In front
+ * of each datafield a header is written. header and data is referred
+ * to as block.
+ *
+ * Note: Size of header must be even and structure must be packed
  */
 typedef struct {
+  /* a number identifying the origin of the datafield after the header */
   uint8_t  block_id;
+  /* tag to indicate the end of the flash queue */
   uint8_t  validmarker;
+  /* size of the user data in the data field. the FEE tools can
+     only write an even data size. whenever we read from flash
+     we will restore the data field size by rounding up this value */
   uint16_t data_size;
 } __attribute__((__packed__)) blockheader_t;
 
@@ -129,7 +138,8 @@ static blockmngr_t blockmngr;
  *
  */
 static int8_t
-flash_erase(const uint8_t sector_start, const uint8_t sector_end){
+flash_erase(const uint8_t sector_start, const uint8_t sector_end)
+{
   FEEMOD |= _BV(FEE_EW_PROTECTION);
   for (uint8_t cnt = sector_start; cnt <= sector_end; cnt++){
     FEEADR = FLASH_SECTOR_SIZE * cnt;
@@ -153,21 +163,17 @@ flash_erase(const uint8_t sector_start, const uint8_t sector_end){
       }
     }
   }
-  /* data string written successfully: exit */
   return true;
 }
 
 
-/** Low level function to write a character buffer to flash
+/** Write character buffer to flash
  *
- * len: length [bytes] to write. must be even and integer
- * dst: logic adress to write
- * src: pointer to character source buffer
- *
- * Note: Can only write 16 bit wise
+ * Note: Can only write 16 bit wise - len must be even
  */
 static int8_t
-flash_write(const char *src,  const char *dst, const uint16_t len){
+flash_write(const char *src,  const char *dst, const uint16_t len)
+{
   uint16_t dst_vma = (uint16_t)(dst - __flash_start__);
   FEEMOD |= _BV(FEE_EW_PROTECTION);
   for (uint16_t cnt = 0; cnt < len; cnt += 2, dst_vma += 2){
@@ -202,14 +208,10 @@ flash_write(const char *src,  const char *dst, const uint16_t len){
       }
     }
   }
-  /* data string written successfully: exit */
   return true;
 }
 
 
-/** Set the block header validmarker to valid
- *
- */
 inline static void
 blockheader_set_valid (blockheader_t *header)
 {
@@ -217,9 +219,6 @@ blockheader_set_valid (blockheader_t *header)
 }
 
 
-/** Checks if a block header is tagged valid
- *
- */
 inline static uint8_t
 blockheader_check_valid (const blockheader_t *header)
 {
@@ -227,57 +226,43 @@ blockheader_check_valid (const blockheader_t *header)
 }
 
 
-/** Set all recent blocks to NA in the ram pointer
+/** Initialize ram pointers which point to newest valid blocks
  *
- * NA means that a block with block_id is not yet written
- * in the flash queue
+ * Blocks which are not present in the flash queue will tagged
+ * as "unitialized" (NA) in the ram pointer.
  */
 inline static
-void blockmngr_reset_blocks(void){
- /* mark all blocks as invalid (set block address to
-    BLOCKMNGR_BLOCK_IS_VOID) */
-  for (uint8_t block_id = 0; block_id < EEPFLASH_NUM_USED_BLOCKS; block_id ++){
+void blockmngr_init(void)
+{
+  /* mark all blocks as invalid  */
+  for (uint8_t block_id = 0;
+       block_id < EEPFLASH_NUM_USED_BLOCKS;
+       block_id ++){
      blockmngr.block_start[block_id] = BLOCKMNGR_BLOCK_IS_VOID;
   }
-}
-
-
-/** Initialize ram pointer which points to most recent blocks
- *
- * Blocks which are not present in the flash queue are not updated
- * in the ram pointer. That means these will reside as "unitialized"
- * (NA) in the ram pointer.
- *
- * Note: The initialization is implemented as linear search
- */
-inline static
-void blockmngr_update_blocks(void){
-  /* from beginning of the active eepflash section */
+  /* from the beginning of the active section */
   char *p_block = flashsections.active_start;
-  /* extract first header */
   blockheader_t *header = (blockheader_t *)(p_block);
-  /* for all valid blocks */
+  /* for all valid blocks (blocks recorded in the flash queue) */
   while (blockheader_check_valid(header)){
-    /* last found is most recent */
+    /* the last block in the queue is the most recent block */
     blockmngr.block_start[header->block_id] = p_block;
-    /* jump to next header. since FEE writes only an even block
-       length but the user may have specified an odd length
-       we must align to get the written data field length */
+    /* jump to next header */
     p_block += _ALIGN(header->data_size, 2) +
-             sizeof(blockheader_t);
-    /* get next header */
+               sizeof(blockheader_t);
     header = (blockheader_t *)(p_block);
   }
+  /* record end position of the flash queue */
   blockmngr.block_queue_end = p_block;
 }
 
 
 /** Initialize pointer to flash sections (working and copy page)
  *
- * Note: No check wheather the flash is corrupt
  */
 inline static
-void flashsections_init(void){
+void flashsections_init(void)
+{
   /* check if there is a valid blockheader at start of
      section two */
   blockheader_t *header = (blockheader_t *)(_eepflash_section2_start);
@@ -289,7 +274,7 @@ void flashsections_init(void){
     flashsections.alternate_end = _eepflash_section1_end;
   }
   else {
-    /* no: maybe flash is virgin or currently section one is in use,
+    /* either flash is virgin or currently section one is in use,
      * then mark section one as active and section two as alternate
      */
     flashsections.active_start = _eepflash_section1_start;
@@ -306,7 +291,8 @@ void flashsections_init(void){
  * flash area becomes active
  */
 inline static
-void flashsections_swap(void){
+void flashsections_swap(void)
+{
   /* erase current active section (working section) */
   const uint8_t sector_start =
     MEMSIZE_TO_NUMSECTOR(flashsections.active_start, __flash_start__ );
@@ -314,7 +300,7 @@ void flashsections_swap(void){
     MEMSIZE_TO_NUMSECTOR(flashsections.active_end, __flash_start__) - 1;
   flash_erase(sector_start, sector_end);
 
-  /* swap section pointers address for active <-> alternate */
+  /* swap section pointers active <-> alternate */
   char *temp;
   temp = flashsections.active_start;
   flashsections.active_start = flashsections.alternate_start;
@@ -332,7 +318,8 @@ void flashsections_swap(void){
  * true elsewise
  */
 inline static int8_t
-blockmngr_get_block(char **p_block, const uint8_t block_id){
+blockmngr_get_block(char **p_block, const uint8_t block_id)
+{
   if (blockmngr.block_start[block_id] == BLOCKMNGR_BLOCK_IS_VOID){
     return false;
   }
@@ -343,36 +330,43 @@ blockmngr_get_block(char **p_block, const uint8_t block_id){
 }
 
 
-/** Perform a cleanup into alternate flash section
+/** Return pointer to the end of the record queue
+ *
+ */
+inline static void
+blockmngr_end_of_queue(char **p_queue_end)
+{
+  *p_queue_end = blockmngr.block_queue_end;
+}
+
+
+/** Perform a cleanup from active into alternate flash section
  *
  * Expunge block with block_id == expunge_id
  */
 inline static void
-flashsections_cleanup(char **p_queue_end, const uint8_t expunge_id){
-  /* copy all recent and valid blocks from active section to
-     alternate section */
+flashsections_cleanup(const uint8_t expunge_id)
+{
   char *p_src;
   char *p_dst = flashsections.alternate_start;
-  /* for each block with block_id */
-  for (uint8_t block_id = 0; block_id < EEPFLASH_NUM_USED_BLOCKS; block_id++){
-    /* get most recent and valid block */
-    if (blockmngr_get_block((char **)&p_src, block_id) && (block_id != expunge_id)){
+  for (uint8_t block_id = 0;
+       block_id < EEPFLASH_NUM_USED_BLOCKS;
+       block_id++){
+    /* get pointer to the newest block referenced by block_id */
+    if (blockmngr_get_block((char **)&p_src, block_id) &&
+       (block_id != expunge_id)){
       /* extract header */
       blockheader_t *header = (blockheader_t *)(p_src);
-       /* since FEE provides only even block length but the user may
-          have specified an odd length (and this is stored in flash)
-          we must align to get the true length           */
-      const uint16_t block_len = _ALIGN(header->data_size, 2) +
-                                 sizeof(blockheader_t);
+      /* length of data field written (must be even; round up) */
+      const uint16_t len = _ALIGN(header->data_size, 2) +
+                           sizeof(blockheader_t);
       /* copy block to alternate section */
-      flash_write(p_src, p_dst, block_len);
-      /* adjust to end of queue in the alternate section */
-      p_dst += block_len;
+      flash_write(p_src, p_dst, len);
+      /* adjust to the end of the record queue */
+      p_dst += len;
     }
-    /* else: no block found -> nothing to do */
+    /* else: no block found -> nothing */
   }
-  /* return pointer to next vacant area in the active flash section */
-  *p_queue_end = p_dst;
 }
 
 /*-----------------------------------------------------------------------------
@@ -380,20 +374,19 @@ flashsections_cleanup(char **p_queue_end, const uint8_t expunge_id){
  *-----------------------------------------------------------------------------
  */
 
-/** Copy data from most recent and valid block with BLOCKID
+/** Copy data from newest valid block with BLOCKID
  *
  * Returns false if no valid block was found, true elsewise
  */
 int8_t
-eepflash_copy_block(char *p_ram, const uint8_t block_id){
+eepflash_copy_block(char *p_ram, const uint8_t block_id)
+{
   char *p_flash;
-  /* if the block is registered in the ram pointer */
+  /* if block is registered in the ram pointer */
   if (blockmngr_get_block((char **)&p_flash, block_id)){
-    /* extract header */
     blockheader_t *header = (blockheader_t *)(p_flash);
-    /* point to start of data stream field (flash) */
+    /* point to start and end of the data field (flash) */
     char *p_data = p_flash + sizeof(blockheader_t);
-    /* point to the end of user-data (might be smaller than the written data) */
     const char *p_end = (char *) (p_data + header->data_size);
     /* point to data destiny start (ram) */
     char *p_dst = p_ram;
@@ -410,61 +403,63 @@ eepflash_copy_block(char *p_ram, const uint8_t block_id){
 
 /** Store a block with BLOCKID
  *
- * If there is not enough free memory in the active flash section
- * a cleanup into alternate section is performed and after that
- * active and alternate sections will be swapped
+ * If there is not enough memory in the active flash section a cleanup
+ * into alternate section is performed and after that active and
+ * alternate sections are swapped
  */
 void
-eepflash_write(const char *p_ram, const uint16_t user_len, const uint8_t block_id){
-  /* seek to the end of the flash queue */
-  char *p_block = blockmngr.block_queue_end;
-  /* create a new blockheader with block_id and data length as
-     specified by user (length may be even or odd) */
+eepflash_write(const char *p_ram,
+               const uint16_t user_len,
+               const uint8_t block_id)
+{
+  char *p_block;
+  /* seek to the end of the record queue */
+  blockmngr_end_of_queue((char **)&p_block);
+  /* create a new blockheader */
   blockheader_t blockheader;
   blockheader.block_id = block_id;
   blockheader.data_size = user_len;
   blockheader_set_valid(&blockheader);
-  /* the FEE - flash utilities store only even data length
-     (round up) */
+  /* FEE: the data field length recorded must be even (round up) */
   const uint16_t data_len = _ALIGN(user_len, 2);
-  /* if we are running out of space ... */
-  if ((p_block + sizeof(blockheader_t) + data_len) > flashsections.active_end){
-    /* ... perform a cleanup and seek to the end */
-    flashsections_cleanup((char **)&p_block, block_id);
+  /* if running out of space */
+  if ((p_block + sizeof(blockheader_t) + data_len) >
+       flashsections.active_end) {
+    /* perform a cleanup */
+    flashsections_cleanup(block_id);
     /* swap working <-> alternate section */
     flashsections_swap();
-    /* mark all blocks as invalid (reset ram pointer table) */
-    blockmngr_reset_blocks();
-    /* initialize ram pointer. points now to most recent data */
-    blockmngr_update_blocks();
+    /* update block pointers */
+    blockmngr_init();
+    /* seek to the new end of the record queue */
+    blockmngr_end_of_queue((char **)&p_block);
   }
   /* if user wants to write still more data than possible */
-  if ((p_block + sizeof(blockheader_t) + data_len) > flashsections.active_end) {
-
+  if ((p_block + sizeof(blockheader_t) + data_len) >
+       flashsections.active_end) {
    /* \todo: Cause ARM exception (e.g. abort) and halt target
              in exception trap */
-
   }
   else {
-    /* write header of new block */
+    /* write block (header and data field) */
     flash_write((char *)&blockheader, p_block, sizeof(blockheader_t));
-    /* write data field of new block */
     flash_write(p_ram, p_block + sizeof(blockheader_t), user_len);
-    /* update ram table pointing to most recent blocks */
+    /* register new block in ram pointer */
     blockmngr.block_start[block_id] = p_block;
-    blockmngr.block_queue_end = p_block + sizeof(blockheader_t) + data_len;
+    blockmngr.block_queue_end = p_block +
+                                sizeof(blockheader_t) +
+                                data_len;
   }
 }
 
 
 static
-void __init eepflash_init(void){
-  /* initialize pointer to active and alternate flash sections */
+void __init eepflash_init(void)
+{
+  /* initialize pointers to active and alternate flash sections */
   flashsections_init();
-  /* mark all blocks as invalid (reset ram pointer table) */
-  blockmngr_reset_blocks();
-  /* initialize ram pointer. points now to most recent data */
-  blockmngr_update_blocks();
+  /* initialize ram pointers pointing to newest valid blocks */
+  blockmngr_init();
 }
 
 module_init(eepflash_init, 0);
