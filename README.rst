@@ -16,9 +16,9 @@ it employs several functions of a data logger like data time
 recording (the software provides an oscilloscope functionality) and
 statistics counting.
 
-There are two different software ports available:
+There are two different software branches available:
 
-  * Related to the ADuC7026 (Analog Devices) w. ARM7TDMI core:
+  * Related to the ADuC7026 (Analog Devices) asic w. ARM7TDMI core:
     https://github.com/samplemaker/FreeMCAn_on_ADUC7026
 
   * Related to the ATMega644 (Atmel) silicon device:
@@ -60,17 +60,22 @@ Software Requirements
   * POSIX/GNU/Linux/Unix host system
   * gcc_ compiler for host system
 
-Toolchain: freeMCAn-ADuC is known to be build on Fedora 16 with newlib
+Toolchain: FreeMCAn_ADUC7026 code comes with full target initialization
+That means beside a compiler and a standard c-library no extra software 
+is needed. FreeMCAn-ADuC is known to be build on Fedora 16 with newlib
 and gcc based on an ARM Toolchain derived from following packages:
 
   * binutils-2.22
-  * gcc-4.6.2
   * newlib-1.19.0
-  * insight-6.8-1a
+  * gdb-7.3a.tar.gz
+  * gcc-4.6.2
 
-Note: FreeMCAn_ADUC7026 comes with a full target initialization and
-has its own asic driver. That means beside a compiler (gcc) and a
-standard c-library (newlib) no additional software is needed.
+gcc was configured with: 
+../gcc_sources/configure -v --quiet --target=arm-elf --prefix=<tbd> 
+--with-gnu-as --with-gnu-ld --enable-languages=c --enable-interwork 
+--enable-multilib --with-newlib --with-system-zlib 
+--with-headers=<tbd>/newlib_sources/newlib/libc/include --disable-werror 
+--silent
 
 For building the internal code documentation (mostly of interest to
 hackers), you additionally need
