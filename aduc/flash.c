@@ -60,7 +60,7 @@
  *  not yet written (NULL pointer)
  *
  */
-#define BLOCKMNGR_BLOCK_IS_VOID (char *)(0xffff)
+#define BLOCKMNGR_BLOCK_IS_VOID ((void*)0)
 
 
 /*-----------------------------------------------------------------------------

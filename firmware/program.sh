@@ -50,5 +50,7 @@ send \"exit\"
 echo 'kill openocd ... '
 kill "$openocd_pid"
 
-echo 'Note: To run the target either disconnect jtag and reset target or reset target and restart OPENOCD server after programming! '
+echo 'Note: To run the target disconnect jtag and perform a system reset.'
+echo '      Or reset target and restart OPENOCD server via: '
+echo '      openocd -f ./openocd-usb.cfg -f ./openocd-target.cfg '
 
