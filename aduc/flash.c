@@ -114,15 +114,13 @@ typedef struct {
 
 /** \brief Holds address of most recent blocks in the flash queue
  *
- * block_start == 0xFFFF indicates a block is NA (not yet
- * written) assuming that we will never have a block located
- * above 64k. However this saves EEPFLASH_NUM_USED_BLOCKS
- * bytes RAM (int8 indicator wheather a block is already written)
+ * block_start == (void*)0 indicates a block is NA (not yet
+ * recorded in the queue)
  */
 typedef struct blockmngr_struct {
   /* pointer to start of most recent block with block_id */
   char *block_start[EEPFLASH_NUM_USED_BLOCKS];
-  /* points to end of data queue already written into flash */
+  /* points to end of data queue written to flash */
   char *block_queue_end;
 } blockmngr_t;
 
