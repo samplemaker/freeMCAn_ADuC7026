@@ -1,8 +1,10 @@
 /** \file firmware/main.c
- * \brief The firmware for ATmega devices
+ * \brief The firmware for the ADuC7026 device
  *
  * \author Copyright (C) 2009 samplemaker
  * \author Copyright (C) 2010 samplemaker
+ * \author Copyright (C) 2011 samplemaker
+ * \author Copyright (C) 2012 samplemaker
  * \author Copyright (C) 2010 Hans Ulrich Niedermann <hun@n-dimensional.de>
  *
  *  This library is free software; you can redistribute it and/or
@@ -44,34 +46,14 @@
  *      code executed before main() is run.
  *
  *   c) Initialized constants in the .text section.  Those are placed
- *      into the program flash on the device, and due to the AVR's
- *      Harvard architecture, need special instructions to
- *      read. Unused so far.
+ *      into the program flash on the device.
  *
- *   d) Register variables.  We only use them in the uninitialized
- *      variety so far for the assembly language version
- *      ISR(ADC_vect), if you choose to compile and link that.
+ *   d) Register variables.
  *
- *   e) EEPROM variables.  We are not using those anywhere yet.
  *
  * All in all, this means that for normal memory variables,
  * initialized or uninitialized, we do not need to initialize anything
  * at the start of main().
- *
- * Also note that the ATmega644 has 4K of SRAM. With an ADC resolution
- * of 10 bit, we need to store 2^10 = 1024 = 1K values in our
- * histogram table. This results in the following memory sizes for the
- * histogram table:
- *
- *    uint16_t: 2K
- *    uint24_t: 3K
- *    uint32_t: 4K
- *
- * We could fit the global variables into otherwise unused registers
- * to free some more SRAM, but we cannot move the stack into register
- * space. This means we cannot use uint32_t counters in the table -
- * the absolute maximum sized integer we can use is our self-defined
- * "uint24_t" type.
  *
  * \addtogroup firmware_generic
  * @{
@@ -98,12 +80,7 @@
 #include "data-table.h"
 #include "switch.h"
 
-/* Only try compiling for supported MCU types */
-/*#if defined(__AVR_ATmega644__) || defined(__AVR_ATmega644P__)
-#else
-# error Unsupported MCU!
-#endif
-*/
+
 
 /** Define static string in a single place */
 const char PSTR_INVALID_EEPROM_DATA[] = "Invalid EEPROM data";
@@ -258,9 +235,7 @@ firmware_state_t firmware_handle_measurement_finished(const firmware_state_t pst
   switch (pstate) {
   case STP_MEASURING:
     /* end measurement */
-/*    cli();*/
     disable_IRQs_usermode();
-
     on_measurement_finished();
     send_table(PACKET_VALUE_TABLE_DONE);
     return STP_DONE;
@@ -337,7 +312,6 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
 
       eepflash_write((char *)&pparam_sram, sizeof(pparam_sram),
                      EEPFLASH_FRAME_CMD_PARAMS);
-
       send_state(PSTR_READY);
       return STP_READY;
       break;
@@ -363,7 +337,7 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
     switch (c) {
     case FRAME_CMD_INTERMEDIATE:
       /** The value table will be updated asynchronously from ISRs
-       * like ISR(ADC_vect) or ISR(TIMER1_foo), i.e. independent from
+       * like ISR_ADC() or ISR_TIMER1(), i.e. independent from
        * this main loop.  This will cause glitches in the intermediate
        * values as the values in the table often consist of more than
        * a single 8bit machine word.  However, we have decided that
@@ -376,12 +350,12 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
        * our ISR within the appropriate time range or anything
        * similar.
        *
-       * If you decide to bracket the send_table() call with a
-       * cli()/sei() pair, be aware that you need to solve the issue
+       * If you decide block interrupts during the send_table() call
+       * be aware that you need to solve the issue
        * of resetting the hardware properly. For example, with the
        * adc-int-mca personality, resetting the peak hold capacitor on
        * resume if an event has been detected by the analog circuit
-       * while we had interrupts disabled and thus ISR(ADC_vect) could
+       * while we had interrupts disabled and thus ISR_ADC() could
        * not reset the peak hold capacitor.
        */
       send_table(PACKET_VALUE_TABLE_INTERMEDIATE);
@@ -401,9 +375,7 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
       break;
     case FRAME_CMD_ABORT:
       send_state(PSTR_DONE);
-  /*    cli();*/
       disable_IRQs_usermode();
-
       on_measurement_finished();
       send_table(PACKET_VALUE_TABLE_ABORTED);
       send_state(PSTR_DONE);
@@ -440,17 +412,17 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
 /** @} */
 
 
-/** AVR firmware's main event loop function
+/** firmware's main event loop function
  *
  * The main event loop detects all incoming events and dispatches them
  * to the appropriate handler functions (firmware_handle_*).
  *
  * Incoming events are e.g. "button pressed", "incoming byte on
- * USART", or "measurement finished".
+ * UART", or "measurement finished".
  *
  * Note that eventually we are always forcing the system through a
- * reset after a measurement has finished (by having the watchdog
- * timer reset the AVR device). This ensures the device is in a
+ * reset after a measurement has finished (either softreset or
+ * watchdog reset). This ensures the device is in a
  * well-defined default state when the next measurement is being set
  * up.
  *
@@ -505,11 +477,7 @@ void main_event_loop(void)
 
   /* Firmware FSM State */
   firmware_state_t pstate = STP_READY;
-
-  /* Globally enable interrupts */
-/*  sei();*/
   enable_IRQs_usermode();
-
   /* Firmware main event loop */
   while (1) {
 
@@ -632,7 +600,7 @@ void main_event_loop(void)
 
 /** Firmware main() function
  *
- * avr-gcc knows that int main(void) ending with an endless loop and
+ * gcc knows that int main(void) ending with an endless loop and
  * not returning is normal, so we can avoid the
  *
  *    int main(void) __attribute__((noreturn));
@@ -648,14 +616,14 @@ int main(void)
 
   /* ST_booting */
 
-  /** We try not to explicitly call initialization functions at the
-   * start of main().  The idea is to implement the initialization
-   * functions as ((naked)) and put them in the ".initN" sections so
-   * they are called automatically before main() is run.
+  /** Initialization functions which need to be called before
+   * this entry point shall be tagged with
+   * module_init(<functionname>, <level>) and "__init". Code
+   * will be put into .init.text and functionpointers will reside
+   * in the .initcall<level>.init sections and called
+   * automatically from within the target startup code.
    *
-   * This keeps all foo.c related initialization code inside foo.c,
-   * and it also saves us a few bytes in the firmware image which
-   * would be used by the call/return instructions.
+   * This keeps all foo.c related initialization code inside foo.c
    */
 
   send_personality_info();

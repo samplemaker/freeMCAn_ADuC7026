@@ -1,5 +1,5 @@
 /** \file firmware/packet-comm.c
- * \brief ATmega packet communication interface (layer 3)
+ * \brief Packet communication interface (layer 3)
  *
  * \author Copyright (C) 2010 samplemaker
  * \author Copyright (C) 2010 Hans Ulrich Niedermann <hun@n-dimensional.de>

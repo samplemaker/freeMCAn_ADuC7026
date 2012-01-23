@@ -1,5 +1,5 @@
 /** \file firmware/uart-comm.c
- * \brief ATmega UART communication implementation (layer 1)
+ * \brief ADuC7026 UART communication implementation (layer 1)
  *
  * \author Copyright (C) 2010 samplemaker
  * \author Copyright (C) 2010 Hans Ulrich Niedermann <hun@n-dimensional.de>
