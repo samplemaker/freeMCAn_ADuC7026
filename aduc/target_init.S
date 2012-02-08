@@ -1,5 +1,5 @@
 /** \file aduc/target_init.S
- * \brief ADUC-port specific target initialization and IRQ functions
+ * \brief ADuC specific target initialization
  *
  * \author Copyright (C) 2011 samplemaker
  *
@@ -31,49 +31,56 @@
  * ADuC7019/20/21/22/24/25/26/27/28/29 (REV. D)"
  * http://www.analog.com/static/imported-files/data_sheets/ADuC7019_20_21_22_24_25_26_27_28_29.pdf
  *
- * \defgroup aduc_target_init Startup code for ADUC bare silicon
+ * \defgroup aduc_target_init Startup code for ADuC bare silicon
  * \ingroup ADUC
  *
  * @{
  */
 
+/*-----------------------------------------------------------------------------
+ * Includes
+ *-----------------------------------------------------------------------------
+ */
+
 #include "aduc.h"
+
+/*-----------------------------------------------------------------------------
+ * Variables
+ *-----------------------------------------------------------------------------
+ */
 
 .extern main
 .extern do_initcalls
 .extern _irq_handler
 .extern _swi_handler
 
-
 .code 32
 .align 0
 .section .vector, "ax"
 
-/** Jump island exception vector table for operating modes
+/** Jump island exception vector table
  *
- * See: ARM7TDMI Technical Reference Manual p. 67
+ * See:  ARM7TDMI Technical Reference Manual p. 67
  *
- * Note: In the ADUC7026 asic the FLASH is mirrored at ADDR
- *       0x00000 by default after reset (MMR-REMAP bit 0 unset).
- *       To not keep on executing in this address range lets jump
- *       to the flash adress range 0x80000 onwards. Therefore we
- *       have to reload the handler address from a "literal pool"
- *       rather than using a branch (b $targetaddr) instruction.
+ * Note: After power on reset the flash (0x80000 onwards) is mirrored
+ *       at address 0x00000 (MMR-REMAP bit 0 unset). To not keep on
+ *       executing code from 0x00000 onwards we have to jump into the
+ *       0x80000 address range. Therefore we load the handler address
+ *       from a "literal pool" instead of using a branch (b $targetaddr)
+ *       instruction. This is necessary if we want to use breakpoints.
  *
  */
-_vector:
-	ldr	pc, init_target		/* Reset -> Supervisor */
-	ldr	pc, und_handler		/* Undefined Instruction -> Undefinded */
-	ldr	pc, swi_handler		/* Software Interrupt -> Supervisor */
-	ldr	pc, pabt_handler	/* Prefetch Abort -> Abort */
-	ldr	pc, dabt_handler	/* Data Abort -> Abort */
-	nop				/* Reserved -> Reserved */
-	ldr	pc, irq_handler		/* IRQ -> IRQ */
-	ldr	pc, fiq_handler		/* FIQ -> FIQ */
+_vector:				/* Exception type; Mode on entry */
+	ldr	pc, init_target		/* Reset; Supervisor */
+	ldr	pc, und_handler		/* Undefined Instruction; Undefinded */
+	ldr	pc, swi_handler		/* Software Interrupt; Supervisor */
+	ldr	pc, pabt_handler	/* Prefetch Abort; Abort */
+	ldr	pc, dabt_handler	/* Data Abort; Abort */
+	nop				/* Reserved ; Reserved */
+	ldr	pc, irq_handler		/* IRQ; IRQ */
+	ldr	pc, fiq_handler		/* FIQ; FIQ */
 
-/* Handler functions may be implemented in foreign modules
- * without doing any changes here
- */
+/* Literal pool holding handler addresses */
 
 init_target:	.word	_init_target
 und_handler:	.word	_und_handler
@@ -83,8 +90,12 @@ dabt_handler:	.word	_dabt_handler
 irq_handler:	.word	_irq_handler
 fiq_handler:	.word	_fiq_handler
 
-/* Power on reset init handled inside this file (non weak)     */
+/* .ltorg */
 
+/* Empty handler stubs (handlers may be implemented in foreign modules).
+ * Set to default handler (infinite loop).
+ * Note: Power on reset is handled inside this file and must be non weak.
+ */
 	.weak	_und_handler
 	.set	_und_handler, _xcptn_trap
 	.weak	_swi_handler
@@ -115,13 +126,14 @@ _xcptn_trap:
 
 _init_target:
 
-/** Initialize / reset clock divider in power control
+/** Set clock divider
  *
- * See: ADUC7026 datasheet p. 55
+ * See:  ADuC7026 datasheet p. 55
  *
- * Note: Default is PLL clocking mode after power on reset. No need to 
- *       to touch PLLCON MMR.
- *
+ * Note: The selection of the clock source is in the PLLCON register. By
+ *       default, the part uses the internal oscillator feeding the PLL.
+ *       PLLCON controls the operating mode of the clock system, whereas
+ *       POWCON controls the core clock frequency and the power-down mode.
  */
 	ldr	r0, =__MMR_BASE
 	mov	r1, #0x01	/* Access to POWCON needs special sequence */
@@ -131,17 +143,21 @@ _init_target:
 	mov	r1, #0xF4
 	str	r1, [r0, #POWKEY2]
 
-/** Setup stack pointers and FIQ/IRQ bits
+/** Setup stack pointers and set FIQ/IRQ control flags
  *
- * Enter modes, disable FIQ/IRQ-Flags and set up stack pointers.
- * Priviledged modes first, user mode last because flags cannot be set /
- * cleared in user mode.
- * System mode cannot be entered by an exception and must be setup by CPSR
- * manipulation. We will not provide a stack.
- * Note: (sp -> r14_svc, r14_irq ... ).
+ * 1.) Enter ARM mode
+ * 2.) Enable FIQ/IRQ-Flags (switch off FIQ/IRQ's)
+ * 3.) Set up stack pointer
+ *
+ * Since FIQ/IRQ flags can only be set/cleared in priviledged modes we will
+ * proceed the user mode (non priviledged) in the end of the stack
+ * initialization.
+ * The system mode cannot be entered by an exception and must be setup by CPSR
+ * manipulation. No stack will be provided.
  *
  * See: ARM Compiler toolchain p. 55
  *
+ * Note: (sp -> r14_svc, r14_irq ... ).
  */
 	ldr	r0, =__stack_end__
 	msr	cpsr_c, #M_FIQ|I_FLAG|F_FLAG
@@ -164,7 +180,7 @@ _init_target:
 
 /** Clear .bss section
  *
- * Note: Requires ALIGN(4).
+ * Note: Requires ALIGN(4) since we write 4 byte wise
  */
 	mov	r0, #0			/* r0 = 0 */
 	ldr	r1, =__bss_start__	/* r1 = addr(start of .bss section) */
@@ -179,7 +195,7 @@ zero_bss:
  * Copy block .data from flash (LMA) starting after .text with size of .data
  * into RAM (VMA) starting at _data.
  *
- * Note: Requires ALIGN(4).
+ * Note: Requires ALIGN(4) since we copy 4 byte wise
  *
  */
 	ldr	r0, =_data_load_start	/* r0 = addr(end of .text => fash) */
@@ -191,16 +207,16 @@ copy_data:
 	stmltia	r1!,{r3}		/* if cond then *(r1)=r3 then r1+=4 */
 	blt	copy_data		/* branch if condition */
 
-/** Execute initialization code and jump to main
+/** Execute external initialization code and jump to main
  *
  */
 	ldr	r0,=do_initcalls
 	mov	lr,pc			/* set return address */
-	bx	r0			/* execute _init section code */
+	bx	r0			/* jump to _init code (could be thumb) */
 
 	ldr	r0,=main
 	mov	lr,pc			/* set return address */
-	bx	r0			/* could be thumb / never return */
+	bx	r0			/* could be thumb - never return */
 
 	b	.			/* should never come here */
 
