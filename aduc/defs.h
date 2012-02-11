@@ -28,6 +28,17 @@
 #define DEFS_H
 
 
+/** Field macro: Creates a bitmask as specified by argument
+ *
+ */
+#define _FS(num_shifts, value) ((value) << (num_shifts))
+
+/** One bit macro: Creates a one bit bitmask at position bit_no
+ *
+ */
+#define _BV(bit_no) (1 << (bit_no))
+
+
 #ifdef __ASSEMBLER__
 
 #define _MMR_SIZE_32(rel_address) rel_address
@@ -49,16 +60,6 @@
 #define _MMR_SIZE_32(rel_address) _MMR_RW_32((rel_address) + __MMR_BASE)
 #define _MMR_SIZE_16(rel_address) _MMR_RW_16((rel_address) + __MMR_BASE)
 #define _MMR_SIZE_08(rel_address) _MMR_RW_08((rel_address) + __MMR_BASE)
-
-/** Field macro: Creates a bitmask as specified by argument
- *
- */
-#define _FS(num_shifts, value) ((value) << (num_shifts))
-
-/** One bit macro: Creates a one bit bitmask at position bit_no
- *
- */
-#define _BV(bit_no) (1 << (bit_no))
 
 /** Set bit position bit_no to one
  *

@@ -126,7 +126,7 @@ _xcptn_trap:
 
 _init_target:
 
-/** Set clock divider
+/** Setup CLOCKSEL, PLL and core clock divider
  *
  * See:  ADuC7026 datasheet p. 55
  *
@@ -134,8 +134,64 @@ _init_target:
  *       default, the part uses the internal oscillator feeding the PLL.
  *       PLLCON controls the operating mode of the clock system, whereas
  *       POWCON controls the core clock frequency and the power-down mode.
+ *
+ *       ACTIVE: all parts powered
+ *       PAUSE:  core halted
+ *       NAP:    peripherals also halted
+ *       SLEEP:  PLL also halted
+ *       STOP:   only GPIO IRQ powered
  */
 	ldr	r0, =__MMR_BASE
+
+#if CLOCKSEL_EXT_CRYST
+        /* disable ARM irq flag to avoid executing timer2 ISR */
+	mrs	r1, cpsr
+	orr	r1, r1, #I_FLAG
+	msr	cpsr_c, r1
+	/* get timer2 act value */
+	ldr	r2, [r0, #T2VAL]
+	/* load wakeup timer2 [250us] */
+	mov	r1, #((250*32768)/1000000)
+	str	r1, [r0, #T2LD]  /* 300us */
+	/* switch to internal oscillator; divider = 1 and enable t2 */
+	mov	r1, #(_FS(TIMER2_CLKSOURCE, TIMER2_INT_OSC) | _BV(TIMER2_ENABLE))
+	orr	r3, r0 ,#T2CON
+	strh	r1, [r3]
+	/* poll until timer has latched */
+poll_t2ready:
+	ldr	r1, [r0, #T2VAL]
+	cmp	r1, r2
+	beq	poll_t2ready
+	cmp	r1, #((160*32768)/1000000)
+	bhi	poll_t2ready /* T2VAL > old_val */
+	/* enable timer2 irq flag */
+	mov	r1, #_BV(INT_WAKEUP_TIMER2)
+	str	r1, [r0, #IRQEN]
+	/* PLL, select external crystal (clear OSEL) */
+	mov	r1, #0xAA	/* Access to PLLCON needs special sequence */
+	str	r1, [r0, #PLLKEY1]
+	mov	r1, #(_FS(PLL_MDCLK, MASK_01))
+	str	r1, [r0, #PLLCON]
+	mov	r1, #0x55
+	str	r1, [r0, #PLLKEY2]
+	/* Force core into NAP mode, 326 kHz */
+	mov	r1, #0x01	/* Access to POWCON needs special sequence */
+	str	r1, [r0, #POWKEY1]
+	mov	r1, #(_FS(POW_PC, MASK_010) | _FS(POW_CD, MASK_111))
+	str	r1, [r0, #POWCON]
+	mov	r1, #0xF4
+	str	r1, [r0, #POWKEY2]
+	/* core will be powered up by timer2 automatically */
+	/* stop timer2 */
+	mov	r1, #0
+	strh	r1, [r3]
+	/* clear timer2 irq flag */
+	mov	r1, #_BV(INT_WAKEUP_TIMER2)
+	str	r1, [r0, #IRQCLR]
+	/* the core is now running with external crystal on 326 kHz */
+#endif
+
+	/* set clock divider as requested by user */
 	mov	r1, #0x01	/* Access to POWCON needs special sequence */
 	str	r1, [r0, #POWKEY1]
 	mov	r1, #POWCON_RESET_CFG

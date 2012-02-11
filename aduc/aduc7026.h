@@ -44,14 +44,6 @@
 
 /** Defines for PLL and power control / ADC BANDGAP
  *
- * Access granted by special access procedure:
- *
- *   PLLKEY1 = 0xAA;
- *   PLLCON = tbd
- *   PLLKEY2 = 0x55;
- *   POWKEY1 = 0x01;
- *   POWCON = tbd
- *   POWKEY2 = 0xF4;
  */
 #define POWKEY1   _MMR_SIZE_16(0x0404)
 #define POWCON    _MMR_SIZE_16(0x0408)
@@ -66,12 +58,8 @@
 #define REF_BANDGAP_ENABLE    0
 #define PLL_OSEL              5
 #define PLL_MDCLK             0
-#define POW_PC0               4
-#define POW_PC1               5
-#define POW_PC2               6
-#define POW_CD0               0
-#define POW_CD1               1
-#define POW_CD2               2
+#define POW_PC                4
+#define POW_CD                0
 
 
 /** Defines for GPIO module

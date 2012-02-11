@@ -11,7 +11,7 @@ LIBADUC = ../aduc/
 # include directory
 CINCS = -I../include -I$(LIBADUC)
 
-CCFLAGS=  -mcpu=arm7tdmi -gstabs -Wall -Wextra -Wstrict-prototypes -std=gnu99
+CCFLAGS=  -mcpu=arm7tdmi -g -Wall -Wextra -Wstrict-prototypes -std=gnu99
 # uncomment if you want to have optimized code otherwise resonably debug the code
 CCFLAGS += -Os
 
@@ -19,7 +19,7 @@ CCFLAGS += -Os
 CCLFAGS_LCMD = -E -nostdinc -P -C $(CINCS)
 
 # options generating startup code
-ASMFLAGS= -mcpu=arm7tdmi -I. -x assembler-with-cpp -gstabs -Wall -Wextra
+ASMFLAGS= -mcpu=arm7tdmi -I. -x assembler-with-cpp -g -Wall -Wextra
 
 # linker flags used in all personalities
 LDFLAGS_COMMON = -mcpu=arm7tdmi -Os -I. -nostartfiles

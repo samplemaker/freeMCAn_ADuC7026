@@ -28,8 +28,10 @@
 
 
 /* CD = 0 (No clock divider), PC = 0 (Active Mode) */
-#define POWCON_RESET_CFG             0x0    
+#define POWCON_RESET_CFG     0x0
 
+/* uncomment this line if an external crystall shall be used */
+#define CLOCKSEL_EXT_CRYST   0x1
 
 #ifndef __ASSEMBLER__
 
