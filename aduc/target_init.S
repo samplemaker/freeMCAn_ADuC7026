@@ -152,8 +152,8 @@ _init_target:
 	ldr	r2, [r0, #T2VAL]
 	/* load wakeup timer2 [250us] */
 	mov	r1, #((250*32768)/1000000)
-	str	r1, [r0, #T2LD]  /* 300us */
-	/* switch to internal oscillator; divider = 1 and enable t2 */
+	str	r1, [r0, #T2LD]
+	/* switch to internal oscillator; divider=1 and enable t2 */
 	mov	r1, #(_FS(TIMER2_CLKSOURCE, TIMER2_INT_OSC) | _BV(TIMER2_ENABLE))
 	orr	r3, r0 ,#T2CON
 	strh	r1, [r3]
@@ -162,8 +162,8 @@ poll_t2ready:
 	ldr	r1, [r0, #T2VAL]
 	cmp	r1, r2
 	beq	poll_t2ready
-	cmp	r1, #((160*32768)/1000000)
-	bhi	poll_t2ready /* T2VAL > old_val */
+	cmp	r1, #((150*32768)/1000000) /* approx 150 us */
+	bhi	poll_t2ready /* branch if T2VAL > threshold */
 	/* enable timer2 irq flag */
 	mov	r1, #_BV(INT_WAKEUP_TIMER2)
 	str	r1, [r0, #IRQEN]
