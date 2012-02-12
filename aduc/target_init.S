@@ -144,7 +144,7 @@ _init_target:
 	ldr	r0, =__MMR_BASE
 
 #if CLOCKSEL_EXT_CRYST
-        /* disable ARM irq flag to avoid executing timer2 ISR */
+        /* disable IRQs to avoid executing timer2 ISR */
 	mrs	r1, cpsr
 	orr	r1, r1, #I_FLAG
 	msr	cpsr_c, r1
@@ -153,8 +153,8 @@ _init_target:
 	/* load wakeup timer2 [250us] */
 	mov	r1, #((250*32768)/1000000)
 	str	r1, [r0, #T2LD]
-	/* switch to internal oscillator; divider=1 and enable t2 */
-	mov	r1, #(_FS(TIMER2_CLKSOURCE, TIMER2_INT_OSC) | _BV(TIMER2_ENABLE))
+	/* switch to internal oscillator; divider=1 and enable timer2 */
+	mov	r1, #(_FS(TIMER2_CLKSOURCE,TIMER2_INT_OSC) |_BV(TIMER2_ENABLE))
 	orr	r3, r0 ,#T2CON
 	strh	r1, [r3]
 	/* poll until timer has latched */
@@ -168,14 +168,14 @@ poll_t2ready:
 	mov	r1, #_BV(INT_WAKEUP_TIMER2)
 	str	r1, [r0, #IRQEN]
 	/* PLL, select external crystal (clear OSEL) */
-	mov	r1, #0xAA	/* Access to PLLCON needs special sequence */
+	mov	r1, #0xAA
 	str	r1, [r0, #PLLKEY1]
 	mov	r1, #(_FS(PLL_MDCLK, MASK_01))
 	str	r1, [r0, #PLLCON]
 	mov	r1, #0x55
 	str	r1, [r0, #PLLKEY2]
 	/* Force core into NAP mode, 326 kHz */
-	mov	r1, #0x01	/* Access to POWCON needs special sequence */
+	mov	r1, #0x01
 	str	r1, [r0, #POWKEY1]
 	mov	r1, #(_FS(POW_PC, MASK_010) | _FS(POW_CD, MASK_111))
 	str	r1, [r0, #POWCON]
@@ -188,9 +188,11 @@ poll_t2ready:
 	/* clear timer2 irq flag */
 	mov	r1, #_BV(INT_WAKEUP_TIMER2)
 	str	r1, [r0, #IRQCLR]
+	/* in case of crystal loss we will execute an ISR (halt the target) */
+	mov	r1, #_BV(INT_PLL_LOCK)
+	str	r1, [r0, #IRQEN]
 	/* the core is now running with external crystal on 326 kHz */
 #endif
-
 	/* set clock divider as requested by user */
 	mov	r1, #0x01	/* Access to POWCON needs special sequence */
 	str	r1, [r0, #POWKEY1]
@@ -268,7 +270,7 @@ copy_data:
  */
 	ldr	r0,=do_initcalls
 	mov	lr,pc			/* set return address */
-	bx	r0			/* jump to _init code (could be thumb) */
+	bx	r0			/* jump to _init code (could be thumb)*/
 
 	ldr	r0,=main
 	mov	lr,pc			/* set return address */

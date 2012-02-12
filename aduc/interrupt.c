@@ -42,7 +42,7 @@
  *-----------------------------------------------------------------------------
  */
 
-/* attributes used for interrupt service request stubs (ISR interface) */
+/* weak attribute for implementing the ISR stubs */
 #define __stub(default_handler) \
         __attribute__ ((weak, alias (STR(default_handler))))
 
@@ -53,23 +53,24 @@
 
 static void ISR_TRAP(void);
 
-/* Interface for external ISR code pointing to ISR_TRAP
- * as the default handler. To be replaced by real handlers. 
- * Code must be implemented in foreign modules
- */
-void ISR_ADC(void)			__stub(ISR_TRAP);
-void ISR_TIMER0(void)			__stub(ISR_TRAP);
-void ISR_TIMER1(void)			__stub(ISR_TRAP);
-void ISR_WAKEUP_TIMER2(void)		__stub(ISR_TRAP);
-void ISR_EXTINT0(void)			__stub(ISR_TRAP);
-void ISR_WATCHDOG_TIMER3(void)		__stub(ISR_TRAP);
-
-
-/** Default handler ISR trap
+/* ISR handler interface pointing to ISR_TRAP
  *
- * If no external code is specified to serve the IRQ respectively
- * and if the corresponding IRQ is unmasked the program is
- * hooked at this point
+ * Replacement code to serve the IRQ must be implemented in 
+ * foreign modules.
+ */
+void ISR_ADC(void)                      __stub(ISR_TRAP);
+void ISR_TIMER0(void)                   __stub(ISR_TRAP);
+void ISR_TIMER1(void)                   __stub(ISR_TRAP);
+void ISR_WAKEUP_TIMER2(void)            __stub(ISR_TRAP);
+void ISR_WATCHDOG_TIMER3(void)          __stub(ISR_TRAP);
+void ISR_PLL_LOCK(void)                 __stub(ISR_TRAP);
+void ISR_EXTINT0(void)                  __stub(ISR_TRAP);
+
+/** Default interrupt service handler
+ *
+ * Enless loop if an ISR is called but no external code is present
+ * Note: You may check for the caller in the link register
+ *       [$ADDR = LR - 0x4]
  *
  */
 static void ISR_TRAP(void){ while (1){} }
@@ -88,7 +89,7 @@ static void ISR_TRAP(void){ while (1){} }
  *         pending (regardless wheather it is masked or not)
  */
 
-/** IRQ - handler (coordinator) function
+/** IRQ - handler coordinator
  *
  *  Redirects IRQ processing according to the IRQ-source
  */
@@ -105,6 +106,14 @@ void _irq_handler(void)
     /* clear timer0 interrupt flag at eoi */
     T0CLRI = 0x00;
   }
+  /* Note:
+   * When using an asynchronous clock-to-clock timer, the
+   * interrupt in the timer block may take more time to clear
+   * than the time it takes for the code in the interrupt routine to
+   * execute. Ensure that the interrupt signal is cleared before
+   * leaving the interrupt service routine. This can be done by
+   * checking the IRQSTA MMR.
+   */
   if (bit_is_set(IRQSTA, INT_TIMER1)){
     ISR_TIMER1();
     /* clear timer1 interrupt flag at eoi */
@@ -113,12 +122,15 @@ void _irq_handler(void)
   if (bit_is_set(IRQSTA, INT_WAKEUP_TIMER2)){
     ISR_WAKEUP_TIMER2();
     /* clear timer2 interrupt flag at eoi */
-     T2CLRI = 0x00;
+    T2CLRI = 0x00;
   }
   if (bit_is_set(IRQSTA, INT_WATCHDOG_TIMER3)){
     ISR_WATCHDOG_TIMER3();
     /* clear timer3 interrupt flag at eoi */
     T3CLRI = 0x00;
+  }
+  if (bit_is_set(IRQSTA, INT_PLL_LOCK)){
+    ISR_PLL_LOCK();
   }
   if (bit_is_set(IRQSTA, INT_EXTERNAL_IRQ0)){
     ISR_EXTINT0();
@@ -126,8 +138,9 @@ void _irq_handler(void)
 }
 
 
-/** Software interrupt handler. Enabling and disabling the global I-Flag
+/** Software interrupt handler
  *
+ *  Enable-/disable the global IRQ-Flag: \n
  *  1.) The I-Flag in cpsr_c cannot be written in user mode but only in
  *      a priviledged mode. \n
  *  2.) Switch to supervisor mode by software interrupt. \n
@@ -148,7 +161,6 @@ void _irq_handler(void)
  *  See: ARM Compiler toolchain p. 116
  *
  */
-
 void __attribute__ ((naked)) _swi_handler(void);
 void _swi_handler(void)
 {
