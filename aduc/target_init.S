@@ -45,6 +45,14 @@
 #include "aduc.h"
 
 /*-----------------------------------------------------------------------------
+ * Defines
+ *-----------------------------------------------------------------------------
+ */
+
+#define CLOCKSEL_EXTCRYST_TIMER2_INIT ((250*32768)/1000000) /* 250us */
+#define CLOCKSEL_EXTCRYST_TIMER2_POLL ((150*32768)/1000000) /* 150us */
+
+/*-----------------------------------------------------------------------------
  * Variables
  *-----------------------------------------------------------------------------
  */
@@ -126,7 +134,7 @@ _xcptn_trap:
 
 _init_target:
 
-/** Setup CLOCKSEL, PLL and core clock divider
+/** Setup Clock selection, PLL and core clock divider
  *
  * See:  ADuC7026 datasheet p. 55
  *
@@ -143,15 +151,15 @@ _init_target:
  */
 	ldr	r0, =__MMR_BASE
 
-#if CLOCKSEL_EXT_CRYST
+#if CLOCKSEL_EXTCRYST
         /* disable IRQs to avoid executing timer2 ISR */
 	mrs	r1, cpsr
 	orr	r1, r1, #I_FLAG
 	msr	cpsr_c, r1
-	/* get timer2 act value */
+	/* get timer2 act value (tOldVal) */
 	ldr	r2, [r0, #T2VAL]
-	/* load wakeup timer2 [250us] */
-	mov	r1, #((250*32768)/1000000)
+	/* load wakeup timer2 initialization value */
+	mov	r1, #CLOCKSEL_EXTCRYST_TIMER2_INIT
 	str	r1, [r0, #T2LD]
 	/* switch to internal oscillator; divider=1 and enable timer2 */
 	mov	r1, #(_FS(TIMER2_CLKSOURCE,TIMER2_INT_OSC) |_BV(TIMER2_ENABLE))
@@ -161,8 +169,8 @@ _init_target:
 poll_t2ready:
 	ldr	r1, [r0, #T2VAL]
 	cmp	r1, r2
-	beq	poll_t2ready
-	cmp	r1, #((150*32768)/1000000) /* approx 150 us */
+	beq	poll_t2ready /* branch if T2VAL == tOldVal */
+	cmp	r1, #CLOCKSEL_EXTCRYST_TIMER2_POLL  /* approx 150 us */
 	bhi	poll_t2ready /* branch if T2VAL > threshold */
 	/* enable timer2 irq flag */
 	mov	r1, #_BV(INT_WAKEUP_TIMER2)
@@ -174,15 +182,17 @@ poll_t2ready:
 	str	r1, [r0, #PLLCON]
 	mov	r1, #0x55
 	str	r1, [r0, #PLLKEY2]
-	/* Force core into NAP mode, 326 kHz */
+	/* force core into NAP mode, 326 kHz */
 	mov	r1, #0x01
 	str	r1, [r0, #POWKEY1]
 	mov	r1, #(_FS(POW_PC, MASK_010) | _FS(POW_CD, MASK_111))
 	str	r1, [r0, #POWCON]
 	mov	r1, #0xF4
 	str	r1, [r0, #POWKEY2]
-	/* core will be powered up by timer2 automatically */
-	/* stop timer2 */
+	/* core is now in nap mode. the core will be powered up 
+         * by wakeup timer2
+	 * ...
+	 * stop timer2 */
 	mov	r1, #0
 	strh	r1, [r3]
 	/* clear timer2 irq flag */
@@ -196,7 +206,7 @@ poll_t2ready:
 	/* set clock divider as requested by user */
 	mov	r1, #0x01	/* Access to POWCON needs special sequence */
 	str	r1, [r0, #POWKEY1]
-	mov	r1, #POWCON_RESET_CFG
+	mov	r1, #POWCON_BOOT_CFG
 	str	r1, [r0, #POWCON]
 	mov	r1, #0xF4
 	str	r1, [r0, #POWKEY2]
@@ -261,19 +271,19 @@ zero_bss:
 	ldr	r2, =_data_load_end	/* r2 = addr(end of .data => ram) */
 copy_data:
 	cmp	r0, r2			/* if (r0-r2)<0 (N, V flag): */
-	ldmltia	r0!,{r3}		/* if cond then r3=*(r0) then r0+=4 */
-	stmltia	r1!,{r3}		/* if cond then *(r1)=r3 then r1+=4 */
+	ldmltia	r0!, {r3}		/* if cond then r3=*(r0) then r0+=4 */
+	stmltia	r1!, {r3}		/* if cond then *(r1)=r3 then r1+=4 */
 	blt	copy_data		/* branch if condition */
 
 /** Execute external initialization code and jump to main
  *
  */
-	ldr	r0,=do_initcalls
-	mov	lr,pc			/* set return address */
+	ldr	r0, =do_initcalls
+	mov	lr, pc			/* set return address */
 	bx	r0			/* jump to _init code (could be thumb)*/
 
-	ldr	r0,=main
-	mov	lr,pc			/* set return address */
+	ldr	r0, =main
+	mov	lr, pc			/* set return address */
 	bx	r0			/* could be thumb - never return */
 
 	b	.			/* should never come here */

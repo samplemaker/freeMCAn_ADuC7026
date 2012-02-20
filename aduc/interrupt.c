@@ -51,29 +51,29 @@
  *-----------------------------------------------------------------------------
  */
 
-static void ISR_TRAP(void);
+static void _isr_trap(void);
 
-/* ISR handler interface pointing to ISR_TRAP
+/* ISR handler interface pointing to _isr_trap
  *
  * Replacement code to serve the IRQ must be implemented in 
  * foreign modules.
  */
-void ISR_ADC(void)                      __stub(ISR_TRAP);
-void ISR_TIMER0(void)                   __stub(ISR_TRAP);
-void ISR_TIMER1(void)                   __stub(ISR_TRAP);
-void ISR_WAKEUP_TIMER2(void)            __stub(ISR_TRAP);
-void ISR_WATCHDOG_TIMER3(void)          __stub(ISR_TRAP);
-void ISR_PLL_LOCK(void)                 __stub(ISR_TRAP);
-void ISR_EXTINT0(void)                  __stub(ISR_TRAP);
+void ISR_ADC(void)                      __stub(_isr_trap);
+void ISR_TIMER0(void)                   __stub(_isr_trap);
+void ISR_TIMER1(void)                   __stub(_isr_trap);
+void ISR_WAKEUP_TIMER2(void)            __stub(_isr_trap);
+void ISR_WATCHDOG_TIMER3(void)          __stub(_isr_trap);
+void ISR_PLL_LOCK(void)                 __stub(_isr_trap);
+void ISR_EXTINT0(void)                  __stub(_isr_trap);
 
 /** Default interrupt service handler
  *
- * Enless loop if an ISR is called but no external code is present
- * Note: You may check for the caller in the link register
- *       [$ADDR = LR - 0x4]
+ * Endless loop if an ISR is called but no external code is linked
+ * Note: You may check for the caller in the link register.
+ *       Is ARM32 -> $ADDR = LR - 0x4
  *
  */
-static void ISR_TRAP(void){ while (1){} }
+static void _isr_trap(void){ while (1){} }
 
 
 /* IRQEN:  Ones indicate that the interrupt request from
