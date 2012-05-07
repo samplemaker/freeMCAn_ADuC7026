@@ -359,6 +359,46 @@
 #define DAC_DATA              16
 
 
+/** Defines for PWM Modul
+ *
+ */
+#define PWMCON    _MMR_SIZE_16(0xFC00)
+#define PWMSTA    _MMR_SIZE_16(0xFC04)
+#define PWMCFG    _MMR_SIZE_16(0xFC10)
+#define PWMEN     _MMR_SIZE_16(0xFC20)
+#define PWMDAT0   _MMR_SIZE_16(0xFC08) /* switching period     */
+#define PWMDAT1   _MMR_SIZE_16(0xFC0C) /* dead time            */
+#define PWMDAT2   _MMR_SIZE_16(0xFC24) /* PWM sync pulse width */
+#define PWMCH0    _MMR_SIZE_16(0xFC14)
+#define PWMCH1    _MMR_SIZE_16(0xFC18)
+#define PWMCH2    _MMR_SIZE_16(0xFC1C)
+
+#define PWM_SYNCSEL           4
+#define PWM_EXTSYNC           3
+#define PWM_DBL               2
+#define PWM_SYNC_EN           1
+#define PWM_EN                0
+
+#define PWM_PWMSYNCINT        9
+#define PWM_PWMTRIPINT        8
+#define PWM_PWMTRIP           3
+#define PWM_PWMPHASE          0
+
+#define PWM_CHOPLO            9
+#define PWM_CHOPHI            8
+#define PWM_GDCLK             0
+
+#define PWM_0H0L_XOVR         8
+#define PWM_1H1L_XOVR         7
+#define PWM_2H2L_XOVR         6
+#define PWM_0L_EN             5
+#define PWM_0H_EN             4
+#define PWM_1L_EN             3
+#define PWM_1H_EN             2
+#define PWM_2L_EN             1
+#define PWM_2H_EN             0
+
+
 /** Defines for Programmable logic array
  *
  */
