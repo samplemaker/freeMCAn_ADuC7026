@@ -88,7 +88,7 @@ data_table_info_t data_table_info = {
 PERSONALITY("adc-int-timed-sampling",
             0,2,
             10,
-            ((size_t)(&data_table_size)),
+            0,
             ELEMENT_SIZE_IN_BYTES);
 
 
@@ -99,6 +99,18 @@ volatile table_element_t *volatile table_end =
 
 /** Pointer to the current place to store the next value at */
 volatile table_element_t *volatile table_cur = table;
+
+/** Workaround
+ *
+ */
+void __init personality_info_init(void)
+{
+  personality_info.param_data_size_timer_count = (size_t)(&data_table_size);
+}
+/** Put function into init section, register function pointer and
+ *  execute function at start up
+ */
+module_init(personality_info_init, 8);
 
 
 /** Print some status messages for debugging
