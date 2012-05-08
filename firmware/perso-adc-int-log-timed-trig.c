@@ -105,7 +105,7 @@ volatile table_element_t *volatile table_cur = table;
  */
 void __init personality_info_init(void)
 {
-  personality_info.param_data_size_timer_count = (size_t)(&data_table_size);
+  personality_info.sizeof_table = (size_t)(&data_table_size);
 }
 /** Put function into init section, register function pointer and
  *  execute function at start up
