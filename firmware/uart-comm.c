@@ -95,20 +95,20 @@ void __init uart_init(void)
   GP1PAR &= ~_BV(GP_PAR_PULL_UP_Px0);
   GP1DAT &= ~_BV(GP_DATA_DIRECTION_Px0);
 
-  /* operate in normal mode, no parity, 1 stop bit */
-  COMCON0 &= ~(_BV(UART_BRK) | _BV(UART_PEN) | _BV(UART_STOP));
-  /* word length: 8 bits */
-  COMCON0 |= (_BV(UART_WLS0) | _BV(UART_WLS1));
-  /* normal mode no modem */
-  COMCON1 &= ~_BV(UART_LOOPBACK);
+  /* clear UART_BRK (operate in normal mode), UART_PEN (no parity), 
+   * UART_STOP (1 stop bit) and set word length: 8 bits */
+  COMCON0 = (_BV(UART_WLS0) | _BV(UART_WLS1));
+  /* no modem (reset modem register) */
+  COMCON1 = 0x0;
 
   #if USE_FRACTIONAL_DIVIDER
-    COMDIV2 &= ~_BV(UART_FBM1);
-    COMDIV2 |= (_BV(UART_FBM0)                |
-                _FS(UART_FBN, UART_FBN_VALUE) |
-                _BV(UART_FBEN) );
+    /* set M = 1 (FBM), set FBN according to macro and enable FD */
+    COMDIV2 = (_FS(UART_FBM, MASK_01)        |
+               _FS(UART_FBN, UART_FBN_VALUE) |
+               _BV(UART_FBEN) );
   #else
-    COMDIV2 &= ~_BV(UART_FBEN);
+    /* no fractional divider (clear UART_FBEN) */
+    COMDIV2 = 0x0;
   #endif
 
   /* 1.) set baud rate:

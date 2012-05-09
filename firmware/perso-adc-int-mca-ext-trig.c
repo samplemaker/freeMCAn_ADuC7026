@@ -93,7 +93,7 @@ PERSONALITY("adc-int-mca",
 inline static
 void adc_power_up(void)
 {
-  ADCCON = (_BV(ADC_POWER_CONTROL));
+  ADCCON = _BV(ADC_POWER_CONTROL);
 }
 
 
@@ -123,14 +123,13 @@ void ISR_WATCHDOG_TIMER3(void){
 }
 inline static void
 adctest_init(void){
-  /* clear watch dog and force down counting */
-  T3CON &=~ ( _BV(TIMER3_COUNT_DIR) |
-              _BV(TIMER3_SECURE) |
-              _BV(TIMER3_WDT_ENABLE) );
-  /* set prescaler and run timer in periodic mode
-* (automatic reload from T3LD) */
-  T3CON |= (_FS(TIMER3_PRESCALER, TIMER3_PRESCALER_VALUE) |
-            _BV(TIMER3_MODE) );
+
+  /* clear TIMER3_WDT_ENABLE, TIMER3_COUNT_DIR 
+   * (force down counting) and TIMER3_SECURE
+   * set prescaler and run timer in periodic mode
+   * (automatic reload from T3LD)                  */
+  T3CON = (_FS(TIMER3_PRESCALER, TIMER3_PRESCALER_VALUE) |
+           _BV(TIMER3_MODE) );
   /* timer compare match value */
   T3LD = TIMER3_LOAD_VALUE_DOWNCNT;
   T3CON |= _BV(TIMER3_ENABLE);
@@ -185,8 +184,8 @@ void adc_pla_trigger(void)
    * 0b0001: Element1  (BLOCK0)
    * 0b1111: Element15 (BLOCK1)
    */
-  PLAADC |= (_BV(PLA_ADC_CONV_START) |
-             _FS(PLA_ADC_CONV_SRC, MASK_0000) );
+  PLAADC = (_BV(PLA_ADC_CONV_START) |
+            _FS(PLA_ADC_CONV_SRC, MASK_0000) );
   /* Configure PLA ELEMENT0 (BLOCK0)
    * - MUX3: Select MUX1, not GPIO (nothing to do)
    * - MUX1: Connect element 5 at MUX1
@@ -195,21 +194,21 @@ void adc_pla_trigger(void)
    * - Select logical function of the block (B and not A)
    * - Bypass flip-flop (MUX4)
    */
-  PLAELM0 |= (/*_BV(PLA_MUX3_CONTROL)             |*/
-              _FS(PLA_MUX1_CONTROL, MASK_10)      |
-              _BV(PLA_MUX2_CONTROL)               |
-              _FS(PLA_MUX0_CONTROL, MASK_10)      |
-              _FS(PLA_LOOKUP_TABLE, MASK_0010)    |
-              _BV(PLA_MUX4_CONTROL));
+  PLAELM0 = (/*_BV(PLA_MUX3_CONTROL)             |*/
+             _FS(PLA_MUX1_CONTROL, MASK_10)      |
+             _BV(PLA_MUX2_CONTROL)               |
+             _FS(PLA_MUX0_CONTROL, MASK_10)      |
+             _FS(PLA_LOOKUP_TABLE, MASK_0010)    |
+             _BV(PLA_MUX4_CONTROL));
   /* Configure PLA ELEMENT4 (BLOCK0)
    * - MUX3: Select MUX1, not GPIO (nothing to do)
    * - MUX1: Connect element 5 at MUX1
    * - Select logical function of the block (B -> route MUX3)
    * - Use flip-flop (MUX4) (nothing to do)
    */
-  PLAELM4 |= (/*_BV(PLA_MUX3_CONTROL)             |*/
-              _FS(PLA_MUX1_CONTROL, MASK_10)      |
-              _FS(PLA_LOOKUP_TABLE, MASK_1010) );
+  PLAELM4 = (/*_BV(PLA_MUX3_CONTROL)             |*/
+             _FS(PLA_MUX1_CONTROL, MASK_10)      |
+             _FS(PLA_LOOKUP_TABLE, MASK_1010) );
   /* Configure PLA ELEMENT5 (BLOCK0)
    * - MUX3: Select GPIO, not MUX1
    * - Select logical function of the block:
@@ -217,13 +216,13 @@ void adc_pla_trigger(void)
    *   Not B -> trigger on falling edge
    * - Use flip-flop (MUX4) (nothing to do)
    */
-  PLAELM5 |= (_BV(PLA_MUX3_CONTROL)               |
+  PLAELM5 = (_BV(PLA_MUX3_CONTROL)               |
   #if ADC_TRIGGER_ON_RISING_EDGE
-              _FS(PLA_LOOKUP_TABLE, MASK_1010)
+             _FS(PLA_LOOKUP_TABLE, MASK_1010)
   #else
-              _FS(PLA_LOOKUP_TABLE, MASK_0101)
+             _FS(PLA_LOOKUP_TABLE, MASK_0101)
   #endif
-             );
+            );
   /* configure P1.5 as GPIO and input for PLA5
    * may be configured as output and switched by software, timer
    * for testing.
@@ -240,7 +239,7 @@ void adc_pla_trigger(void)
    * HCLK: MASK_011
    * P0.5: MASK_000
    */
-  PLACLK |= _FS(PLA_BLOCK0_CLK_SRC, MASK_011);
+  PLACLK = _FS(PLA_BLOCK0_CLK_SRC, MASK_011);
 
 }
 
@@ -281,7 +280,7 @@ void adc_init(void)
   /* Set bit for internal bandgap reference.
    * external reference  otherwise but must connect a voltage reference
    * to pin 68 (Vref) */
-  REFCON |= _BV(REF_BANDGAP_ENABLE);
+  REFCON = _BV(REF_BANDGAP_ENABLE);
   /* Engage adc */
   ADCCON |=  _BV(ADC_ENABLE_CONVERION);
   /* Enable ADC IRQ */

@@ -147,7 +147,7 @@
 
 #define T1LD      _MMR_SIZE_32(0x0320)
 #define T1VAL     _MMR_SIZE_32(0x0324)
-#define T1CON     _MMR_SIZE_16(0x0328)
+#define T1CON     _MMR_SIZE_32(0x0328)
 #define T1CLRI    _MMR_SIZE_08(0x032C)
 #define T1CAP     _MMR_SIZE_32(0x0330)
 
@@ -271,8 +271,7 @@
 #define UART_LOOPBACK        4
 #define UART_FBEN            15
 #define UART_FBN             0
-#define UART_FBM0            11
-#define UART_FBM1            12
+#define UART_FBM             11
 
 
 /** Defines for Reset Modul

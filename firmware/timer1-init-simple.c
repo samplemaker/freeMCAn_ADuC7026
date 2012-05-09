@@ -75,14 +75,13 @@ void timer1_init(const uint16_t timer1_value)
 
  /** Configure 32 bit Timer2 (used for timer base) */
 
-  /* - Select appropriate clock source
+  /* Clear TIMER2_COUNT_DIR (force downcount)
+   * - Select appropriate clock source
    * - Run timer in periodic mode (automatic reload from T2LD)
    */
-  T2CON |= (_FS(TIMER2_PRESCALER, TIMER2_PRESCALER_VALUE) |
-            _FS(TIMER2_CLKSOURCE, TIMER2_CLK)              |
-            _BV(TIMER2_MODE) );
-  /* Force downcount */
-  T2CON &= ~_BV(TIMER2_COUNT_DIR);
+  T2CON = (_FS(TIMER2_PRESCALER, TIMER2_PRESCALER_VALUE) |
+           _FS(TIMER2_CLKSOURCE, TIMER2_CLK)              |
+           _BV(TIMER2_MODE) );
 
   /* Timer compare match value */
   T2LD = TIMER2_LOAD_VALUE_DOWNCNT;

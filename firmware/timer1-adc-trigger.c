@@ -81,7 +81,7 @@ volatile uint16_t skip_samples;
 inline static
 void adc_power_up(void)
 {
-  ADCCON = (_BV(ADC_POWER_CONTROL));
+  ADCCON = _BV(ADC_POWER_CONTROL);
 }
 
 /** Initialize peripherals and wake up hardware
@@ -110,20 +110,19 @@ void timer1_init(void)
 {
   /** configure 32 bit Timer1  */
 
-  /* - Select appropriate clock source
-   * - Run timer in periodic mode (automatic reload from T1LD)
-   */
-  T1CON |= (_FS(TIMER1_PRESCALER, TIMER1_PRESCALER_VALUE) |
-            _FS(TIMER1_CLKSOURCE, TIMER1_CLK)             |
-            _BV(TIMER1_MODE) );
-  /* Force downcount, no capture */
-  T1CON &= ~ (_BV(TIMER1_COUNT_DIR) | _BV(TIMER1_CAPTURE_ENABLE));
+
+  /* Clear TIMER1_COUNT_DIR (force downcount), TIMER1_CAPTURE_ENABLE (no capture)
+   * Select appropriate clock source and run timer in periodic mode 
+   * (automatic reload from T1LD)  */
+  T1CON = (_FS(TIMER1_PRESCALER, TIMER1_PRESCALER_VALUE) |
+           _FS(TIMER1_CLKSOURCE, TIMER1_CLK)             |
+           _BV(TIMER1_MODE) );
 
   /* Timer compare match value */
   T1LD = TIMER1_LOAD_VALUE_DOWNCNT;
   T1CON |= _BV(TIMER1_ENABLE);
-  /* Enable interrupt flag for Timer1 */
-  //IRQEN |= _BV(INT_TIMER1);
+  /* for the firmwares affected the data is handled inside the ADC ISR
+   * (no timer ISR) */
   IRQCLR |= _BV(INT_TIMER1);
 }
 
@@ -176,7 +175,7 @@ void adc_init(void)
   /* Set bit for internal bandgap reference.
    * external reference  otherwise but must connect a voltage reference
    * to pin 68 (Vref) */
-  REFCON |= _BV(REF_BANDGAP_ENABLE);
+  REFCON = _BV(REF_BANDGAP_ENABLE);
   /* Engage adc */
   ADCCON |=  _BV(ADC_ENABLE_CONVERION);
   /* Enable ADC IRQ */
