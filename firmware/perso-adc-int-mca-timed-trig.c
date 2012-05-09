@@ -101,7 +101,7 @@ void ISR_ADC(void){
   }
 
   /* measurement duration */
-  if (measurement_finished) {
+  if (!measurement_finished) {
     timer1_count--;
     if (timer1_count == 0) {
       measurement_finished = 1;
