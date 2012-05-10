@@ -33,8 +33,17 @@
 
 
 #include <stdlib.h>
-#include <string.h>
 #include "frame-comm.h"
+
+
+inline static
+size_t _strlen(const char *p_str)
+{
+  const char *p;
+
+  for (p = p_str; *p; ++p);
+  return (p - p_str);
+}
 
 
 /** Send state message packet to host (layer 3).
@@ -44,7 +53,7 @@
  */
 void send_state(const char *state)
 {
-  const size_t len = strlen(state);
+  const size_t len = _strlen(state);
   frame_send(FRAME_TYPE_STATE, state, len);
 }
 
@@ -55,7 +64,7 @@ void send_state(const char *state)
  */
 void send_text(const char *msg)
 {
-  const size_t len = strlen(msg);
+  const size_t len = _strlen(msg);
   frame_send(FRAME_TYPE_TEXT, msg, len);
 }
 

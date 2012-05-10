@@ -259,8 +259,7 @@
 #define UART_EPS             4
 #define UART_PEN             3
 #define UART_STOP            2
-#define UART_WLS0            0
-#define UART_WLS1            1
+#define UART_WLS             0
 #define UART_TEMT            6
 #define UART_THRE            5
 #define UART_BI              4

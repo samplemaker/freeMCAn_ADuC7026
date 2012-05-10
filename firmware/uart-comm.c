@@ -89,18 +89,12 @@ void __init uart_init(void)
    */
   GP1CON |= (_FS(GP_SELECT_FUNCTION_Px1, MASK_01) |
              _FS(GP_SELECT_FUNCTION_Px0, MASK_01) );
-  /* configure SOUT as output */
-  GP1DAT |= _BV(GP_DATA_DIRECTION_Px1);
-  /* configure SIN as input and disable pull up */
-  GP1PAR &= ~_BV(GP_PAR_PULL_UP_Px0);
-  GP1DAT &= ~_BV(GP_DATA_DIRECTION_Px0);
-
   /* clear UART_BRK (operate in normal mode), UART_PEN (no parity), 
-   * UART_STOP (1 stop bit) and set word length: 8 bits */
-  COMCON0 = (_BV(UART_WLS0) | _BV(UART_WLS1));
+   * UART_STOP (1 stop bit)
+   * set word length: 8 bits */
+  COMCON0 = _FS(UART_WLS, MASK_11);
   /* no modem (reset modem register) */
   COMCON1 = 0x0;
-
   #if USE_FRACTIONAL_DIVIDER
     /* set M = 1 (FBM), set FBN according to macro and enable FD */
     COMDIV2 = (_FS(UART_FBM, MASK_01)        |
@@ -110,7 +104,6 @@ void __init uart_init(void)
     /* no fractional divider (clear UART_FBEN) */
     COMDIV2 = 0x0;
   #endif
-
   /* 1.) set baud rate:
    *     register for access to divisor latch
    *     DIV0 & DIV1 registers and write divider */
