@@ -37,30 +37,8 @@
 #include "packet-comm.h"
 
 
-
-
-
-
-/** Set up our IO pins */
-static
-void __init timer1_simple_io_init(void)
-{
- /* measurement in progress LED */
-  /* configure P4.1 as GPIO: */
-  GP4CON |= _FS(GP_SELECT_FUNCTION_Px1, MASK_00);
-  /* configure P4.1 as output */
-  GP4DAT |= _BV(GP_DATA_DIRECTION_Px1);
-}
-/** Put function into init section, register function pointer and
- *  execute function at start up
- */
-module_init(timer1_simple_io_init, 5);
-
-
-
-/** Configure 16 bit timer to trigger an ISR every second
+/** Configure 32 bit timer to trigger an ISR every second (time base)
  *
- * Configure "measurement in progress toggle LED-signal"
  */
 void timer1_init(const uint16_t timer1_value)
 {

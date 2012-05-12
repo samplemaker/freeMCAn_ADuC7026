@@ -43,11 +43,13 @@
 #include "main.h"
 
 
-/** \bug adc-int-mca-timed does not work. Measurements lead to a reboot. */
-
-
 /** Number of elements in the histogram table */
 #define MAX_COUNTER (1<<ADC_RESOLUTION)
+
+
+/* forward declaration */
+inline static
+void timer1_halt(void);
 
 
 /** Histogram table
@@ -86,12 +88,15 @@ PERSONALITY("adc-int-mca-timed",
   * downsampling to fullfill shannons sample theoreme
   */
 void ISR_ADC(void){
+  /* toggle a time base signal */
+  TOG_LED_ISR;
+
+  /* starting from bit 16 the result is stored in ADCDAT.
+     reading the ADCDATA also clears flag in ADCSTA */
+  const uint32_t result =  ADCDAT;
+
   /* downsampling of analog data via skip_samples */
   if (skip_samples == 0) {
-    /* starting from bit 16 the result is stored in ADCDAT.
-       reading the ADCDATA also clears flag in ADCSTA */
-    const uint32_t result =  ADCDAT;
-    /* adjust to correct size */
     const uint16_t index = (result >> (16 + 12 - ADC_RESOLUTION));
     volatile table_element_t *element = &(table[index]);
     table_element_inc(element);
@@ -99,14 +104,25 @@ void ISR_ADC(void){
   } else {
     skip_samples--;
   }
-
   /* measurement duration */
   if (!measurement_finished) {
     timer1_count--;
     if (timer1_count == 0) {
       measurement_finished = 1;
+      timer1_halt();
     }
   }
+}
+
+
+/** Switch off trigger to stop any sampling of the analog signal
+ *
+ *
+ */
+inline static
+void timer1_halt(void)
+{
+  T1CON &= ~_BV(TIMER1_ENABLE);
 }
 
 

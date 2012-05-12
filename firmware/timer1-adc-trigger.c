@@ -28,8 +28,6 @@
  */
 
 
-/* #define TIMEBASE */
-
 #include "aduc.h"
 #include "init.h"
 
@@ -53,10 +51,6 @@
 volatile uint16_t timer1_count;
 
 
-/** timer counter */
-volatile uint16_t timer1_count;
-
-
 /** Original timer count received in the command.
  *
  * Used later for determining how much time has elapsed yet. Written
@@ -73,6 +67,7 @@ volatile uint16_t orig_timer1_count;
 volatile uint16_t orig_skip_samples;
 volatile uint16_t skip_samples;
 
+
 /** Power up ADC
  *
  * Note: The ADC must be powered up for at least
@@ -84,22 +79,19 @@ void adc_power_up(void)
   ADCCON = _BV(ADC_POWER_CONTROL);
 }
 
-/** Initialize peripherals and wake up hardware
- *
- * Configure used IO pins
- * Wake up ADC
- */
-void timer1_adc_trigger_init(void)
-{
-  /* \todo */
 
+/** Firmware specific hardware initializion at boot time
+ *
+ */
+void __init hw_init(void)
+{
+  /* measurement in progress LED */
+  GP4CON |= _FS(GP_SELECT_FUNCTION_Px1, MASK_00);
+  GP4DAT |= _BV(GP_DATA_DIRECTION_Px1);
   /* wake up adc */
   adc_power_up();
 }
-/** Put function into init section, register function pointer and
- *  execute function at start up
- */
-module_init(timer1_adc_trigger_init, 5);
+module_init(hw_init, 5);
 
 
 /** Configure 16 bit timer to trigger an ISR every 0.1 second
@@ -109,7 +101,6 @@ module_init(timer1_adc_trigger_init, 5);
 void timer1_init(void)
 {
   /** configure 32 bit Timer1  */
-
 
   /* Clear TIMER1_COUNT_DIR (force downcount), TIMER1_CAPTURE_ENABLE (no capture)
    * Select appropriate clock source and run timer in periodic mode 

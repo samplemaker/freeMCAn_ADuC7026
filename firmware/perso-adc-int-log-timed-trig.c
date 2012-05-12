@@ -46,11 +46,6 @@
 #include "main.h"
 
 
-/* forward declaration */
-inline static
-void timer1_halt(void);
-
-
 /** The table
  *
  * Note that we have the table location and size determined by the
@@ -100,6 +95,12 @@ volatile table_element_t *volatile table_end =
 /** Pointer to the current place to store the next value at */
 volatile table_element_t *volatile table_cur = table;
 
+
+/* forward declaration */
+inline static
+void timer1_halt(void);
+
+
 /** Workaround
  *
  */
@@ -107,9 +108,6 @@ void __init personality_info_init(void)
 {
   personality_info.sizeof_table = (size_t)(&data_table_size);
 }
-/** Put function into init section, register function pointer and
- *  execute function at start up
- */
 module_init(personality_info_init, 8);
 
 
@@ -132,9 +130,6 @@ void __init data_table_print_status(void)
   uprintf("</data_table_print_status>");
 #endif
 }
-/** Put function into init section, register function pointer and
- *  execute function at start up
- */
 module_init(data_table_print_status, 8);
 
 
@@ -146,23 +141,22 @@ module_init(data_table_print_status, 8);
  * downsampling to fullfill shannons sample theoreme
  */
 void ISR_ADC(void){
-  /* downsampling of analog data as a multiple of timer1_multiple      */
+  /* toggle a time base signal */
+  TOG_LED_ISR;
+
   /* starting from bit 16 the result is stored in ADCDAT.
      reading the ADCDATA also clears flag in ADCSTA */
   const uint32_t result =  ADCDAT;
 
+  /* downsampling of analog data */
   if (skip_samples == 0) {
-    /* Read analog value */
     if (!measurement_finished) {
-      /* adjust to correct size */
       const uint16_t value = (result >> (16 + 12 - ADC_RESOLUTION));
-      /* Write to current position in table */
       *table_cur = value;
       table_cur++;
       data_table_info.size += sizeof(*table_cur);
       skip_samples = orig_skip_samples;
       if (table_cur >= table_end) {
-        /* switch off any compare matches on B to stop sampling     */
         timer1_halt();
         /* tell main() that measurement is over                     */
         measurement_finished = 1;
@@ -181,7 +175,7 @@ void ISR_ADC(void){
 inline static
 void timer1_halt(void)
 {
-  T1CON &=~ _BV(TIMER1_ENABLE);
+  T1CON &= ~_BV(TIMER1_ENABLE);
 }
 
 

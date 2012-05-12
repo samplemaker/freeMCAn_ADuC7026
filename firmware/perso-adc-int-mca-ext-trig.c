@@ -55,13 +55,6 @@
 #define MAX_COUNTER (1<<ADC_RESOLUTION)
 
 /** Histogram table
- *
- * ATmega644P has 4Kbyte RAM.  When using 10bit ADC resolution,
- * MAX_COUNTER==1024 and 24bit values will still fit (3K table).
- *
- * For the definition of sizeof_table, see adc-int-histogram.c.
- *
- * \see data_table
  */
 volatile table_element_t table[MAX_COUNTER] asm("data_table");
 
@@ -103,8 +96,14 @@ void adc_power_up(void)
  * Wake up ADC
  */
 static
-void __init personality_io_init(void)
+void __init hw_init(void)
 {
+  /* measurement in progress LED */
+  /* configure P4.1 as GPIO: */
+  GP4CON |= _FS(GP_SELECT_FUNCTION_Px1, MASK_00);
+  /* configure P4.1 as output */
+  GP4DAT |= _BV(GP_DATA_DIRECTION_Px1);
+
   /* wake up adc */
   adc_power_up();
 
@@ -113,7 +112,7 @@ void __init personality_io_init(void)
 /** Put function into init section, register function pointer and
  *  execute function at start up
  */
-module_init(personality_io_init, 5);
+module_init(hw_init, 5);
 
 
 
@@ -289,19 +288,13 @@ void adc_init(void)
 }
 
 
-/** ADC subsystem and trigger setup */
-inline static
-void hw_init(void)
-{
-  adc_pla_trigger();
-  adc_init();
-}
-
 void personality_start_measurement_sram(void)
 {
   const void *voidp = &pparam_sram.params[0];
   const uint16_t *timer1_value = voidp;
-  hw_init();
+  /** ADC subsystem and trigger setup */
+  adc_pla_trigger();
+  adc_init();
   #if DEBUG_ADC_TRIGGER
     adctest_init();
   #endif
