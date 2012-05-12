@@ -93,7 +93,7 @@ void ISR_ADC(void){
 
   /* starting from bit 16 the result is stored in ADCDAT.
      reading the ADCDATA also clears flag in ADCSTA */
-  const uint32_t result =  ADCDAT;
+  volatile uint32_t result =  ADCDAT;
 
   /* downsampling of analog data via skip_samples */
   if (skip_samples == 0) {

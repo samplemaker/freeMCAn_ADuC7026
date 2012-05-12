@@ -151,7 +151,7 @@ void ISR_ADC(void){
 
   /* starting from bit 16 the result is stored in ADCDAT.
      reading the ADCDATA also clears flag in ADCSTA */
-  const uint32_t result =  ADCDAT;
+  volatile uint32_t result =  ADCDAT;
   /* adjust to correct size */
   const uint16_t index = (result >> (16 + 12 - ADC_RESOLUTION));
 
