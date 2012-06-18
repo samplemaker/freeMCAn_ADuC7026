@@ -1,10 +1,8 @@
 /** \file firmware/switch.c
- * \brief Providing a hardware button switch to start a measurement
+ * \brief Provide a hardware button switch to start a measurement
  *
  * \author Copyright (C) 2011 samplemaker
  * \author Copyright (C) 2010 Hans Ulrich Niedermann <hun@n-dimensional.de>
- * \author Copyright (C) 1998, 1999, 2000, 2007, 2008, 2009 Free Software Foundation, Inc.
- *         (for the assembly code in ts_init() to clear data_table)
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License
@@ -21,24 +19,41 @@
  *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301 USA
  *
- * \defgroup switch
- * \ingroup firmware_personality_groups
+ * \defgroup switch Switch button to start a measurement
+ * \ingroup firmware_generic
  *
+ * The idea here is to make switch use a one-off thing: Once the user
+ * has pressed the button, eventually switch_lock() is called and the
+ * switch then permanently disabled (in switch OFF state) afterwards.
  *
+ * This avoids the need to debounce the switch, as it is only used
+ * once and we can use the first bounce for that. The next use of the
+ * switch will only happen after a reboot, and thus a long time away,
+ * and debouncing stops being an issue.
  *
  * @{
  */
 
 #include <stdint.h>
 
+#include "switch.h"
 #include "aduc.h"
 #include "init.h"
 
 
-#define SWITCH_LOCKED     0x01
-#define SWITCH_UNPRESSED  0x00
+/** Type def for whether the switch is locked in OFF state */
+typedef enum {
+  SWITCH_UNLOCKED,
+  SWITCH_LOCKED_OFF
+} switch_lock_t;
 
-uint8_t switch_state = SWITCH_UNPRESSED;
+
+/** Whether the switch is locked in OFF state.
+ *
+ * Stored as a single uint8_t value by avr-gcc.
+ */
+static switch_lock_t the_switch_lock = SWITCH_UNLOCKED;
+
 
 /** Initialize peripherals necessary for "start measurement hardware button"
  *
@@ -67,12 +82,13 @@ module_init(switch_init, 5);
  *  status.
  */
 uint8_t switch_trigger_measurement(void){
-  if (switch_state == SWITCH_LOCKED){
-      return (0);
-  }
-  else {
-      return (!bit_is_set (GP0DAT, GP_DATA_INPUT_Px4));
-  }
+
+  switch (the_switch_lock) {
+  case SWITCH_UNLOCKED:
+    return (!bit_is_set (GP0DAT, GP_DATA_INPUT_Px4));
+  default:
+    return 0;
+   }
 }
 
 /** Lock switch
@@ -81,5 +97,16 @@ uint8_t switch_trigger_measurement(void){
  *  ever again except by power on reset or WDT reset
  */
 void switch_lock(void){
-  switch_state = SWITCH_LOCKED;
+  the_switch_lock = SWITCH_LOCKED_OFF;
 }
+
+
+/** @} */
+
+
+/*
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+  */
