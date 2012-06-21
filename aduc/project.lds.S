@@ -47,6 +47,9 @@
 #include <arm7tdmi.h>
 
 
+OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
+OUTPUT_ARCH(arm)
+
 MEMORY
 {
   flash   (rx) : ORIGIN = 0x00080000, LENGTH = 62k
@@ -58,7 +61,8 @@ MEMORY
  */
 __flash_start__ = ORIGIN(flash);
 __flash_end__ = ORIGIN(flash) + LENGTH(flash);
-__stack_end__ = ORIGIN(ram) + LENGTH(ram) - 4;
+__ram_end__ = ORIGIN(ram) + LENGTH(ram);
+__stack_start__ = __ram_end__ - STACK_SIZE_TOTAL;
 
 /**  Output sections
  *

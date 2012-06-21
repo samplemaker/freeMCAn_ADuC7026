@@ -227,7 +227,7 @@ poll_t2ready:
  *
  * Note: (sp -> r14_svc, r14_irq ... ).
  */
-	ldr	r0, =__stack_end__
+	ldr	r0, = (__ram_end__ - 4)
 	msr	cpsr_c, #M_FIQ|I_FLAG|F_FLAG
 	mov	sp, r0
 	sub	r0, r0, #STACKSIZE_FIQ
