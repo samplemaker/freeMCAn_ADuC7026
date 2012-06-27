@@ -35,7 +35,7 @@
 
 
 /** Histogram element size */
-#define ELEMENT_SIZE_IN_BYTES 3
+#define BITS_PER_VALUE 24
 
 #include "main.h"
 #include "perso-adc-int-global.h"
@@ -66,7 +66,7 @@ data_table_info_t data_table_info = {
   /** Type of value table we send */
   VALUE_TABLE_TYPE_HISTOGRAM,
   /** Table element size */
-  ELEMENT_SIZE_IN_BYTES,
+  BITS_PER_VALUE,
 };
 
 
@@ -75,7 +75,7 @@ PERSONALITY("adc-int-mca",
             2,0,
             1,
             sizeof(table),
-            ELEMENT_SIZE_IN_BYTES);
+            BITS_PER_VALUE);
 
 
 /** Power up ADC
