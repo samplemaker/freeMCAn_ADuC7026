@@ -140,9 +140,8 @@ void export_common_vtable(FILE *datfile,
     fprintf(datfile, "# receive_time:             %lu (%s)\n",
             receive_time, time_rfc_3339(receive_time));
 
-    const size_t orig_element_size = value_table_packet->orig_element_size;
-    fprintf(datfile, "# orig_element_size:        %d byte (%d bit)\n",
-            orig_element_size, 8*orig_element_size);
+    fprintf(datfile, "# orig_element_size:        %d bit\n",
+            value_table_packet->orig_bits_per_value);
   }
 }
 
@@ -292,7 +291,7 @@ void export_time_series_vtable(FILE *datfile,
 
     fprintf(datfile, "# measurements done:        %u\n", element_count);
     const size_t total_element_count =
-      (personality_info->sizeof_table / personality_info->sizeof_value);
+      (8 * personality_info->sizeof_table / personality_info->bits_per_value);
     const size_t elements_to_go = total_element_count - element_count;
     fprintf(datfile, "# measurements to do:       %u\n", elements_to_go);
     fprintf(datfile, "# space for measurements:   %u\n", total_element_count);
@@ -302,8 +301,15 @@ void export_time_series_vtable(FILE *datfile,
     fprintf(datfile, "# time for last meas'mt:    %u\n",
             value_table_packet->duration);
     const double time_to_go = elements_to_go * value_table_packet->total_duration;
-    fprintf(datfile, "# time to go:               %.1f seconds = %.2f minutes = %.4f hours\n",
-            time_to_go, time_to_go/60.0f, time_to_go/3600.0f);
+    fprintf(datfile, "# time to go:               "
+            "%.1f seconds = "
+            "%.2f minutes = "
+            "%.4f hours = "
+            "%.2f days\n",
+            time_to_go,
+            time_to_go/60.0f,
+            time_to_go/3600.0f,
+            time_to_go/86400.0f);
   }
 
   statistics_t s;

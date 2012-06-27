@@ -154,9 +154,14 @@ const uint16_t duration_list[] = {
   10,
   30,
   60,
+  120,
   150,
+  240,
+  300,
+  450,
   600,
   1200,
+  1800,
   3600,
   3*3600,
   0
@@ -320,30 +325,35 @@ tui_log_handler(void *data __attribute__ (( unused )),
 static
 void tui_fmlog_help(void)
 {
-  fmlog("Key         Action");
-  fmlog("q, Q, x, X  quit program (other keys: C-c, esc)");
-  fmlog("h, H, ?     show this help message");
-  fmlog("1           toggle hexdump of received layer 1 data (byte stream)");
-  fmlog("2           toggle hexdump of received layer 2 data (frames)");
-  fmlog("9           toggle dump of user input (typed characters)");
+  fmlog("Keys and Actions");
+  fmlog("  General");
+  fmlog("    q, Q, x, X  quit program (other keys: C-c, esc)");
+  fmlog("    h, H, ?     show this help message");
+  fmlog("  Debugging");
+  fmlog("    1           toggle hexdump of received layer 1 data (byte stream)");
+  fmlog("    2           toggle hexdump of received layer 2 data (frames)");
+  fmlog("    9           toggle dump of user input (typed characters)");
+  fmlog("  Local settings");
   if (personality_info) {
-    fmlog("+/-         increase/decrease measurement duration (%.3f seconds)",
+    fmlog("    +/-         increase/decrease measurement duration (%.3f seconds)",
           duration_list[duration_index]*(1.0f/((float)personality_info->units_per_second)));
   } else {
-    fmlog("+/-         increase/decrease measurement duration (%u clock periods)",
+    fmlog("    +/-         increase/decrease measurement duration (%u clock periods)",
           duration_list[duration_index]);
   }
-  fmlog("./,         increase/decrease number of samples to skip (%u)", skip_samples);
-  fmlog("<space>     print current hostware parameters that would be sent with 'e' or 'm'");
-  fmlog("a           send command \"(a)bort\"");
-  fmlog("e           write measurement parameters to (e)eprom");
-  fmlog("E           read measurement parameters from (e)eprom");
-  fmlog("f           request personality in(f)ormation");
-  fmlog("i           send command \"(i)ntermediate result\"");
-  fmlog("m           send command \"start (m)easurement\" with adequate parameters");
-  fmlog("p           toggle (p)eriodical requests of intermediate results");
-  fmlog("r           send command \"(r)eset\"");
-  fmlog("w           send command \"intermediate result\" and (w)rite data to file");
+  fmlog("    ./,         increase/decrease number of samples to skip (%u)", skip_samples);
+  fmlog("    <space>     print current hostware parameters that would be sent");
+  fmlog("                with 'e' or 'm'");
+  fmlog("    p           toggle (p)eriodical requests of intermediate results");
+  fmlog("  Send commands/requests:");
+  fmlog("    a           send command \"(a)bort\"");
+  fmlog("    e           write measurement parameters to (e)eprom");
+  fmlog("    E           read measurement parameters from (e)eprom");
+  fmlog("    f           request personality in(f)ormation");
+  fmlog("    i           send command \"(i)ntermediate result\"");
+  fmlog("    m           send command \"start (m)easurement\" with adequate parameters");
+  fmlog("    r           send command \"(r)eset\"");
+  fmlog("    w           send command \"intermediate result\" and (w)rite data to file");
 }
 
 
@@ -547,8 +557,10 @@ void tui_do_io(void)
         break;
       case ' ':
         /** \todo Make this depend on the configured personality? */
-        fmlog("Hostware status: duration=%u clock cycles, skip_samples=%u, periodic_update_interval=%lu",
-              duration_list[duration_index], skip_samples, periodic_update_interval);
+        fmlog("Hostware status:");
+        fmlog("  duration=%u clock cycles", duration_list[duration_index]);
+        fmlog("  skip_samples=%u", skip_samples);
+        fmlog("  periodic_update_interval=%lu", periodic_update_interval);
         break;
       case FRAME_CMD_ABORT:
       case FRAME_CMD_RESET:
@@ -648,13 +660,13 @@ static void packet_handler_personality_info(personality_info_t *pi,
 {
   fmlog("<PERSONALITY INFO: personality_name:\"%s\" units_per_second=%u",
         pi->personality_name, pi->units_per_second);
-  fmlog("<                  sizeof_table:%u sizeof_value:%u",
-        pi->sizeof_table, pi->sizeof_value);
+  fmlog("<                  sizeof_table:%u bits_per_value:%u",
+        pi->sizeof_table, pi->bits_per_value);
   fmlog("<                  sz(timer_count):%u sz(skip_samples):%u",
         pi->param_data_size_timer_count, pi->param_data_size_skip_samples);
-  fmlog("<                  %u elements of %ubits each",
+  fmlog("<                  %u elements of %u bits each",
 
-        pi->sizeof_table / pi->sizeof_value, 8*pi->sizeof_value);
+        8*pi->sizeof_table / pi->bits_per_value, pi->bits_per_value);
   if (personality_info) {
     personality_info_unref(personality_info);
   }
