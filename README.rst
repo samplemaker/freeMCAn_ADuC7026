@@ -66,12 +66,12 @@ is needed. FreeMCAn-ADuC is known to be build on Fedora 16 with newlib
 and gcc based on an ARM Toolchain derived from following packages:
 
   * binutils-2.22_
-  * newlib-1.19.0_
-  * gdb-7.3a_
-  * gcc-4.6.2_
+  * newlib-1.20.0_
+  * gdb-7.4.1_
+  * gcc-4.7.1_
 
 gcc was configured with: 
-../gcc_sources/configure -v --quiet --target=arm-elf --prefix=<tbd> 
+../gcc_sources/configure -v --quiet --target=arm-none-eabi --prefix=<tbd> 
 --with-gnu-as --with-gnu-ld --enable-languages=c --enable-interwork 
 --enable-multilib --with-newlib --with-system-zlib 
 --with-headers=<tbd>/newlib_sources/newlib/libc/include --disable-werror 
@@ -89,9 +89,9 @@ need
   * sloccount_
 
 .. _binutils-2.22: http://ftp.gnu.org/gnu/binutils/
-.. _newlib-1.19.0: ftp://sources.redhat.com/pub/newlib/
-.. _gdb-7.3a:      http://ftp.gnu.org/gnu/gdb/
-.. _gcc-4.6.2:     http://ftp.gnu.org/gnu/gcc/
+.. _newlib-1.20.0: ftp://sources.redhat.com/pub/newlib/
+.. _gdb-7.4.1:     http://ftp.gnu.org/gnu/gdb/
+.. _gcc-4.7.1:     http://ftp.gnu.org/gnu/gcc/
 .. _doxygen:       http://www.stack.nl/~dimitri/doxygen/index.html
 .. _gcc:           http://gcc.gnu.org/
 .. _graphviz:      http://www.graphviz.org/

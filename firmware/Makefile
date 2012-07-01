@@ -1,10 +1,9 @@
 include ../common.mk
 
-#ARMPATH=~/DevelToolbin/binaries/armThumb-4.4.6-interwork/bin/
-ARMPATH=~/DevelToolbin/binaries/armThumb-4.6.2/bin/
-CC=$(ARMPATH)arm-elf-gcc
-OBJCPY=$(ARMPATH)arm-elf-objcopy
-OBJDUMP=$(ARMPATH)arm-elf-objdump
+ARMPATH=~/DevelToolbin/binaries/armThumb-4.7.1/bin/
+CC=$(ARMPATH)arm-none-eabi-gcc
+OBJCPY=$(ARMPATH)arm-none-eabi-objcopy
+OBJDUMP=$(ARMPATH)arm-none-eabi-objdump
 
 LIBADUC = ../aduc/
 
