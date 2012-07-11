@@ -53,7 +53,7 @@
  * for the system. 
  *
  */
-#define F_UCLK  41780000ULL
+#define F_UCLK  41779200ULL
 
 /** Frequency definition internal resonator
  *

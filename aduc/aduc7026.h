@@ -45,6 +45,9 @@
 /** Defines for PLL and power control / ADC BANDGAP
  *
  */
+/* PLLSTA undocumented - size unknown. 2012-07-11 samplemaker */
+#define PLLSTA    _MMR_SIZE_08(0x0400)
+
 #define POWKEY1   _MMR_SIZE_16(0x0404)
 #define POWCON    _MMR_SIZE_16(0x0408)
 #define POWKEY2   _MMR_SIZE_16(0x040C)

@@ -89,7 +89,9 @@ main (int argc, char *argv[])
   printf (" \n");
   if (argc != 3)
     {
-      printf (" ADuC7026 serial sector and mass eraser V1\n");
+      printf ("*********************************************\n");
+      printf ("* ADuC7026 serial sector and mass eraser V2 *\n");
+      printf ("*********************************************\n");
       printf (" press the SD and RST switches in the following\n");
       printf (" sequence, as specified in AN-724:\n");
       printf (" SD     ------_________________------\n");
@@ -130,8 +132,16 @@ main (int argc, char *argv[])
   char buf[256];
   memset (buf, '\0', sizeof (buf));
   assert_read (fd, buf, 24);
-  printf ("Received: ID PACKET:%s\n", buf);
+  printf ("Received (raw dump):%s\n", buf);
 
+  printf ("PRODUCT ID:                     %.8s\n", buf);
+  char *s1 = &buf[11];
+  printf ("MEMORY SIZE MODEL:              %.3s\n", s1);
+  printf ("SILICON REV.:                   %c\n", buf[15]);
+  printf ("LOADER VERSION:                 %c\n", buf[16]);
+  printf ("LOADER VERSION REVISION NUMBER: %c\n", buf[17]);
+
+  /* go ahead with the erasing command ... */
   /* trailing 2 commando bytes */
   const char packet_start_id[] = { 0x07, 0x0e };
 
@@ -197,8 +207,8 @@ main (int argc, char *argv[])
     }
   printf ("\n");
   assert_write (fd, &cmd, 10);
-  printf ("stand by (4 seconds) ...\n");
-  sleep (4);
+  printf ("stand by (6 seconds) ...\n");
+  sleep (6);
 
   char acknowledge;
   assert_read (fd, &acknowledge, 1);
@@ -206,14 +216,11 @@ main (int argc, char *argv[])
   switch (acknowledge)
     {
     case 0x06:
-      printf ("ACK: (0x06)\n");
-      printf ("Erase of flash sectors successful!\n");
+      printf ("ACK: (0x06) => Erase of flash sectors successful!\n");
       break;
     case 0x07:
-      printf ("BEL: (0x07)\n");
-      printf ("ERROR: Negative response!\n");
+      printf ("BEL: (0x07) => ERROR: Negative response!\n");
       break;
-
     default:
       /* poor man's fallthrough */
       printf ("Unknown return code!\n");
