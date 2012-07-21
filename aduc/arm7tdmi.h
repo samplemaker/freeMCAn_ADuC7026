@@ -47,11 +47,11 @@
 
 /** 2^9 = 512 bytes per flash sector
  */
-#define FLASH_SECTOR_CONFIG 9
+#define FLASH_SECTOR_SIZE 9
 
 /** Flash sector size definition
  */
-#define FLASH_SECTOR_SIZE (1 << (FLASH_SECTOR_CONFIG))
+#define FLASH_SECTOR_SIZE_BYTES (1 << (FLASH_SECTOR_SIZE))
 
 
 #ifndef IN_LINKERCOMMAND_FILE

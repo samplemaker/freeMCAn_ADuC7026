@@ -164,21 +164,21 @@ SECTIONS
  *
  */
   /* locate to 30 sectors above the end of flash code & data 
-  _eepflash_section1_start = _data_load_end + 30*FLASH_SECTOR_SIZE; */
+  _eepflash_section1_start = _data_load_end + 30*FLASH_SECTOR_SIZE_BYTES; */
   _eepflash_section1_start = 0x85000;
 
   /* rectify this address on flash sector boundarys */
-  _eepflash_section1_start = ALIGN(_eepflash_section1_start, FLASH_SECTOR_SIZE);
+  _eepflash_section1_start = ALIGN(_eepflash_section1_start, FLASH_SECTOR_SIZE_BYTES);
 
   /* flash section size: 
    * store 2 x 11 bit data table, 3byte each element plus some extra space 
    * for additional data and overhead ~ 24 + 2 sectors before sections1 & 2
    * are swapped into alternate section
    */
-  _eepflash_section_size = 26*FLASH_SECTOR_SIZE;
+  _eepflash_section_size = 26*FLASH_SECTOR_SIZE_BYTES;
 
   /* automatic gather for all flash space available
-     _eepflash_section_size = (__flash_end__ - FLASH_SECTOR_SIZE 
+     _eepflash_section_size = (__flash_end__ - FLASH_SECTOR_SIZE_BYTES 
                                - _eepflash_section1_start) / 2;  
    */
 
@@ -198,7 +198,7 @@ SECTIONS
      * Access to Flash Address 0x0008F7FF Causes a Data Abort [er022] 
      * --> avoid last sector to be allocated for eepflash 
      */
-    . = . + FLASH_SECTOR_SIZE;
+    . = . + FLASH_SECTOR_SIZE_BYTES;
   }  >flash
 
 

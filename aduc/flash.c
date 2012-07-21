@@ -49,8 +49,8 @@
 /** Mem size to number of flash sector(s) conversion
  *
  */
-#define FLASH_ADDR_TO_NUM_SECTOR(end, start) \
-                                (((end) - (start)) >> (FLASH_SECTOR_CONFIG))
+#define SIZE_TO_NUM_SECTOR(end, start) \
+                          (((end) - (start)) >> (FLASH_SECTOR_SIZE))
 
 /** uint8_t pattern indicating a block is written
  *
@@ -135,7 +135,7 @@ void flash_erase(const uint8_t sector_start, const uint8_t sector_end)
 {
   FEEMOD |= _BV(FEE_EW_PROTECTION);
   for (uint8_t cnt = sector_start; cnt <= sector_end; cnt++){
-    FEEADR = FLASH_SECTOR_SIZE * cnt;
+    FEEADR = FLASH_SECTOR_SIZE_BYTES * cnt;
     FEECON = FEE_CMD_SINGLE_ERASE;
     uint8_t fee_controller_busy = true;
     while (fee_controller_busy){
@@ -284,9 +284,9 @@ void flashsections_swap(void)
 {
   /* erase current active section (working section) */
   const uint8_t sector_start =
-    FLASH_ADDR_TO_NUM_SECTOR(flashsections.active_start, __flash_start__ );
+    SIZE_TO_NUM_SECTOR(flashsections.active_start, __flash_start__ );
   const uint8_t sector_end =
-    FLASH_ADDR_TO_NUM_SECTOR(flashsections.active_end, __flash_start__) - 1;
+    SIZE_TO_NUM_SECTOR(flashsections.active_end, __flash_start__) - 1;
   flash_erase(sector_start, sector_end);
 
   /* swap section pointers active <-> alternate */
