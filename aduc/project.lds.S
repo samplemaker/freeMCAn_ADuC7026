@@ -44,7 +44,7 @@
 
 #define IN_LINKERCOMMAND_FILE
 
-#include <arm7tdmi.h>
+#include "arm7tdmi.h"
 
 
 OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")

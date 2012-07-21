@@ -26,6 +26,8 @@
 #ifndef FLASH_H
 #define FLASH_H
 
+#include <stdbool.h>
+
 
 /* Eepflash memory service identifier. Define here various BLOCKIDs */
 enum {
@@ -37,7 +39,7 @@ enum {
 
 
 void eepflash_write(const char *src, const uint16_t user_len, const uint8_t block_id);
-int8_t eepflash_copy_block(char *p_ram, const uint8_t block_id);
+bool eepflash_copy_block(char *p_ram, const uint8_t block_id);
 
 
 /** @} */
