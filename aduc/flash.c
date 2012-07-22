@@ -49,7 +49,7 @@
 /** Mem size to number of flash sector(s) conversion
  *
  */
-#define SIZE_TO_NUM_SECTOR(end, start) \
+#define ADDR_TO_NUM_SECTOR(end, start) \
                           (((end) - (start)) >> (FLASH_SECTOR_SIZE_EXP))
 
 /** uint8_t pattern indicating a block is written
@@ -284,9 +284,9 @@ void flashsections_swap(void)
 {
   /* erase current active section (working section) */
   const uint8_t sector_start =
-    SIZE_TO_NUM_SECTOR(flashsections.active_start, __flash_start__ );
+    ADDR_TO_NUM_SECTOR(flashsections.active_start, __flash_start__ );
   const uint8_t sector_end =
-    SIZE_TO_NUM_SECTOR(flashsections.active_end, __flash_start__) - 1;
+    ADDR_TO_NUM_SECTOR(flashsections.active_end, __flash_start__) - 1;
   flash_erase(sector_start, sector_end);
 
   /* swap section pointers active <-> alternate */
