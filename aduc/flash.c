@@ -50,7 +50,7 @@
  *
  */
 #define SIZE_TO_NUM_SECTOR(end, start) \
-                          (((end) - (start)) >> (FLASH_SECTOR_SIZE))
+                          (((end) - (start)) >> (FLASH_SECTOR_SIZE_EXP))
 
 /** uint8_t pattern indicating a block is written
  *
