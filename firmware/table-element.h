@@ -45,6 +45,8 @@ typedef uint8_t freemcan_uint24_t[3];
 typedef
 #if (BITS_PER_VALUE == 8)
   uint8_t
+#elif (BITS_PER_VALUE == 12)
+  uint16_t
 #elif (BITS_PER_VALUE == 16)
   uint16_t
 #elif (BITS_PER_VALUE == 24)

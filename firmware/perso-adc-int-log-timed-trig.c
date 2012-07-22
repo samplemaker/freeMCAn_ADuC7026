@@ -34,7 +34,7 @@
 #include "init.h"
 
 /** Histogram element size */
-#define BITS_PER_VALUE 16
+#define BITS_PER_VALUE 12
 
 #include "perso-adc-int-global.h"
 #include "packet-comm.h"
@@ -45,6 +45,16 @@
 #include "timer1-constants.h"
 #include "main.h"
 
+typedef enum {
+  STATE_A,
+  STATE_B,
+  STATE_C,
+  STATE_D
+} state_compress_t;
+
+
+static state_compress_t state = STATE_A;
+static uint16_t temp;
 
 /** The table
  *
@@ -140,25 +150,61 @@ module_init(data_table_print_status, 8);
  * Actually one could implement a low pass filter here before
  * downsampling to fullfill shannons sample theoreme
  */
-void ISR_ADC(void){
+void __runRam ISR_ADC(void){
   /* toggle a time base signal */
   TOG_LED_ISR;
 
   /* starting from bit 16 the result is stored in ADCDAT.
      reading the ADCDATA also clears flag in ADCSTA */
   volatile uint32_t result =  ADCDAT;
+  const uint16_t value = (result >> (16 + 12 - ADC_RESOLUTION));
 
   /* downsampling of analog data */
   if (skip_samples == 0) {
     if (!measurement_finished) {
-      const uint16_t value = (result >> (16 + 12 - ADC_RESOLUTION));
-      *table_cur = value;
-      table_cur++;
-      data_table_info.size += sizeof(*table_cur);
+      #if (BITS_PER_VALUE == 12)
+         /* for 12 bit 4 adjacent 12 bit samples (A,B,C,D) are coded as follows:
+          * [a|a|a|b], [b|b|c|c], [c|d|d|d]
+          */
+        switch (state) {
+           case (STATE_A) :
+               temp = (value << 4);
+               state = STATE_B;
+           break;
+           case (STATE_B) :
+               *table_cur = temp | (value >> 8);
+               table_cur++;
+               data_table_info.size += sizeof(*table_cur);
+               temp = (value << 8);
+               state = STATE_C;
+           break;
+           case (STATE_C) :
+               *table_cur = temp | (value >> 4);
+               table_cur++;
+               data_table_info.size += sizeof(*table_cur);
+               temp = (value << 12);
+               state = STATE_D;
+           break;
+           case (STATE_D) :
+               *table_cur = temp | value;
+               table_cur++;
+               data_table_info.size += sizeof(*table_cur);
+               state = STATE_A;
+           break;
+           default:
+
+           break;
+        }
+      #else
+        *table_cur = value;
+        table_cur++;
+        data_table_info.size += sizeof(*table_cur);
+      #endif
       skip_samples = orig_skip_samples;
+      /* Note: If we either stop in state B or C the last analog sample will be corrupt */
       if (table_cur >= table_end) {
         timer1_halt();
-        /* tell main() that measurement is over                     */
+        /* tell main() that measurement is over */
         measurement_finished = 1;
       }
     }
@@ -166,6 +212,9 @@ void ISR_ADC(void){
     skip_samples--;
   }
 }
+
+
+
 
 
 /** Switch off trigger to stop any sampling of the analog signal
@@ -206,3 +255,4 @@ void on_measurement_finished(void)
  * indent-tabs-mode: nil
  * End:
  */
+

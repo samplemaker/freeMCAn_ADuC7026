@@ -39,6 +39,14 @@
 #include "personality-info.h"
 
 
+typedef enum {
+  STATE_A,
+  STATE_B,
+  STATE_C,
+  STATE_D
+} state_compress_t;
+
+
 /** Create new value table object in host conventions.
  *
  * Note that all multi-byte parameters which need endianness
@@ -121,6 +129,50 @@ packet_value_table_t *packet_value_table_new(const packet_value_table_reason_t r
     for (size_t i=0; i<element_count; i++) {
       const uint32_t v = e8[i];
       result->elements[i] = v;
+    }
+    break;
+   /* for 12 bit 4 adjacent 12 bit samples (A,B,C,D) are coded as follows:
+    * [a|a|a|b], [b|b|c|c], [c|d|d|d]
+    */
+  case 12:
+    if (1){
+    uint32_t v, temp;
+    state_compress_t state = STATE_A;
+    uint32_t j = 0;
+    for (size_t i=0; j<element_count; i++) {
+     switch (state) {
+         case (STATE_A) :
+             temp = ((((uint32_t)e8[2*i+0]) << 0) +
+                    (((uint32_t)e8[2*i+1]) << 8));
+             result->elements[j] = (temp >> 4);
+             j++;
+             state = STATE_B;
+         break;
+         case (STATE_B) :
+             v = (temp << 8) & 0x0f00;
+             temp = ((((uint32_t)e8[2*i+0]) << 0) +
+                    (((uint32_t)e8[2*i+1]) << 8));
+             v = v + (temp >> 8);
+             result->elements[j] = v;
+             j++;
+             state = STATE_C;
+         break;
+         case (STATE_C) :
+             v= (temp & 0x00ff);
+             temp = ((((uint32_t)e8[2*i+0]) << 0) +
+                    (((uint32_t)e8[2*i+1]) << 8));
+             v = (v << 4) + (temp >> 12);
+             result->elements[j] = v;
+             j++;
+             result->elements[j] = (((((uint32_t)e8[2*i+0]) << 0) +
+                                   (((uint32_t)e8[2*i+1]) << 8)) & 0x0fff);
+             j++;
+             state = STATE_A;
+         default:
+
+         break;
+      }
+    }
     }
     break;
   case 16:
