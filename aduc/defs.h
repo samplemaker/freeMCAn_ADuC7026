@@ -88,6 +88,15 @@
  */
 #define _ALIGN(value, size) (((value)+((size)-1))&(~((size)-1)))
 
+/** Tag for relocating and executing code in RAM
+ *
+ *  For branch and link instruction the offset value is a signed 24-bit
+ *  value, so the branch target must be within approx +/-32MB. otherwise
+ *  use __attribute((section(".ramrun"),long_call)) to perform a load
+ *  into an intermediate register and branch 
+ */
+#define __runRam  __attribute((section(".ramrun")))
+
 
 #endif /* !__ASSEMBLER__ */
 

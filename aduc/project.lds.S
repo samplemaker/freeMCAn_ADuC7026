@@ -106,15 +106,16 @@ SECTIONS
     PROVIDE (etext = .);
   } >flash
 
-/** read & write and initialized global variables copied from flash
- *  to ram at startup. Load memory adress at end of .text. Virtual memory adress
- *  at ram
+/** Initialized global variables which are copied from flash to ram at startup.
+ *  Load memory adress at end of .text. Virtual memory adress
+ *  at ram origin.
  *
  */
   .data : AT (ADDR (.text) + SIZEOF (.text))
   {
     _data = . ;
     *(.data)
+    *(.ramrun)   /* code execution in ram */
     . = ALIGN(4);
     _edata = . ;
     PROVIDE (edata = .);
