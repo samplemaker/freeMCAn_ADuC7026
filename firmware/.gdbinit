@@ -39,9 +39,9 @@ define cpu_status
   printf "Processor state register     : 0x%x \n", $cpsr
 
   if ($cpsr & 0x80)
-    printf "Global interrupt flag        : UNSET \n"
+    printf "Interrupts                   : DISABLED \n"
   else
-    printf "Global interrupt flag        : SET \n"
+    printf "Interrupts                   : ENABLED \n"
   end
 
   if ($cpsr & 0x20)
@@ -53,6 +53,12 @@ define cpu_status
   printf "The mode set is              : "
   if (($cpsr & 0x1F) == 0x10)
     printf "User \n"
+  end
+  if (($cpsr & 0x1F) == 0x11)
+    printf "Fast Interrupt \n"
+  end
+  if (($cpsr & 0x1F) == 0x12)
+    printf "Interrupt \n"
   end
   if (($cpsr & 0x1F) == 0x13)
     printf "Supervisor \n"
@@ -66,6 +72,7 @@ define cpu_status
   if (($cpsr & 0x1F) == 0x1F)
     printf "System \n"
   end
+
 
 end
 document cpu_status
@@ -81,24 +88,30 @@ define mmr_status
   set $MMR_IRQEN = $MMR_BASE + 8
   set $MMR_PLLCON = $MMR_BASE + 0x0414
   set $MMR_POWCON = $MMR_BASE + 0x0408
+  set $MMR_ADCCON = $MMR_BASE + 0x0500
 
   printf "\n"
   printf "MMR's\n"
   printf "-----\n"
 
+
+  set $PLLCON = (*(uint8_t *)($MMR_PLLCON))
+  printf "PLLCON                       : 0x%02x \n",$PLLCON
   #check the OSEL bit in the PLLCON MMR
-  if ((*(uint32_t *)($MMR_PLLCON)) & 0x20)
+  if ($PLLCON & 0x20)
     printf "Clock source                 : Internal resonator \n"
   else
     printf "Clock source                 : External crystal \n"
   end
-  set $POWCON_CD = ((*(uint32_t *)($MMR_POWCON)) & 0x7)
-  printf "Clock divider setting        : %01d \n", $POWCON_CD
-  printf "Core clock                   : F_HCLK=F_CLK/%d \n", (1 << $POWCON_CD)
-
+  set $POWCON = (*(uint8_t *)($MMR_POWCON))
+  printf "POWCON                       : 0x%02x \n",$POWCON
+  printf "Core clock                   : %0.2f MHz \n", 41.78/(1 << ($POWCON & 0x7))
   printf "IRQEN  (masked)              : 0x%08x \n",*(uint32_t *)($MMR_IRQEN)
   printf "IRQSTA (enabled and pending) : 0x%08x \n",*(uint32_t *)($MMR_IRQSTA)
   printf "IRQSIG (pending)             : 0x%08x \n",*(uint32_t *)($MMR_IRQSIG)
+  set $ADCCON = (*(uint16_t *)($MMR_ADCCON))
+  printf "ADCCON                       : 0x%04x \n",$ADCCON
+  printf "ADC clock divider            : %01d \n",(1 << (($ADCCON & 0x1c00) >> 10))
   printf "\n"
 
 end
