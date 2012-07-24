@@ -23,8 +23,10 @@
  * @{
  */
 
+
 #ifndef INIT_H
 #define INIT_H
+
 
 #if !defined(STR) && !defined(STR1)
 /* macros used for stringification */
@@ -65,5 +67,6 @@ typedef void (*initcall_t)(void);
 
 
 /** @} */
+
 
 #endif  /* !INIT_H */

@@ -25,20 +25,25 @@
  * @{
  */
 
+
 #ifndef INT_H
 #define INT_H
+
 
 /* used by software interrupt handler */
 #define SWI_ENABLE_IRQ   0x01
 #define SWI_DISABLE_IRQ  0x02
 
+
 #ifndef __ASSEMBLER__
+
 
 #if !defined(STR) && !defined(STR1)
 /* macros used for synthesizing asm inline macros */
 #define STR1(x)  #x
 #define STR(x)  STR1(x)
 #endif
+
 
 /** \brief Enable interrupts within non-/priviledged usermode
  *
@@ -62,8 +67,11 @@ void disable_IRQs_usermode(void){
   asm volatile ( "SVC " STR(SWI_DISABLE_IRQ) ::);
 }
 
+
 #endif /* !__ASSEMBLER__ */
 
+
 /** @} */
+
 
 #endif  /* !INT_H */

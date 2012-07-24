@@ -27,6 +27,7 @@
  * @{
  */
 
+
 /*-----------------------------------------------------------------------------
  * Includes
  *-----------------------------------------------------------------------------
@@ -37,6 +38,7 @@
 #include "aduc.h"
 #include "defs.h"
 
+
 /*-----------------------------------------------------------------------------
  * Defines
  *-----------------------------------------------------------------------------
@@ -46,12 +48,14 @@
 #define __stub(default_handler) \
         __attribute__ ((weak, alias (STR(default_handler))))
 
+
 /*-----------------------------------------------------------------------------
  * Prototypes
  *-----------------------------------------------------------------------------
  */
 
 static void _isr_trap(void);
+
 
 /* ISR handler interface pointing to _isr_trap
  *
@@ -65,6 +69,7 @@ void ISR_WAKEUP_TIMER2(void)            __stub(_isr_trap);
 void ISR_WATCHDOG_TIMER3(void)          __stub(_isr_trap);
 void ISR_PLL_LOCK(void)                 __stub(_isr_trap);
 void ISR_EXTINT0(void)                  __stub(_isr_trap);
+
 
 /** Default interrupt service handler
  *
@@ -204,5 +209,6 @@ void _swi_handler(void)
                      reload cached memory values  */
   );
 }
+
 
 /** @} */

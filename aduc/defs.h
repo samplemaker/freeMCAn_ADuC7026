@@ -24,6 +24,7 @@
  * @{
  */
 
+
 #ifndef DEFS_H
 #define DEFS_H
 
@@ -41,25 +42,28 @@
 
 #ifdef __ASSEMBLER__
 
+
 #define _MMR_SIZE_32(rel_address) rel_address
 #define _MMR_SIZE_16(rel_address) rel_address
 #define _MMR_SIZE_08(rel_address) rel_address
 
+
 #else /* !__ASSEMBLER__ */
 
-/** Access to 8,16,32-bit numbers by absolute adress
+
+/** Access to 8,16,32-bit numbers by absolute adressing
  *
  */
-#define _MMR_RW_32(abs_address) (*(volatile uint32_t *)(abs_address))
-#define _MMR_RW_16(abs_address) (*(volatile uint16_t *)(abs_address))
-#define _MMR_RW_08(abs_address) (*(volatile uint8_t *)(abs_address))
+#define _GET_32(abs_address) (*(volatile uint32_t *)(abs_address))
+#define _GET_16(abs_address) (*(volatile uint16_t *)(abs_address))
+#define _GET_08(abs_address) (*(volatile uint8_t *)(abs_address))
 
 /** Memory mapped register access relative to absolute adress conversion
  *
  */
-#define _MMR_SIZE_32(rel_address) _MMR_RW_32((rel_address) + __MMR_BASE)
-#define _MMR_SIZE_16(rel_address) _MMR_RW_16((rel_address) + __MMR_BASE)
-#define _MMR_SIZE_08(rel_address) _MMR_RW_08((rel_address) + __MMR_BASE)
+#define _MMR_SIZE_32(rel_address) _GET_32((rel_address) + __MMR_BASE)
+#define _MMR_SIZE_16(rel_address) _GET_16((rel_address) + __MMR_BASE)
+#define _MMR_SIZE_08(rel_address) _GET_08((rel_address) + __MMR_BASE)
 
 /** Set bit position bit_no to one
  *
@@ -170,5 +174,6 @@
 
 
 /** @} */
+
 
 #endif  /* !DEFS_H */
