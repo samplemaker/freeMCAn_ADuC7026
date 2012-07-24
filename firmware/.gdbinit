@@ -117,9 +117,6 @@ define mmr_status
   end
   set $POWCON = (*(uint8_t *)($MMR_POWCON))
   printf "POWCON                       : 0x%02x    [f_hclk=%0.2f MHz]\n",$POWCON, 41.78/(1 << ($POWCON & 0x7))
-  printf "IRQEN  (masked)              : 0x%08x \n",*(uint32_t *)($MMR_IRQEN)
-  printf "IRQSTA (enabled and pending) : 0x%08x \n",*(uint32_t *)($MMR_IRQSTA)
-  printf "IRQSIG (pending)             : 0x%08x \n",*(uint32_t *)($MMR_IRQSIG)
   set $ADCCON = (*(uint16_t *)($MMR_ADCCON))
   printf "ADCCON                       : 0x%04x  [divider=%01d ;",$ADCCON,(1 << (($ADCCON & 0x1c00) >> 10))
   if ($ADCCON & 0x80)
@@ -136,6 +133,35 @@ define mmr_status
   printf "GP2CON                       : 0x%08x \n",*(uint32_t *)($MMR_GP2CON)
   printf "GP3CON                       : 0x%08x \n",*(uint32_t *)($MMR_GP3CON)
   printf "GP4CON                       : 0x%08x \n",*(uint32_t *)($MMR_GP4CON)
+  printf "Interrupts:\n"
+  set $IRQEN = *(uint32_t *)($MMR_IRQEN)
+  printf "IRQEN  (masked)              : 0x%08x \n",$IRQEN
+  set $IRQSTA = *(uint32_t *)($MMR_IRQEN)
+  printf "IRQSTA (enabled and pending) : 0x%08x \n",$IRQSTA
+  printf "IRQSIG (pending)             : 0x%08x \n",*(uint32_t *)($MMR_IRQSIG)
+  printf "INT_SWI              :ENA %01x STA %01x\n", (($IRQEN >>1) & 1), (($IRQSTA >>1) & 1)
+  printf "INT_TIMER0           :ENA %01x STA %01x\n", (($IRQEN >>2) & 1), (($IRQSTA >>2) & 1)
+  printf "INT_TIMER1           :ENA %01x STA %01x\n", (($IRQEN >>3) & 1), (($IRQSTA >>3) & 1)
+  printf "INT_WAKEUP_TIMER2    :ENA %01x STA %01x\n", (($IRQEN >>4) & 1), (($IRQSTA >>4) & 1)
+  printf "INT_WATCHDOG_TIMER3  :ENA %01x STA %01x\n", (($IRQEN >>5) & 1), (($IRQSTA >>5) & 1)
+  printf "INT_FLASH_CONTROL    :ENA %01x STA %01x\n", (($IRQEN >>6) & 1), (($IRQSTA >>6) & 1)
+  printf "INT_ADC_CHANNEL      :ENA %01x STA %01x\n", (($IRQEN >>7) & 1), (($IRQSTA >>7) & 1)
+  printf "INT_PLL_LOCK         :ENA %01x STA %01x\n", (($IRQEN >>8) & 1), (($IRQSTA >>8) & 1)
+  printf "INT_I2C0_SLAVE       :ENA %01x STA %01x\n", (($IRQEN >>9) & 1), (($IRQSTA >>9) & 1)
+  printf "INT_I2C0_MASTER      :ENA %01x STA %01x\n", (($IRQEN >>10) & 1), (($IRQSTA >>10) & 1)
+  printf "INT_I2C1_MASTER      :ENA %01x STA %01x\n", (($IRQEN >>11) & 1), (($IRQSTA >>11) & 1)
+  printf "INT_SPI_SLAVE        :ENA %01x STA %01x\n", (($IRQEN >>12) & 1), (($IRQSTA >>12) & 1)
+  printf "INT_SPI_MASTER       :ENA %01x STA %01x\n", (($IRQEN >>13) & 1), (($IRQSTA >>13) & 1)
+  printf "INT_UART             :ENA %01x STA %01x\n", (($IRQEN >>14) & 1), (($IRQSTA >>14) & 1)
+  printf "INT_EXTERNAL_IRQ0    :ENA %01x STA %01x\n", (($IRQEN >>15) & 1), (($IRQSTA >>15) & 1)
+  printf "INT_COMPARATOR       :ENA %01x STA %01x\n", (($IRQEN >>16) & 1), (($IRQSTA >>16) & 1)
+  printf "INT_PSM              :ENA %01x STA %01x\n", (($IRQEN >>17) & 1), (($IRQSTA >>17) & 1)
+  printf "INT_EXTERNAL_IRQ1    :ENA %01x STA %01x\n", (($IRQEN >>18) & 1), (($IRQSTA >>18) & 1)
+  printf "INT_PLA_IRQ0         :ENA %01x STA %01x\n", (($IRQEN >>19) & 1), (($IRQSTA >>19) & 1)
+  printf "INT_PLA_IRQ1         :ENA %01x STA %01x\n", (($IRQEN >>20) & 1), (($IRQSTA >>20) & 1)
+  printf "INT_EXTERNAL_IRQ2    :ENA %01x STA %01x\n", (($IRQEN >>21) & 1), (($IRQSTA >>21) & 1)
+  printf "INT_EXTERNAL_IRQ3    :ENA %01x STA %01x\n", (($IRQEN >>22) & 1), (($IRQSTA >>22) & 1)
+  printf "INT_PWM_TRIP         :ENA %01x STA %01x\n", (($IRQEN >>23) & 1), (($IRQSTA >>23) & 1)
   printf "\n"
 
 end
