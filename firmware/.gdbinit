@@ -89,29 +89,53 @@ define mmr_status
   set $MMR_PLLCON = $MMR_BASE + 0x0414
   set $MMR_POWCON = $MMR_BASE + 0x0408
   set $MMR_ADCCON = $MMR_BASE + 0x0500
+  set $MMR_T0CON = $MMR_BASE + 0x0308
+  set $MMR_T1CON = $MMR_BASE + 0x0328
+  set $MMR_T2CON = $MMR_BASE + 0x0348
+  set $MMR_T3CON = $MMR_BASE + 0x0368
+  set $MMR_GP0CON = $MMR_BASE + 0xF400
+  set $MMR_GP1CON = $MMR_BASE + 0xF404
+  set $MMR_GP2CON = $MMR_BASE + 0xF408
+  set $MMR_GP3CON = $MMR_BASE + 0xF40C
+  set $MMR_GP4CON = $MMR_BASE + 0xF410
 
   printf "\n"
   printf "MMR's\n"
   printf "-----\n"
 
-
   set $PLLCON = (*(uint8_t *)($MMR_PLLCON))
-  printf "PLLCON                       : 0x%02x \n",$PLLCON
+  printf "PLLCON                       : 0x%02x",$PLLCON
   #check the OSEL bit in the PLLCON MMR
-  if ($PLLCON & 0x20)
-    printf "Clock source                 : Internal resonator \n"
+  if ($PLLCON != 0)
+    if ($PLLCON & 0x20)
+      printf "    [Internal resonator] \n"
+    else
+      printf "    [External crystal] \n"
+    end
   else
-    printf "Clock source                 : External crystal \n"
+      printf " ?\n"
   end
   set $POWCON = (*(uint8_t *)($MMR_POWCON))
-  printf "POWCON                       : 0x%02x \n",$POWCON
-  printf "Core clock                   : %0.2f MHz \n", 41.78/(1 << ($POWCON & 0x7))
+  printf "POWCON                       : 0x%02x    [f_hclk=%0.2f MHz]\n",$POWCON, 41.78/(1 << ($POWCON & 0x7))
   printf "IRQEN  (masked)              : 0x%08x \n",*(uint32_t *)($MMR_IRQEN)
   printf "IRQSTA (enabled and pending) : 0x%08x \n",*(uint32_t *)($MMR_IRQSTA)
   printf "IRQSIG (pending)             : 0x%08x \n",*(uint32_t *)($MMR_IRQSIG)
   set $ADCCON = (*(uint16_t *)($MMR_ADCCON))
-  printf "ADCCON                       : 0x%04x \n",$ADCCON
-  printf "ADC clock divider            : %01d \n",(1 << (($ADCCON & 0x1c00) >> 10))
+  printf "ADCCON                       : 0x%04x  [divider=%01d ;",$ADCCON,(1 << (($ADCCON & 0x1c00) >> 10))
+  if ($ADCCON & 0x80)
+    printf " online] \n"
+  else
+    printf " offline] \n"
+  end
+  printf "T0CON                        : 0x%04x \n",*(uint16_t *)($MMR_T0CON)
+  printf "T1CON                        : 0x%08x \n",*(uint32_t *)($MMR_T1CON)
+  printf "T2CON                        : 0x%04x \n",*(uint16_t *)($MMR_T2CON)
+  printf "T3CON                        : 0x%04x \n",*(uint16_t *)($MMR_T3CON)
+  printf "GP0CON                       : 0x%08x \n",*(uint32_t *)($MMR_GP0CON)
+  printf "GP1CON                       : 0x%08x \n",*(uint32_t *)($MMR_GP1CON)
+  printf "GP2CON                       : 0x%08x \n",*(uint32_t *)($MMR_GP2CON)
+  printf "GP3CON                       : 0x%08x \n",*(uint32_t *)($MMR_GP3CON)
+  printf "GP4CON                       : 0x%08x \n",*(uint32_t *)($MMR_GP4CON)
   printf "\n"
 
 end
