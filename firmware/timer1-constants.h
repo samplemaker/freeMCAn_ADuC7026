@@ -79,7 +79,7 @@
  */
 
 /** Select a valid clock divider depending on interval and clock source */
-#define TIMER1_CLOCK_DIVISION_FACTOR_x1000 256000ULL
+#define TIMER1_CLOCK_DIVISION_FACTOR_x1000 16000ULL
 
 /** Select source to be connected to TIMER1 */
 #define TIMER1_CLK TIMER1_CORE_CLK
