@@ -38,6 +38,7 @@
  *
  */
 #define __MMRLO_BASE 0xFFFF0000
+#define __MMRHI_BASE 0xFFFFF000
 
 
 /** PLL and power control / ADC BANDGAP
@@ -76,51 +77,51 @@
 /** General purpose intput and output (GPIO)
  *
  */
-#define _GP0CON         0xF400
-#define _GP1CON         0xF404
-#define _GP2CON         0xF408
-#define _GP3CON         0xF40C
-#define _GP4CON         0xF410
-#define _GP0DAT         0xF420
-#define _GP0SET         0xF424
-#define _GP0CLR         0xF428
-#define _GP0PAR         0xF42C
-#define _GP1DAT         0xF430
-#define _GP1SET         0xF434
-#define _GP1CLR         0xF438
-#define _GP1PAR         0xF43C
-#define _GP2DAT         0xF440
-#define _GP2SET         0xF444
-#define _GP2CLR         0xF448
-#define _GP3DAT         0xF450
-#define _GP3SET         0xF454
-#define _GP3CLR         0xF458
-#define _GP4DAT         0xF460
-#define _GP4SET         0xF464
-#define _GP4CLR         0xF468
+#define _GP0CON         0x0400
+#define _GP1CON         0x0404
+#define _GP2CON         0x0408
+#define _GP3CON         0x040C
+#define _GP4CON         0x0410
+#define _GP0DAT         0x0420
+#define _GP0SET         0x0424
+#define _GP0CLR         0x0428
+#define _GP0PAR         0x042C
+#define _GP1DAT         0x0430
+#define _GP1SET         0x0434
+#define _GP1CLR         0x0438
+#define _GP1PAR         0x043C
+#define _GP2DAT         0x0440
+#define _GP2SET         0x0444
+#define _GP2CLR         0x0448
+#define _GP3DAT         0x0450
+#define _GP3SET         0x0454
+#define _GP3CLR         0x0458
+#define _GP4DAT         0x0460
+#define _GP4SET         0x0464
+#define _GP4CLR         0x0468
 
-#define GP0CON          _MMR_32(_GP0CON, __MMRLO_BASE)
-#define GP1CON          _MMR_32(_GP1CON, __MMRLO_BASE)
-#define GP2CON          _MMR_32(_GP2CON, __MMRLO_BASE)
-#define GP3CON          _MMR_32(_GP3CON, __MMRLO_BASE)
-#define GP4CON          _MMR_32(_GP4CON, __MMRLO_BASE)
-#define GP0DAT          _MMR_32(_GP0DAT, __MMRLO_BASE)
-#define GP0SET          _MMR_32(_GP0SET, __MMRLO_BASE)
-#define GP0CLR          _MMR_32(_GP0CLR, __MMRLO_BASE)
-#define GP0PAR          _MMR_32(_GP0PAR, __MMRLO_BASE)
-#define GP1DAT          _MMR_32(_GP1DAT, __MMRLO_BASE)
-#define GP1SET          _MMR_32(_GP1SET, __MMRLO_BASE)
-#define GP1CLR          _MMR_32(_GP1CLR, __MMRLO_BASE)
-#define GP1PAR          _MMR_32(_GP1PAR, __MMRLO_BASE)
-#define GP2DAT          _MMR_32(_GP2DAT, __MMRLO_BASE)
-#define GP2SET          _MMR_32(_GP2SET, __MMRLO_BASE)
-#define GP2CLR          _MMR_32(_GP2CLR, __MMRLO_BASE)
-#define GP3DAT          _MMR_32(_GP3DAT, __MMRLO_BASE)
-#define GP3SET          _MMR_32(_GP3SET, __MMRLO_BASE)
-#define GP3CLR          _MMR_32(_GP3CLR, __MMRLO_BASE)
-#define GP4DAT          _MMR_32(_GP4DAT, __MMRLO_BASE)
-#define GP4SET          _MMR_32(_GP4SET, __MMRLO_BASE)
-#define GP4CLR          _MMR_32(_GP4CLR, __MMRLO_BASE)
+#define GP0CON          _MMR_32(_GP0CON, __MMRHI_BASE)
+#define GP1CON          _MMR_32(_GP1CON, __MMRHI_BASE)
+#define GP2CON          _MMR_32(_GP2CON, __MMRHI_BASE)
+#define GP3CON          _MMR_32(_GP3CON, __MMRHI_BASE)
+#define GP4CON          _MMR_32(_GP4CON, __MMRHI_BASE)
+#define GP0DAT          _MMR_32(_GP0DAT, __MMRHI_BASE)
+#define GP0SET          _MMR_32(_GP0SET, __MMRHI_BASE)
+#define GP0CLR          _MMR_32(_GP0CLR, __MMRHI_BASE)
+#define GP0PAR          _MMR_32(_GP0PAR, __MMRHI_BASE)
+#define GP1DAT          _MMR_32(_GP1DAT, __MMRHI_BASE)
+#define GP1SET          _MMR_32(_GP1SET, __MMRHI_BASE)
+#define GP1CLR          _MMR_32(_GP1CLR, __MMRHI_BASE)
+#define GP1PAR          _MMR_32(_GP1PAR, __MMRHI_BASE)
+#define GP2DAT          _MMR_32(_GP2DAT, __MMRHI_BASE)
+#define GP2SET          _MMR_32(_GP2SET, __MMRHI_BASE)
+#define GP2CLR          _MMR_32(_GP2CLR, __MMRHI_BASE)
+#define GP3DAT          _MMR_32(_GP3DAT, __MMRHI_BASE)
+#define GP3SET          _MMR_32(_GP3SET, __MMRHI_BASE)
+#define GP3CLR          _MMR_32(_GP3CLR, __MMRHI_BASE)
+#define GP4DAT          _MMR_32(_GP4DAT, __MMRHI_BASE)
+#define GP4SET          _MMR_32(_GP4SET, __MMRHI_BASE)
+#define GP4CLR          _MMR_32(_GP4CLR, __MMRHI_BASE)
 
 
 #define GP_SELECT_FUNCTION_Px0  0
@@ -183,6 +184,7 @@
 #define TIMER0_MODE             6
 #define TIMER0_PRESCALER        2
 
+
 #define _T1LD           0x0320
 #define _T1VAL          0x0324
 #define _T1CON          0x0328
@@ -209,6 +211,7 @@
 #define TIMER1_FORMAT           4
 #define TIMER1_PRESCALER        0
 
+
 #define _T2LD           0x0340
 #define _T2VAL          0x0344
 #define _T2CON          0x0348
@@ -230,6 +233,7 @@
 #define TIMER2_INT_OSC          2
 #define TIMER2_CORE_CLK         3
 #define TIMER2_PRESCALER        0
+
 
 #define _T3LD           0x0360
 #define _T3VAL          0x0364
@@ -396,6 +400,7 @@
 #define ADCGN           _MMR_16(_ADCGN, __MMRLO_BASE)
 #define ADCOF           _MMR_16(_ADCOF, __MMRLO_BASE)
 
+
 #define ADC_CLOCK_SPEED         10
 #define ADC_ACQUISITION_TIME    8
 #define ADC_ENABLE_CONVERION    7
@@ -410,23 +415,23 @@
 /** FLASH
  *
  */
-#define _FEESTA         0xF800
-#define _FEEMOD         0xF804
-#define _FEECON         0xF808
-#define _FEEDAT         0xF80C
-#define _FEEADR         0xF810
-#define _FEESIGN        0xF818
-#define _FEEPRO         0xF81C
-#define _FEEHIDE        0xF820
+#define _FEESTA         0x0800
+#define _FEEMOD         0x0804
+#define _FEECON         0x0808
+#define _FEEDAT         0x080C
+#define _FEEADR         0x0810
+#define _FEESIGN        0x0818
+#define _FEEPRO         0x081C
+#define _FEEHIDE        0x0820
 
-#define FEESTA          _MMR_08(_FEESTA, __MMRLO_BASE)
-#define FEEMOD          _MMR_16(_FEEMOD, __MMRLO_BASE)
-#define FEECON          _MMR_08(_FEECON, __MMRLO_BASE)
-#define FEEDAT          _MMR_16(_FEEDAT, __MMRLO_BASE)
-#define FEEADR          _MMR_16(_FEEADR, __MMRLO_BASE)
-#define FEESIGN         _MMR_32(_FEESIGN, __MMRLO_BASE)
-#define FEEPRO          _MMR_32(_FEEPRO, __MMRLO_BASE)
-#define FEEHIDE         _MMR_32(_FEEHIDE, __MMRLO_BASE)
+#define FEESTA          _MMR_08(_FEESTA, __MMRHI_BASE)
+#define FEEMOD          _MMR_16(_FEEMOD, __MMRHI_BASE)
+#define FEECON          _MMR_08(_FEECON, __MMRHI_BASE)
+#define FEEDAT          _MMR_16(_FEEDAT, __MMRHI_BASE)
+#define FEEADR          _MMR_16(_FEEADR, __MMRHI_BASE)
+#define FEESIGN         _MMR_32(_FEESIGN, __MMRHI_BASE)
+#define FEEPRO          _MMR_32(_FEEPRO, __MMRHI_BASE)
+#define FEEHIDE         _MMR_32(_FEEHIDE, __MMRHI_BASE)
 
 
 #define FEE_CONTROLLER_BUSY     2
@@ -473,28 +478,27 @@
 /** Pulse width modulation (PWM)
  *
  */
-#define _PWMCON         0xFC00
-#define _PWMSTA         0xFC04
-#define _PWMCFG         0xFC10
-#define _PWMEN          0xFC20
-#define _PWMDAT0        0xFC08 /* switching period     */
-#define _PWMDAT1        0xFC0C /* dead time            */
-#define _PWMDAT2        0xFC24 /* PWM sync pulse width */
-#define _PWMCH0         0xFC14
-#define _PWMCH1         0xFC18
-#define _PWMCH2         0xFC1C
+#define _PWMCON         0x0C00
+#define _PWMSTA         0x0C04
+#define _PWMCFG         0x0C10
+#define _PWMEN          0x0C20
+#define _PWMDAT0        0x0C08 /* switching period     */
+#define _PWMDAT1        0x0C0C /* dead time            */
+#define _PWMDAT2        0x0C24 /* PWM sync pulse width */
+#define _PWMCH0         0x0C14
+#define _PWMCH1         0x0C18
+#define _PWMCH2         0x0C1C
 
-#define PWMCON          _MMR_16(_PWMCON, __MMRLO_BASE)
-#define PWMSTA          _MMR_16(_PWMSTA, __MMRLO_BASE)
-#define PWMCFG          _MMR_16(_PWMCFG, __MMRLO_BASE)
-#define PWMEN           _MMR_16(_PWMEN, __MMRLO_BASE)
-#define PWMDAT0         _MMR_16(_PWMDAT0, __MMRLO_BASE)
-#define PWMDAT1         _MMR_16(_PWMDAT1, __MMRLO_BASE)
-#define PWMDAT2         _MMR_16(_PWMDAT2, __MMRLO_BASE)
-#define PWMCH0          _MMR_16(_PWMCH0, __MMRLO_BASE)
-#define PWMCH1          _MMR_16(_PWMCH1, __MMRLO_BASE)
-#define PWMCH2          _MMR_16(_PWMCH2, __MMRLO_BASE)
-
+#define PWMCON          _MMR_16(_PWMCON, __MMRHI_BASE)
+#define PWMSTA          _MMR_16(_PWMSTA, __MMRHI_BASE)
+#define PWMCFG          _MMR_16(_PWMCFG, __MMRHI_BASE)
+#define PWMEN           _MMR_16(_PWMEN, __MMRHI_BASE)
+#define PWMDAT0         _MMR_16(_PWMDAT0, __MMRHI_BASE)
+#define PWMDAT1         _MMR_16(_PWMDAT1, __MMRHI_BASE)
+#define PWMDAT2         _MMR_16(_PWMDAT2, __MMRHI_BASE)
+#define PWMCH0          _MMR_16(_PWMCH0, __MMRHI_BASE)
+#define PWMCH1          _MMR_16(_PWMCH1, __MMRHI_BASE)
+#define PWMCH2          _MMR_16(_PWMCH2, __MMRHI_BASE)
 
 
 #define PWM_SYNCSEL             4

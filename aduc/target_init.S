@@ -149,7 +149,7 @@ _init_target:
  *       SLEEP:  PLL also halted
  *       STOP:   only GPIO IRQ powered
  */
-	ldr	r0, =__MMR_BASE
+	ldr	r0, =__MMRLO_BASE
 
 #if CLOCKSEL_EXTCRYST
         /* disable IRQs to avoid executing timer2 ISR */
