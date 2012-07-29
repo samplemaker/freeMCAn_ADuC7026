@@ -35,9 +35,9 @@
 #include "data-table.h"
 #include "perso-adc-int-global.h"
 #include "timer1-adc-trigger.h"
-#include "timer1-constants.h"
 #include "packet-comm.h"
 
+#include "set_timer.h"
 
 /** timer counter
  *

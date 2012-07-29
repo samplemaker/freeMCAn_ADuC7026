@@ -45,9 +45,6 @@
 
 #include "timer1-measurement.h"
 
-
-/* \todo : comment following lines to have the "real working code" */
-#include "timer1-constants.h"
 #define DEBUG_ADC_TRIGGER 1
 
 
@@ -117,6 +114,9 @@ module_init(hw_init, 5);
 
 
 #if DEBUG_ADC_TRIGGER
+
+#include "set_timer.h"
+
 void ISR_WATCHDOG_TIMER3(void){
   GP1DAT ^= _BV(GP_DATA_OUTPUT_Px5);
 }

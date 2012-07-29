@@ -1,6 +1,7 @@
 include ../common.mk
 
-ARMPATH=~/DevelToolbin/binaries/armThumb-4.7.1/bin/
+# ARMPATH=~/DevelToolbin/binaries/armThumb-4.7.1/bin/
+ARMPATH= 
 CC=$(ARMPATH)arm-none-eabi-gcc
 OBJCPY=$(ARMPATH)arm-none-eabi-objcopy
 OBJDUMP=$(ARMPATH)arm-none-eabi-objdump

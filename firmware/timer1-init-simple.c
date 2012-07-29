@@ -32,10 +32,10 @@
 #include "reset.h"
 
 #include "data-table.h"
-#include "timer1-constants.h"
 #include "timer1-measurement.h"
 #include "packet-comm.h"
 
+#include "set_timer.h"
 
 /** Configure 32 bit timer to trigger an ISR every second (time base)
  *

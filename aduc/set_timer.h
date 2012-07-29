@@ -1,7 +1,7 @@
-/** \file firmware/timer1-constants.h
- * \brief Constants for setting up timer1
+/** \file set_timer.h
+ * \brief Timer macros
  *
- * \author Copyright (C) 2010 samplemaker
+ * \author Copyright (C) 2012 Samplemaker
  * \author Copyright (C) 2010 Hans Ulrich Niedermann <hun@n-dimensional.de>
  *
  *  This library is free software; you can redistribute it and/or
@@ -19,15 +19,54 @@
  *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301 USA
  *
- * \defgroup timer1_constants Constants for setting up timer1
- * \ingroup firmware_generic
- * @{
+ * \defgroup settimer Timer macros
+ * \ingroup Library
+ *
+ *
+ *  \code
+ *  #include "clock.h"
+ *  #define TIMER0_CLOCK_DIVISION_FACTOR 256ULL
+ *  #define TIMER0_INTERVAL 50ULL
+ *  #define TIMER1_CLOCK_DIVISION_FACTOR_x1000 256000ULL
+ *  #define TIMER1_CLK TIMER1_CORE_CLK
+ *  #define TIMER1_INTERVAL 1000ULL
+ *  #define TIMER2_CLOCK_DIVISION_FACTOR_x1000 256000ULL
+ *  #define TIMER2_CLK TIMER2_CORE_CLK
+ *  #define TIMER2_INTERVAL 1000ULL
+ *  #define TIMER3_CLOCK_DIVISION_FACTOR 16ULL
+ *  #define TIMER3_INTERVAL 1000ULL
+ *  #include "set_timer.h"
+ *  \endcode
+ *
+ *  Set_timer.h calculates all necessary register settings to setup
+ *  timer0 .. 3. All calculations are done using the C preprocessor
+ *
+ *  To use this macro timer division factor, timer clock source,
+ *  the timer interval and the cpu core frequency must be
+ *  defined in advance. The cpu frequency can be included with "clock.h"
+ *
+ *  If nothing is defined the macro will setup default values for all
+ *  four timers.
+ *
+ *  Example usage:
+ *
+ *  \code
+ *
+ * \endcode
+ *
  */
 
-#ifndef TIMER1_CONSTANTS_H
-#define TIMER1_CONSTANTS_H
+#ifndef SET_TIMER_H
+#define SET_TIMER_H
 
-#include "clock.h"
+
+/** \addtogroup settimer
+ * @{ */
+
+
+/** @} */
+
+
 
 /**  Defines for TIMER0 (RTOS Timer)
  *
@@ -35,10 +74,14 @@
  */
 
 /** Select a valid clock divider depending on interval and clock source */
-#define TIMER0_CLOCK_DIVISION_FACTOR 256ULL
+#ifndef TIMER0_CLOCK_DIVISION_FACTOR
+  #define TIMER0_CLOCK_DIVISION_FACTOR 256ULL
+#endif
 
-/** Timeout time                            */
-#define TIMER0_INTERVAL 50ULL       // [ms]
+/** Timeout time */
+#ifndef TIMER0_INTERVAL
+  #define TIMER0_INTERVAL 50ULL // [ms]
+#endif
 
 /** Timer0 prescaler selection (16Bit timer)
  *
@@ -48,13 +91,13 @@
  *
  */
 #if   (TIMER0_CLOCK_DIVISION_FACTOR == 256ULL)
-# define TIMER0_PRESCALER_VALUE 2
+  #define TIMER0_PRESCALER_VALUE 2
 #elif (TIMER0_CLOCK_DIVISION_FACTOR == 16ULL)
-# define TIMER0_PRESCALER_VALUE 1
+  #define TIMER0_PRESCALER_VALUE 1
 #elif (TIMER0_CLOCK_DIVISION_FACTOR == 1ULL)
-# define TIMER0_PRESCALER_VALUE 0
+  #define TIMER0_PRESCALER_VALUE 0
 #else
-# error Invalid TIMER0_CLOCK_DIVISION_FACTOR value!
+  #error Invalid TIMER0_CLOCK_DIVISION_FACTOR value!
 #endif
 
 /** Timer0 load value calculation for timer initialization
@@ -66,26 +109,33 @@
   ( (TIMER0_CLOCK_DIVISION_FACTOR) * 1000ULL) ) )
 
 #if (TIMER0_LOAD_VALUE < 0x00FF)
-# error TIMER0_LOAD_VALUE: too low => try to decrease timer0 divider
+  #error TIMER0_LOAD_VALUE: too low => try to decrease timer0 divider
 #endif
 #if (TIMER0_LOAD_VALUE > 0xFF00)
-# error TIMER0_LOAD_VALUE: too high => try to increase timer0 divider
+  #error TIMER0_LOAD_VALUE: too high => try to increase timer0 divider
 #endif
 
 
-/**  Defines for TIMER1 (General-Purpose Timer)
+/**  TIMER1 (General-Purpose Timer)
  *
- * 32 kHz external crystal, core clock frequency, or GPIO (P1.0 or P0.6)
  */
 
 /** Select a valid clock divider depending on interval and clock source */
-#define TIMER1_CLOCK_DIVISION_FACTOR_x1000 16000ULL
+#ifndef TIMER1_CLOCK_DIVISION_FACTOR_x1000
+  #define TIMER1_CLOCK_DIVISION_FACTOR_x1000 16000ULL
+#endif
 
-/** Select source to be connected to TIMER1 */
-#define TIMER1_CLK TIMER1_CORE_CLK
+/** Select source to be connected to TIMER1
+ *  32 kHz external crystal, core clock frequency, or GPIO (P1.0 or P0.6)
+ */
+#ifndef TIMER1_CLK
+  #define TIMER1_CLK TIMER1_CORE_CLK
+#endif
 
-/** Timeout time                            */
-#define TIMER1_INTERVAL 100ULL             // [ms]
+/** Timeout time */
+#ifndef TIMER1_INTERVAL
+  #define TIMER1_INTERVAL 100ULL // [ms]
+#endif
 
 
 /** TIMER1 prescaler selection (32Bit timer)
@@ -143,14 +193,19 @@
  */
 
 /** Select a valid clock divider depending on interval and clock source */
-#define TIMER2_CLOCK_DIVISION_FACTOR_x1000 256000ULL
+#ifndef TIMER2_CLOCK_DIVISION_FACTOR_x1000
+  #define TIMER2_CLOCK_DIVISION_FACTOR_x1000 256000ULL
+#endif
 
-/** Select source to be connected to timer2 */
-#define TIMER2_CLK TIMER2_CORE_CLK
+/** Select source to be connected to TIMER2 */
+#ifndef TIMER2_CLK
+  #define TIMER2_CLK TIMER2_CORE_CLK
+#endif
 
-/** Timeout time                            */
-#define TIMER2_INTERVAL 1000ULL             // [ms]
-
+/** Timeout time */
+#ifndef TIMER2_INTERVAL
+  #define TIMER2_INTERVAL 1000ULL // [ms]
+#endif
 
 /** Timer2 prescaler selection (32Bit timer)
  *
@@ -201,16 +256,21 @@
 
 #define TIMER2_LOAD_VALUE_UPCNT (0xFFFFFFFFULL - TIMER2_LOAD_VALUE_DOWNCNT)
 
+
 /**  Defines for TIMER3 (WatchDog-Timer)
  *
  *
  */
 
 /** Select a valid clock divider depending on interval and clock source */
-#define TIMER3_CLOCK_DIVISION_FACTOR 1ULL
+#ifndef TIMER3_CLOCK_DIVISION_FACTOR
+  #define TIMER3_CLOCK_DIVISION_FACTOR 1ULL
+#endif
 
-/** Timeout time                            */
-#define TIMER3_INTERVAL 50ULL              // [ms]
+/** Timeout time */
+#ifndef TIMER3_INTERVAL
+  #define TIMER3_INTERVAL 50ULL // [ms]
+#endif
 
 /** Timer3 prescaler selection (16Bit timer)
  *
@@ -220,13 +280,13 @@
  *
  */
 #if   (TIMER3_CLOCK_DIVISION_FACTOR == 256ULL)
-# define TIMER3_PRESCALER_VALUE 2
+  #define TIMER3_PRESCALER_VALUE 2
 #elif (TIMER3_CLOCK_DIVISION_FACTOR == 16ULL)
-# define TIMER3_PRESCALER_VALUE 1
+  #define TIMER3_PRESCALER_VALUE 1
 #elif (TIMER3_CLOCK_DIVISION_FACTOR == 1ULL)
-# define TIMER3_PRESCALER_VALUE 0
+  #define TIMER3_PRESCALER_VALUE 0
 #else
-# error Invalid TIMER3_CLOCK_DIVISION_FACTOR value!
+  #error Invalid TIMER3_CLOCK_DIVISION_FACTOR value!
 #endif
 
 /** Timer3 load value calculation for timer initialization
@@ -243,24 +303,14 @@
  *
  */
 #if (TIMER3_LOAD_VALUE_DOWNCNT < 0x00FFULL)
-# error TIMER3_LOAD_VALUE_DOWNCNT: too low
+  #error TIMER3_LOAD_VALUE_DOWNCNT: too low
 #endif
 #if (TIMER3_LOAD_VALUE_DOWNCNT > 0xFF00ULL)
-# error TIMER3_LOAD_VALUE_DOWNCNT: too high
+  #error TIMER3_LOAD_VALUE_DOWNCNT: too high
 #endif
 
 #define TIMER3_LOAD_VALUE_UPCNT (0xFFFFULL - TIMER3_LOAD_VALUE_DOWNCNT)
 
 
-#endif /* !TIMER1_CONSTANTS_H */
+#endif /* !SET_TIMER_H */
 
-
-/** @} */
-
-
-/*
- * Local Variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
