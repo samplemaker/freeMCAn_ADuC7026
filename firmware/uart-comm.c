@@ -37,41 +37,7 @@
 #include "uart-defs.h"
 #include "uart-comm.h"
 #include "checksum.h"
-
-
-/* Normal 450 UART Baud Rate Generation */
-#define UART_DL ((F_HCLK) / (2ULL * 16ULL * (UART_BAUDRATE)))
-#define BAUD_REAL_DL ((F_HCLK) / (2ULL * 16ULL * (UART_DL)))
-#define BAUD_ERROR ((BAUD_REAL_DL * 1000ULL) / (UART_BAUDRATE))
-
-/* If baud error is too high revert to FD */
-#if ((BAUD_ERROR<(1000-UART_RELTOL)) || (BAUD_ERROR>(1000+UART_RELTOL)))
-  #define USE_FRACTIONAL_DIVIDER 1
-  #warning baud error exceeds UART_RELTOL => reverting to fractional divider
-#else
-  #define USE_FRACTIONAL_DIVIDER 0
-#endif
-
-/* Check fractional divider if requested */
-#if USE_FRACTIONAL_DIVIDER
-#undef BAUD_ERROR
-#define UART_FBM_VALUE (1ULL)
-#define UART_FBN_VALUE (((2048ULL * ((BAUD_REAL_DL) - (UART_FBM_VALUE) * \
-                         (UART_BAUDRATE))) / (UART_BAUDRATE)) & 0x7FF)
-
-#define BAUD_REAL_FD ((2048ULL * (BAUD_REAL_DL)) /                       \
-                      (2048ULL * (UART_FBM_VALUE) + (UART_FBN_VALUE)))
-#define BAUD_ERROR ((BAUD_REAL_FD * 1000UL) / (UART_BAUDRATE))
-
-#if ((BAUD_ERROR<(1000-UART_RELTOL)) || (BAUD_ERROR>(1000+UART_RELTOL)))
-  #error baud error is too high although using fractional divider
-#endif
-
-
-#endif
-
-#define UARTL_DL (UART_DL & 0xff)
-#define UARTH_DL (UART_DL >> 8)
+#include "set_baud.h"
 
 
 static checksum_accu_t cs_accu_send;
@@ -97,7 +63,7 @@ void __init uart_init(void)
   COMCON1 = 0x0;
   #if USE_FRACTIONAL_DIVIDER
     /* set M = 1 (FBM), set FBN according to macro and enable FD */
-    COMDIV2 = (_FS(UART_FBM, MASK_01)        |
+    COMDIV2 = (_FS(UART_FBM, UART_FBM_VALUE) |
                _FS(UART_FBN, UART_FBN_VALUE) |
                _BV(UART_FBEN) );
   #else
