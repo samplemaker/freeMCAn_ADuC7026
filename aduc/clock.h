@@ -32,19 +32,32 @@
  */
 #define POWCON_BOOT_CFG      0x0
 
-/** Use external Xtal
+/** Use external crystal
  *
  */
-#define CLOCKSEL_EXTCRYST    0x1
+#define CLKSEL_EXT_XTAL    0x1
 
 
+/** Frequency definition internal resonator
+ *
+ * 32.768 kHz +-3% oscillator
+ * ADuC7019/20/21/22/24/25/26/27/28/29
+ *
+ */
 #ifndef __ASSEMBLER__
-
+  #define F_OSC 32768ULL
+#else
+  #define F_OSC 32768
+#endif /* !__ASSEMBLER__ */
 
 /** Frequency definition external crystal
  *
  */
-#define F_XTAL  32768ULL
+#ifndef __ASSEMBLER__
+  #define F_XTAL  32768ULL
+#else
+  #define F_XTAL  32768
+#endif /* !__ASSEMBLER__ */
 
 /** Frequency definition system clock
  *
@@ -53,15 +66,11 @@
  * for the system. 
  *
  */
-#define F_UCLK  41779200ULL
-
-/** Frequency definition internal resonator
- *
- * 32.768 kHz +-3% oscillator
- * ADuC7019/20/21/22/24/25/26/27/28/29
- *
- */
-#define F_OSC 32768ULL
+#ifndef __ASSEMBLER__
+  #define F_UCLK  41779200ULL
+#else
+  #define F_UCLK  41779200
+#endif /* !__ASSEMBLER__ */
 
 /** Frequency definition of CPU core frequency
  *
@@ -76,9 +85,10 @@
  *   ...
  *
  */
-#define F_HCLK (F_UCLK / (1ULL << ((POWCON_BOOT_CFG) & 0x7)) )
-
-
+#ifndef __ASSEMBLER__
+  #define F_HCLK (F_UCLK / (1ULL << ((POWCON_BOOT_CFG) & 0x7)) )
+#else
+  #define F_HCLK (F_UCLK / (1L << ((POWCON_BOOT_CFG) & 0x7)) )
 #endif /* !__ASSEMBLER__ */
 
 

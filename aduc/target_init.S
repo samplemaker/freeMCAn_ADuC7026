@@ -49,8 +49,8 @@
  *-----------------------------------------------------------------------------
  */
 
-#define CLOCKSEL_EXTCRYST_TIMER2_INIT ((250*32768)/1000000) /* 250us */
-#define CLOCKSEL_EXTCRYST_TIMER2_POLL ((150*32768)/1000000) /* 150us */
+#define CLKSEL_TIMER2_INIT ((250*F_OSC)/1000000) /* 250us */
+#define CLKSEL_TIMER2_POLL ((150*F_OSC)/1000000) /* 150us */
 
 /*-----------------------------------------------------------------------------
  * Variables
@@ -151,7 +151,7 @@ _init_target:
  */
 	ldr	r0, =__MMRLO_BASE
 
-#if CLOCKSEL_EXTCRYST
+#if CLKSEL_EXT_XTAL
         /* disable IRQs to avoid executing timer2 ISR */
 	mrs	r1, cpsr
 	orr	r1, r1, #I_FLAG
@@ -159,7 +159,7 @@ _init_target:
 	/* get timer2 act value (tOldVal) */
 	ldr	r2, [r0, #T2VAL]
 	/* load wakeup timer2 initialization value */
-	mov	r1, #CLOCKSEL_EXTCRYST_TIMER2_INIT
+	mov	r1, #CLKSEL_TIMER2_INIT
 	str	r1, [r0, #T2LD]
 	/* switch to internal oscillator; divider=1 and enable timer2 */
 	mov	r1, #(_FS(TIMER2_CLKSOURCE,TIMER2_INT_OSC) |_BV(TIMER2_ENABLE))
@@ -170,7 +170,7 @@ poll_t2ready:
 	ldr	r1, [r0, #T2VAL]
 	cmp	r1, r2
 	beq	poll_t2ready /* branch if T2VAL == tOldVal */
-	cmp	r1, #CLOCKSEL_EXTCRYST_TIMER2_POLL  /* approx 150 us */
+	cmp	r1, #CLKSEL_TIMER2_POLL  /* approx 150 us */
 	bhi	poll_t2ready /* branch if T2VAL > threshold */
 	/* enable timer2 irq flag */
 	mov	r1, #_BV(INT_WAKEUP_TIMER2)
@@ -201,7 +201,7 @@ poll_t2ready:
 	/* in case of crystal loss we will execute an ISR (halt the target) */
 	mov	r1, #_BV(INT_PLL_LOCK)
 	str	r1, [r0, #IRQEN]
-	/* the core is now running with external crystal on 326 kHz */
+	/* the core is now clocked by the external crystal with 326 kHz */
 #endif
 	/* set clock divider as requested by user */
 	mov	r1, #0x01	/* Access to POWCON needs special sequence */
