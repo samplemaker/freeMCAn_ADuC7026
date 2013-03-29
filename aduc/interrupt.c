@@ -98,7 +98,8 @@ static void _isr_trap(void){ while (1){} }
  *
  *  Redirects IRQ processing according to the IRQ-source
  */
-void __attribute__ ((interrupt("IRQ"))) _irq_handler(void);
+void __attribute__ ((interrupt("IRQ"))) __runRam _irq_handler(void);
+
 void _irq_handler(void)
 {
   /* which interrupt is enabled and pending?
