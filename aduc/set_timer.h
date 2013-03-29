@@ -173,7 +173,7 @@
     ( (TIMER1_CLOCK_DIVISION_FACTOR_x1000) ) ) )
 #elif (TIMER1_CLK == TIMER1_CORE_CLK)
   #define TIMER1_LOAD_VALUE_DOWNCNT                       \
-    ( (TIMER1_INTERVAL)  *  ((F_UCLK) /                   \
+    ( (TIMER1_INTERVAL)  *  ((F_HCLK) /                   \
     ( (TIMER1_CLOCK_DIVISION_FACTOR_x1000) ) ) )
 #endif
 
@@ -243,7 +243,7 @@
     ( (TIMER2_CLOCK_DIVISION_FACTOR_x1000) ) ) )
 #elif (TIMER2_CLK == TIMER2_CORE_CLK)
   #define TIMER2_LOAD_VALUE_DOWNCNT                       \
-    ( (TIMER2_INTERVAL)  *  ((F_UCLK) /                   \
+    ( (TIMER2_INTERVAL)  *  ((F_HCLK) /                   \
     ( (TIMER2_CLOCK_DIVISION_FACTOR_x1000) ) ) )
 #endif
 
