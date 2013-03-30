@@ -115,6 +115,7 @@ SECTIONS
   {
     _data = . ;
     *(.data)
+    *(.data*)    /* occurs if --data-sections is specified */
     *(.ramrun)   /* code execution in ram */
     . = ALIGN(4);
     _edata = . ;
