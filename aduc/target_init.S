@@ -70,10 +70,10 @@
  *
  * See:  ARM7TDMI Technical Reference Manual p. 67
  *
- * Note: After power on reset the flash (0x80000 onwards) is mirrored
- *       at address 0x00000 (MMR-REMAP bit 0 unset). To not keep on
- *       executing code from 0x00000 onwards we have to jump into the
- *       0x80000 address range. Therefore we load the handler address
+ * Note: After a power on reset the flash area from 0x80000 upwards
+ *       is mirrored at the address 0x00000 (MMR-REMAP bit 0 unset).
+ *       However, we want to run the code in the address range from
+ *       0x80000 upwards. Therefore we load the handler address
  *       from a "literal pool" instead of using a branch (b $targetaddr)
  *       instruction. This is necessary if we want to use breakpoints.
  *
@@ -88,7 +88,7 @@ _vector:				/* Exception type; Mode on entry */
 	ldr	pc, irq_handler		/* IRQ; IRQ */
 	ldr	pc, fiq_handler		/* FIQ; FIQ */
 
-/* Literal pool holding handler addresses */
+/* Literal pool containing all handler addresses */
 
 init_target:	.word	_init_target
 und_handler:	.word	_und_handler
@@ -100,9 +100,9 @@ fiq_handler:	.word	_fiq_handler
 
 /* .ltorg */
 
-/* Empty handler stubs (handlers may be implemented in foreign modules).
- * Set to default handler (infinite loop).
- * Note: Power on reset is handled inside this file and must be non weak.
+/* Handler stubs that point to a default handler (an infinite loop).
+ * The actual handler code needs to be implemented in external modules.
+ * Note: Power on reset is handled in this file and must be non weak.
  */
 	.weak	_und_handler
 	.set	_und_handler, _xcptn_trap
@@ -138,8 +138,8 @@ _init_target:
  *
  * See:  ADuC7026 datasheet p. 55
  *
- * Note: The selection of the clock source is in the PLLCON register. By
- *       default, the part uses the internal oscillator feeding the PLL.
+ * Note: The clock source is selected in the PLLCON register. By default,
+ *       the asic runs on the internal oscillator which feeds the pll.
  *       PLLCON controls the operating mode of the clock system, whereas
  *       POWCON controls the core clock frequency and the power-down mode.
  *
@@ -190,7 +190,7 @@ poll_t2ready:
 	mov	r1, #0xF4
 	str	r1, [r0, #POWKEY2]
 	/* core is now in nap mode. the core will be powered up 
-         * by wakeup timer2
+         * by wakeup timer2 automatically
 	 * ...
 	 * stop timer2 */
 	mov	r1, #0
@@ -217,10 +217,10 @@ poll_t2ready:
  * 2.) Enable FIQ/IRQ-Flags (switch off FIQ/IRQ's)
  * 3.) Set up stack pointer
  *
- * Since FIQ/IRQ flags can only be set/cleared in priviledged modes we will
- * proceed the user mode (non priviledged) in the end of the stack
+ * Since FIQ/IRQ flags can only set/cleared in priviledged modes we will
+ * turn into user mode (which is non priviledged) at the end of the stack
  * initialization.
- * The system mode cannot be entered by an exception and must be setup by CPSR
+ * The system mode cannot be entered by an exception and must be set up by CPSR
  * manipulation. No stack will be provided.
  *
  * See: ARM Compiler toolchain p. 55
@@ -260,13 +260,10 @@ zero_bss:
 
 /** Initialize variables in RAM
  *
- * Copy block .data from flash (LMA) starting after .text with size of .data
- * into RAM (VMA) starting at _data.
- *
+ * Copy the entire block '.data' from flash (LMA) to RAM (VMA).
  * Note: Requires ALIGN(4) since we copy 4 byte wise
- *
  */
-	ldr	r0, =_data_load_start	/* r0 = addr(end of .text => fash) */
+	ldr	r0, =_data_load_start	/* r0 = addr(end of .text => flash) */
 	ldr	r1, =_data		/* r1 = addr(start of .data => ram) */
 	ldr	r2, =_data_load_end	/* r2 = addr(end of .data => ram) */
 copy_data:

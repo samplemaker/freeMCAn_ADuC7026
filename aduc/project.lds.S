@@ -70,13 +70,13 @@ __stack_start__ = __ram_end__ - STACK_SIZE_TOTAL;
 SECTIONS
 {
 
-  .init : {                /* init code and data @ 0x80000        */
-    *(.vector)             /* jump island for ARM modes           */
+  .init : {                  /* flash @ 0x80000 */
+    *(.vector)               /* jump island for various ARM modes */
     . = ALIGN(4);
-    *(.init_target)        /* target initialization startup code  */
-    *(.init.text)          /* do_initcalls(); and executed code   */
+    *(.init_target)          /* startup code; referenced by vector  */
+    *(.init.text)            /* do_initcalls(); referenced by initcode */
     __initcall_start = . ;
-    *(.initcall0.init)     /* function pointers to init functions */
+    *(.initcall0.init)       /* function pointers to init functions */
     *(.initcall1.init)
     *(.initcall2.init)
     *(.initcall3.init)
@@ -89,16 +89,16 @@ SECTIONS
     . = ALIGN(4);
   } >flash
 
-/** Code and const variables which remain in flash
+/** Code and const variables remaining in the flash
  *
  */
   .text :
   {
-    *(.text)     /* code */
+    *(.text)     /* executable code */
     *(.text.*)
     *(.prog_memory)
-    *(.rodata)   /* read only constants for flash */
-    *(.rodata*)  /* wildcart matched residual read only data i.e. .rodata.str1.1 */
+    *(.rodata)   /* read-only constants */
+    *(.rodata*)  /* read-only data like .rodata.str1.1 */
     *(.glue_7t)  /* input sections arm, thumb interworking code */
     *(.glue_7)
     . = ALIGN(4);
@@ -107,8 +107,8 @@ SECTIONS
   } >flash
 
 /** Initialized global variables which are copied from flash to ram at startup.
- *  Load memory adress at end of .text. Virtual memory adress
- *  at ram origin.
+ *  Load memory adress points to the end of .text. Virtual memory adress
+ *  points to the beginning of ram origin.
  *
  */
   .data : AT (ADDR (.text) + SIZEOF (.text))
@@ -125,7 +125,7 @@ SECTIONS
   _data_load_start = LOADADDR(.data);
   _data_load_end = _data_load_start + SIZEOF(.data);
 
-/** zero inititialized and read write global variables
+/** Initialized to zero and read-write global variables
  *
  */
  .bss : AT (ADDR (.bss))
@@ -133,13 +133,13 @@ SECTIONS
     __bss_start = . ;
     __bss_start__ = . ;
     *(.bss)
-    *(COMMON)        /* common symbols like i.e 'global int' */
+    *(COMMON)        /* common symbols like 'global int' */
     . = ALIGN(4);
     __bss_end__ = . ;
     __bss_end = . ;
   } >ram
 
-/** global data which remains in ram only and which is not cleared after reset
+/** Ram data that should not be deleted during a system reset
  *
  */
   .noinit :
@@ -153,14 +153,13 @@ SECTIONS
     PROVIDE (__heap_start = .) ;
   }  >ram
 
-/** check for ram occupied by the stack
+/** Check whether sufficient space is left for the stack
  *
  */
  .reserved_stack :
   {
     . = . + STACK_SIZE_TOTAL ;
   }  >ram
-
 
 /** eepflash configuration
  *
