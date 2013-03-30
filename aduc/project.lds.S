@@ -72,19 +72,29 @@ SECTIONS
 
   .init : {                  /* flash @ 0x80000 */
     *(.vector)               /* jump island for various ARM modes */
+    KEEP(*(.vector))         /* to be kept although --gc-sections is passed to ld */
     . = ALIGN(4);
     *(.init_target)          /* startup code; referenced by vector  */
     *(.init.text)            /* do_initcalls(); referenced by initcode */
     __initcall_start = . ;
     *(.initcall0.init)       /* function pointers to init functions */
+    KEEP(*(.initcall0.init)) /* these are not referenced and must be kept */
     *(.initcall1.init)
+    KEEP(*(.initcall1.init))
     *(.initcall2.init)
+    KEEP(*(.initcall2.init))
     *(.initcall3.init)
+    KEEP(*(.initcall3.init))
     *(.initcall4.init)
+    KEEP(*(.initcall4.init))
     *(.initcall5.init)
+    KEEP(*(.initcall5.init))
     *(.initcall6.init)
+    KEEP(*(.initcall6.init))
     *(.initcall7.init)
+    KEEP(*(.initcall7.init))
     *(.initcall8.init)
+    KEEP(*(.initcall8.init))
     __initcall_end = . ;
     . = ALIGN(4);
   } >flash
