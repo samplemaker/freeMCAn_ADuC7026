@@ -143,6 +143,7 @@ SECTIONS
     __bss_start = . ;
     __bss_start__ = . ;
     *(.bss)
+    *(.bss*)         /* occurs if --data-sections is specified */
     *(COMMON)        /* common symbols like 'global int' */
     . = ALIGN(4);
     __bss_end__ = . ;
