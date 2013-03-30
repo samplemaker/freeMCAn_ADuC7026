@@ -31,7 +31,7 @@ then
 fi
 
 echo 'start openocd and wait ... '
-openocd -f ./openocd-usb.cfg -f ./openocd-target.cfg &
+openocd -f ../openocd/openocd-usb.cfg -f ../openocd/openocd-target.cfg &
 openocd_pid=$!
 
 sleep 3
@@ -42,7 +42,7 @@ spawn telnet localhost 4444
 expect \"> \"
 send \"soft_reset_halt\r\"
 expect \"> \"
-send \"flash_load $1\r\"
+send \"flash_load ./$1\r\"
 expect \"> \"
 send \"exit\"
 ")
@@ -52,5 +52,5 @@ kill "$openocd_pid"
 
 echo 'Note: To run the target disconnect jtag and perform a system reset.'
 echo '      Or reset target and restart OPENOCD server via: '
-echo '      openocd -f ./openocd-usb.cfg -f ./openocd-target.cfg '
+echo '      openocd -f ../openocd/openocd-usb.cfg -f ../openocd//openocd-target.cfg '
 
