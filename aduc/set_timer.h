@@ -1,7 +1,7 @@
 /** \file set_timer.h
  * \brief Timer macros
  *
- * \author Copyright (C) 2012 Samplemaker
+ * \author Copyright (C) 2012 samplemaker
  * \author Copyright (C) 2010 Hans Ulrich Niedermann <hun@n-dimensional.de>
  *
  *  This library is free software; you can redistribute it and/or
@@ -25,16 +25,16 @@
  *
  *  \code
  *  #include "clock.h"
- *  #define TIMER0_CLOCK_DIVISION_FACTOR 256ULL
- *  #define TIMER0_INTERVAL 50ULL
- *  #define TIMER1_CLOCK_DIVISION_FACTOR_x1000 256000ULL
+ *  #define TIMER0_CLOCK_DIVISION_FACTOR 256000000ULL
+ *  #define TIMER0_INTERVAL 50000ULL
+ *  #define TIMER1_CLOCK_DIVISION_FACTOR 256000000ULL
  *  #define TIMER1_CLK TIMER1_CORE_CLK
- *  #define TIMER1_INTERVAL 1000ULL
- *  #define TIMER2_CLOCK_DIVISION_FACTOR_x1000 256000ULL
+ *  #define TIMER1_INTERVAL 1000000ULL
+ *  #define TIMER2_CLOCK_DIVISION_FACTOR 256000000ULL
  *  #define TIMER2_CLK TIMER2_CORE_CLK
- *  #define TIMER2_INTERVAL 1000ULL
- *  #define TIMER3_CLOCK_DIVISION_FACTOR 16ULL
- *  #define TIMER3_INTERVAL 1000ULL
+ *  #define TIMER2_INTERVAL 1000000ULL
+ *  #define TIMER3_CLOCK_DIVISION_FACTOR 16000000ULL
+ *  #define TIMER3_INTERVAL 1000000ULL
  *  #include "set_timer.h"
  *  \endcode
  *
@@ -75,12 +75,12 @@
 
 /** Select a valid clock divider depending on interval and clock source */
 #ifndef TIMER0_CLOCK_DIVISION_FACTOR
-  #define TIMER0_CLOCK_DIVISION_FACTOR 256ULL
+  #define TIMER0_CLOCK_DIVISION_FACTOR 256000000ULL
 #endif
 
 /** Timeout time */
 #ifndef TIMER0_INTERVAL
-  #define TIMER0_INTERVAL 50ULL // [ms]
+  #define TIMER0_INTERVAL 50000ULL // [us]
 #endif
 
 /** Timer0 prescaler selection (16Bit timer)
@@ -90,11 +90,11 @@
  * 2: Divider=256
  *
  */
-#if   (TIMER0_CLOCK_DIVISION_FACTOR == 256ULL)
+#if   (TIMER0_CLOCK_DIVISION_FACTOR == 256000000ULL)
   #define TIMER0_PRESCALER_VALUE 2
-#elif (TIMER0_CLOCK_DIVISION_FACTOR == 16ULL)
+#elif (TIMER0_CLOCK_DIVISION_FACTOR == 16000000ULL)
   #define TIMER0_PRESCALER_VALUE 1
-#elif (TIMER0_CLOCK_DIVISION_FACTOR == 1ULL)
+#elif (TIMER0_CLOCK_DIVISION_FACTOR == 1000000ULL)
   #define TIMER0_PRESCALER_VALUE 0
 #else
   #error Invalid TIMER0_CLOCK_DIVISION_FACTOR value!
@@ -104,9 +104,9 @@
  *
  * Depends on timer Interval and divider choosen
  */
-#define TIMER0_LOAD_VALUE                          \
-  ( (TIMER0_INTERVAL)  *  ((F_HCLK) /              \
-  ( (TIMER0_CLOCK_DIVISION_FACTOR) * 1000ULL) ) )
+#define TIMER0_LOAD_VALUE                         \
+   ( ((TIMER0_INTERVAL) * (F_HCLK)) /              \
+     (TIMER0_CLOCK_DIVISION_FACTOR) )
 
 #if (TIMER0_LOAD_VALUE < 0x00FF)
   #error TIMER0_LOAD_VALUE: too low => try to decrease timer0 divider
@@ -121,8 +121,8 @@
  */
 
 /** Select a valid clock divider depending on interval and clock source */
-#ifndef TIMER1_CLOCK_DIVISION_FACTOR_x1000
-  #define TIMER1_CLOCK_DIVISION_FACTOR_x1000 16000ULL
+#ifndef TIMER1_CLOCK_DIVISION_FACTOR
+  #define TIMER1_CLOCK_DIVISION_FACTOR 256000000ULL
 #endif
 
 /** Select source to be connected to TIMER1
@@ -134,7 +134,7 @@
 
 /** Timeout time */
 #ifndef TIMER1_INTERVAL
-  #define TIMER1_INTERVAL 100ULL // [ms]
+  #define TIMER1_INTERVAL 100000ULL // [us]
 #endif
 
 
@@ -146,16 +146,16 @@
  *  15: Divider=32.768
  *
  */
-#if   (TIMER1_CLOCK_DIVISION_FACTOR_x1000 == 256000ULL)
+#if   (TIMER1_CLOCK_DIVISION_FACTOR == 256000000ULL)
    #define TIMER1_PRESCALER_VALUE 8
-#elif (TIMER1_CLOCK_DIVISION_FACTOR_x1000 == 16000ULL)
+#elif (TIMER1_CLOCK_DIVISION_FACTOR == 16000000ULL)
    #define TIMER1_PRESCALER_VALUE 4
-#elif (TIMER1_CLOCK_DIVISION_FACTOR_x1000 == 1000ULL)
+#elif (TIMER1_CLOCK_DIVISION_FACTOR == 1000000ULL)
    #define TIMER1_PRESCALER_VALUE 0
-#elif (TIMER1_CLOCK_DIVISION_FACTOR_x1000 == 32768ULL)
+#elif (TIMER1_CLOCK_DIVISION_FACTOR == 32768000ULL)
    #define TIMER1_PRESCALER_VALUE 15
 #else
-   #error Invalid TIMER1_CLOCK_DIVISION_FACTOR_x1000 value!
+   #error Invalid TIMER1_CLOCK_DIVISION_FACTOR value!
 #endif
 
 
@@ -169,12 +169,12 @@
  */
 #if   (TIMER1_CLK == TIMER1_EXT_XTAL)
   #define TIMER1_LOAD_VALUE_DOWNCNT                       \
-    ( (TIMER1_INTERVAL)  *  ((F_XTAL) /                   \
-    ( (TIMER1_CLOCK_DIVISION_FACTOR_x1000) ) ) )
+    ( ((TIMER1_INTERVAL) * (F_XTAL)) /                    \
+      (TIMER1_CLOCK_DIVISION_FACTOR) )
 #elif (TIMER1_CLK == TIMER1_CORE_CLK)
   #define TIMER1_LOAD_VALUE_DOWNCNT                       \
-    ( (TIMER1_INTERVAL)  *  ((F_HCLK) /                   \
-    ( (TIMER1_CLOCK_DIVISION_FACTOR_x1000) ) ) )
+    ( ((TIMER1_INTERVAL) * (F_HCLK)) /                    \
+      (TIMER1_CLOCK_DIVISION_FACTOR) )
 #endif
 
 #if (TIMER1_LOAD_VALUE_DOWNCNT < 0x000000FFULL)
@@ -193,8 +193,8 @@
  */
 
 /** Select a valid clock divider depending on interval and clock source */
-#ifndef TIMER2_CLOCK_DIVISION_FACTOR_x1000
-  #define TIMER2_CLOCK_DIVISION_FACTOR_x1000 256000ULL
+#ifndef TIMER2_CLOCK_DIVISION_FACTOR
+  #define TIMER2_CLOCK_DIVISION_FACTOR 256000000ULL
 #endif
 
 /** Select source to be connected to TIMER2 */
@@ -204,7 +204,7 @@
 
 /** Timeout time */
 #ifndef TIMER2_INTERVAL
-  #define TIMER2_INTERVAL 1000ULL // [ms]
+  #define TIMER2_INTERVAL 1000000ULL // [us]
 #endif
 
 /** Timer2 prescaler selection (32Bit timer)
@@ -215,16 +215,16 @@
  *  15: Divider=32.768
  *
  */
-#if   (TIMER2_CLOCK_DIVISION_FACTOR_x1000 == 256000ULL)
+#if   (TIMER2_CLOCK_DIVISION_FACTOR == 256000000ULL)
    #define TIMER2_PRESCALER_VALUE 8
-#elif (TIMER2_CLOCK_DIVISION_FACTOR_x1000 == 16000ULL)
+#elif (TIMER2_CLOCK_DIVISION_FACTOR == 16000000ULL)
    #define TIMER2_PRESCALER_VALUE 4
-#elif (TIMER2_CLOCK_DIVISION_FACTOR_x1000 == 1000ULL)
+#elif (TIMER2_CLOCK_DIVISION_FACTOR == 1000000ULL)
    #define TIMER2_PRESCALER_VALUE 0
-#elif (TIMER2_CLOCK_DIVISION_FACTOR_x1000 == 32768ULL)
+#elif (TIMER2_CLOCK_DIVISION_FACTOR == 32768000ULL)
    #define TIMER2_PRESCALER_VALUE 15
 #else
-   #error Invalid TIMER2_CLOCK_DIVISION_FACTOR_x1000 value!
+   #error Invalid TIMER2_CLOCK_DIVISION_FACTOR value!
 #endif
 
 
@@ -235,16 +235,16 @@
  */
 #if   (TIMER2_CLK == TIMER2_EXT_XTAL)
   #define TIMER2_LOAD_VALUE_DOWNCNT                       \
-    ( (TIMER2_INTERVAL)  *  ((F_XTAL) /                   \
-    ( (TIMER2_CLOCK_DIVISION_FACTOR_x1000) ) ) )
+    ( ((TIMER2_INTERVAL) * (F_XTAL)) /                    \
+      (TIMER2_CLOCK_DIVISION_FACTOR) )
 #elif (TIMER2_CLK == TIMER2_INT_OSC)
   #define TIMER2_LOAD_VALUE_DOWNCNT                       \
-    ( (TIMER2_INTERVAL)  *  ((F_OSC) /                    \
-    ( (TIMER2_CLOCK_DIVISION_FACTOR_x1000) ) ) )
+    ( ((TIMER2_INTERVAL) * (F_OSC)) /                     \
+      (TIMER2_CLOCK_DIVISION_FACTOR) )
 #elif (TIMER2_CLK == TIMER2_CORE_CLK)
   #define TIMER2_LOAD_VALUE_DOWNCNT                       \
-    ( (TIMER2_INTERVAL)  *  ((F_HCLK) /                   \
-    ( (TIMER2_CLOCK_DIVISION_FACTOR_x1000) ) ) )
+    ( ((TIMER2_INTERVAL) * (F_HCLK)) /                    \
+      (TIMER2_CLOCK_DIVISION_FACTOR) )
 #endif
 
 #if (TIMER2_LOAD_VALUE_DOWNCNT < 0x000000FFULL)
@@ -264,12 +264,12 @@
 
 /** Select a valid clock divider depending on interval and clock source */
 #ifndef TIMER3_CLOCK_DIVISION_FACTOR
-  #define TIMER3_CLOCK_DIVISION_FACTOR 1ULL
+  #define TIMER3_CLOCK_DIVISION_FACTOR 1000000ULL
 #endif
 
 /** Timeout time */
 #ifndef TIMER3_INTERVAL
-  #define TIMER3_INTERVAL 50ULL // [ms]
+  #define TIMER3_INTERVAL 50000ULL // [us]
 #endif
 
 /** Timer3 prescaler selection (16Bit timer)
@@ -279,11 +279,11 @@
  *   2: Divider=256
  *
  */
-#if   (TIMER3_CLOCK_DIVISION_FACTOR == 256ULL)
+#if   (TIMER3_CLOCK_DIVISION_FACTOR == 256000000ULL)
   #define TIMER3_PRESCALER_VALUE 2
-#elif (TIMER3_CLOCK_DIVISION_FACTOR == 16ULL)
+#elif (TIMER3_CLOCK_DIVISION_FACTOR == 16000000ULL)
   #define TIMER3_PRESCALER_VALUE 1
-#elif (TIMER3_CLOCK_DIVISION_FACTOR == 1ULL)
+#elif (TIMER3_CLOCK_DIVISION_FACTOR == 1000000ULL)
   #define TIMER3_PRESCALER_VALUE 0
 #else
   #error Invalid TIMER3_CLOCK_DIVISION_FACTOR value!
@@ -294,8 +294,8 @@
  * Depends on timer Interval and divider choosen
  */
 #define TIMER3_LOAD_VALUE_DOWNCNT                  \
-  ( (TIMER3_INTERVAL)  *  ((F_OSC) /               \
-  ( (TIMER3_CLOCK_DIVISION_FACTOR) * 1000ULL ) ) )
+  ( ((TIMER3_INTERVAL) *  (F_OSC)) /               \
+    (TIMER3_CLOCK_DIVISION_FACTOR) )
 
 /** Timer3 load value calculation for timer initialization
  *
