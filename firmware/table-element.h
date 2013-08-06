@@ -63,24 +63,37 @@ typedef
 
 /** Increment 24bit unsigned integer */
 
-/*
 inline static
 void table_element_zero(volatile freemcan_uint24_t *dest)
 {
+ asm("\n\t"
+
+/* \todo */      : /* output operands */
+
+      : /* input operands */
+        [preg] "b" (dest)
+        /* no clobber */
+      );
+
 }
 
 inline static
 void table_element_copy(volatile freemcan_uint24_t *dest,
                         volatile freemcan_uint24_t *source)
 {
+  asm("\n\t"
+
+/* \todo */      : /* output operands */
+
+      : /* input operands */
+        [dst] "b" (dest),
+        [src] "b" (source)
+        /* no clobbers */
+      );
+
 }
 
-inline static
-uint8_t table_element_cmp_eq(volatile freemcan_uint24_t *element,
-                             const uint32_t value)
-{
-}
-*/
+
 
 inline static
 void table_element_inc(volatile freemcan_uint24_t *element)
@@ -117,9 +130,42 @@ void table_element_inc(volatile freemcan_uint24_t *element)
 }
 
 
+/** Compare table element to value for equality.
+ *
+ * \param element Pointer to the table element to compare.
+ * \param value   The value to compare the element against.
+ *
+ * Note that #value has a different type from #*element here, as the
+ * compiler would not know how to generate or pass such a
+ * freemcan_uint24_t value.
+ *
+ * Caveats: Ignores the upper 8bit of the uint32_t constant. Generates
+ * more instructions than strictly necessary. Clobbers more registers
+ * than strictly necessary. Generates a lot more instructions than
+ * strictly necessary if compiling to an immediate value.
+ */
+inline static
+uint8_t table_element_cmp_eq(volatile freemcan_uint24_t *element,
+                             const uint32_t value)
+{
+  uint8_t result_bool;
+  asm volatile(
+        "\n\t"
+
+/* \todo */
+
+        : /* output operands */
+          [result] "=&r" (result_bool)
+        : /* input operands */
+          [elem] "b" (element),
+          [valu] "r" (value)
+               );
+  return result_bool;
+}
+
 #else
 
-/*
+/** Zero 8bit, 16bit, or 32bit unsigned integer */
 inline static
 void table_element_zero(volatile table_element_t *dest)
 {
@@ -133,19 +179,25 @@ void table_element_copy(volatile table_element_t *dest,
   *dest = *source;
 }
 
-inline static
-uint8_t table_element_cmp_eq(volatile table_element_t *element,
-                             const table_element_t value)
-{
-  return ((*element) == value);
-}
-*/
-
 /** Increment 8bit, 16bit, or 32bit unsigned integer */
 inline static
 void table_element_inc(volatile table_element_t *element)
 {
   (*element)++;
+}
+
+/** Compare table element to a value for equality.
+ *
+ * \param element Pointer to the table element
+ * \param value   Value to compare table element with.
+ *
+ * Note that #value has the same type as #*element here.
+ */
+inline static
+uint8_t table_element_cmp_eq(volatile table_element_t *element,
+                             const table_element_t value)
+{
+  return ((*element) == value);
 }
 
 #endif
