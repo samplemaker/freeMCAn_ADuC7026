@@ -68,7 +68,7 @@ void ISR_TIMER1(void)                   __stub(_isr_trap);
 void ISR_WAKEUP_TIMER2(void)            __stub(_isr_trap);
 void ISR_WATCHDOG_TIMER3(void)          __stub(_isr_trap);
 void ISR_PLL_LOCK(void)                 __stub(_isr_trap);
-void ISR_EXTINT0(void)                  __stub(_isr_trap);
+void ISR_PLA_INT0(void)                  __stub(_isr_trap);
 
 
 /** Default interrupt service handler
@@ -138,8 +138,8 @@ void _irq_handler(void)
   if (bit_is_set(IRQSTA, INT_PLL_LOCK)){
     ISR_PLL_LOCK();
   }
-  if (bit_is_set(IRQSTA, INT_EXTERNAL_IRQ0)){
-    ISR_EXTINT0();
+  if (bit_is_set(IRQSTA, INT_PLA_IRQ0)){
+    ISR_PLA_INT0();
   }
 }
 

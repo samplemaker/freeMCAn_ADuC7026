@@ -1,7 +1,7 @@
 include ../common.mk
 
-# ARMPATH=~/DevelToolbin/binaries/armThumb-4.7.1/bin/
-ARMPATH= 
+ARMPATH=~/DevelToolbin/binaries/armThumb-4.7.1/bin/
+# ARMPATH= 
 CC=$(ARMPATH)arm-none-eabi-gcc
 OBJCPY=$(ARMPATH)arm-none-eabi-objcopy
 OBJDUMP=$(ARMPATH)arm-none-eabi-objdump
@@ -48,11 +48,14 @@ LDFLAGS_ADC_INT_MCA_TIMED =$(LDFLAGS_COMMON) -T$(LIBADUC)project.lds -Wl,-Map=fi
 OBJ_ADC_INT_TIMED_SAMPLING = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-adc-int-log-timed-trig.o timer1-adc-trigger.o data-table-all-other-memory.o
 LDFLAGS_ADC_INT_TIMED_SAMPLING =$(LDFLAGS_COMMON) -T$(LIBADUC)project.lds data_table_empty_ram.lds -Wl,--defsym=MALLOC_HEAP_SIZE=500 -Wl,-Map=firmware-adc-int-timed-sampling.map,--cref -g
 
+OBJ_GEIGER_TIME_SERIES = $(OBJ_LIBADUC) $(OBJ_COMMON) perso-geiger-time-series.o data-table-all-other-memory.o timer1-get-duration.o timer1-init-simple.o beep.o
+LDFLAGS_GEIGER_TIME_SERIES =$(LDFLAGS_COMMON) -T$(LIBADUC)project.lds data_table_empty_ram.lds -Wl,--defsym=MALLOC_HEAP_SIZE=500 -Wl,-Map=firmware-geiger-ts.map,--cref -g
+
 ########################################################################################
 
 ### call for linkerfiles and firmware compile & link ###
 
-all: firmware-adc-int-mca firmware-adc-int-mca-timed firmware-adc-int-timed-sampling
+all: firmware-adc-int-mca firmware-adc-int-mca-timed firmware-adc-int-timed-sampling firmware-geiger-ts
 
 firmware-adc-int-mca: $(LIBADUC)project.lds make-adc-int-mca
 
@@ -60,6 +63,7 @@ firmware-adc-int-mca-timed: $(LIBADUC)project.lds make-adc-int-mca-timed
 
 firmware-adc-int-timed-sampling: $(LIBADUC)project.lds data_table_empty_ram.lds make-adc-int-timed-sampling
 
+firmware-geiger-ts: $(LIBADUC)project.lds data_table_empty_ram.lds make-geiger-ts
 
 ########################################################################################
 
@@ -82,6 +86,12 @@ make-adc-int-timed-sampling:	$(OBJ_ADC_INT_TIMED_SAMPLING)
 	$(OBJCPY) --output-target ihex firmware-adc-int-timed-sampling.elf firmware-adc-int-timed-sampling.hex
 	$(OBJCPY) --output-target binary firmware-adc-int-timed-sampling.elf firmware-adc-int-timed-sampling.bin
 	$(OBJDUMP) -h -S firmware-adc-int-timed-sampling.elf > firmware-adc-int-timed-sampling.lss
+
+make-geiger-ts:	$(OBJ_GEIGER_TIME_SERIES)
+	$(CC) $(LDFLAGS_GEIGER_TIME_SERIES) -o firmware-geiger-ts.elf $^
+	$(OBJCPY) --output-target ihex firmware-geiger-ts.elf firmware-geiger-ts.hex
+	$(OBJCPY) --output-target binary firmware-geiger-ts.elf firmware-geiger-ts.bin
+	$(OBJDUMP) -h -S firmware-geiger-ts.elf > firmware-geiger-ts.lss
 
 ########################################################################################
 
@@ -139,6 +149,13 @@ packet-comm.o : packet-comm.c $(HEADERS)
 timer1-adc-trigger.o : timer1-adc-trigger.c $(HEADERS)
 	$(CC) $(CCFLAGS) $(CINCS) $< -marm -mthumb-interwork -c -o $@
 
+# rule linker command files augmenting the base linker command file
+data_table_empty_ram.lds :  data_table_empty_ram.lds.S
+	$(CC) $(CCLFAGS_LCMD) $< -c -o $@
+
+data-table-all-other-memory.o : data-table-all-other-memory.c $(HEADERS)
+	$(CC) $(CCFLAGS) $(CINCS) $< -marm -mthumb-interwork -c -o $@
+
 ### Specials like printf ###
 
 syscalls.o : syscalls.c $(HEADERS)
@@ -175,14 +192,17 @@ perso-adc-int-mca-timed-trig.o : perso-adc-int-mca-timed-trig.c $(HEADERS)
 
 ### Rule for OBJ_ADC_INT_TIMED_SAMPLING ###
 
-# rule linker command files augmenting the base linker command file
-data_table_empty_ram.lds :  data_table_empty_ram.lds.S
-	$(CC) $(CCLFAGS_LCMD) $< -c -o $@
-
 perso-adc-int-log-timed-trig.o : perso-adc-int-log-timed-trig.c $(HEADERS)
 	$(CC) $(CCFLAGS) $(CINCS) $< -marm -mthumb-interwork -c -o $@
 
-data-table-all-other-memory.o : data-table-all-other-memory.c $(HEADERS)
+########################################################################################
+
+### Rule for OBJ_GEIGER_TIME_SERIES ###
+
+perso-geiger-time-series.o : perso-geiger-time-series.c $(HEADERS)
+	$(CC) $(CCFLAGS) $(CINCS) $< -marm -mthumb-interwork -c -o $@
+
+beep.o : beep.c $(HEADERS)
 	$(CC) $(CCFLAGS) $(CINCS) $< -marm -mthumb-interwork -c -o $@
 
 ########################################################################################

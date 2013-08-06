@@ -578,6 +578,10 @@
 #define PLA_BLOCK0_CLK_SRC      0
 #define PLA_ADC_CONV_START      4
 #define PLA_ADC_CONV_SRC        0
+#define PLA_IRQ0_ENA            4
+#define PLA_IRQ0_SRC            0
+#define PLA_IRQ1_ENA            12
+#define PLA_IRQ1_SRC            8
 #define PLA_MUX0_CONTROL        9
 #define PLA_MUX1_CONTROL        7
 #define PLA_MUX2_CONTROL        6
