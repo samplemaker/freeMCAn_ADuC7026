@@ -52,6 +52,8 @@
 #define RST_EOI_DIS (PLADIN &=~ _BV(1))
 
 
+#define DEBUG_TRIGGER 1
+
 /*todo: need to initialize a bool with FALSE -> otherwise use bss */
 static int gf_measurement_finished;
 
@@ -200,6 +202,33 @@ void ISR_WAKEUP_TIMER2(void)
 }
 
 
+
+#if DEBUG_TRIGGER
+
+#include "set_timer.h"
+
+void ISR_WATCHDOG_TIMER3(void){
+  GP1DAT ^= _BV(GP_DATA_OUTPUT_Px5);
+}
+inline static void
+trig_test_init(void){
+  /* clear TIMER3_WDT_ENABLE, TIMER3_COUNT_DIR 
+   * (force down counting) and TIMER3_SECURE
+   * set prescaler and run timer in periodic mode
+   * (automatic reload from T3LD)                  */
+  T3CON = (_FS(TIMER3_PRESCALER, TIMER3_PRESCALER_VALUE) |
+           _BV(TIMER3_MODE) );
+  /* timer compare match value */
+  T3LD = TIMER3_LOAD_VALUE_DOWNCNT;
+  T3CON |= _BV(TIMER3_ENABLE);
+  /* enable interrupt flag for Timer3 */
+  IRQEN |= _BV(INT_WATCHDOG_TIMER3);
+}
+#endif
+
+
+
+
 inline static
 void trigger_src_conf(void)
 {
@@ -291,6 +320,7 @@ void trigger_src_conf(void)
    */
   PLACLK |= _FS(PLA_BLOCK0_CLK_SRC, MASK_011);
 
+  IRQEN |= _BV(INT_PLA_IRQ0);
 }
 
 
@@ -306,9 +336,13 @@ void personality_start_measurement_sram(void)
   const void *voidp = &pparam_sram.params[0];
   const uint16_t *timer1_value = voidp;
   trigger_src_conf();
+
+  #if DEBUG_TRIGGER
+    trig_test_init();
+  #endif
+
   timer1_init(*timer1_value);
 }
-
 
 /** @} */
 
