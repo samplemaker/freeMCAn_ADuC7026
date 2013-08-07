@@ -29,7 +29,7 @@
 #include <arm7tdmi.h>
 
 SECTIONS {
-  data_table = _end ;
+  data_table = __noinit_end ;
   data_table_end = ALIGN(( __stack_start__ - MALLOC_HEAP_SIZE - 3), 4) ;
   data_table_size = data_table_end - data_table ;
   _end = data_table_end ;
