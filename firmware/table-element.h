@@ -157,9 +157,8 @@ uint8_t table_element_cmp_eq(volatile freemcan_uint24_t *element,
                "ldrb   %[r1], [%[elem]]        \n\t"
                "orr    %[r0], %[r1]            \n\t"
                "teq    %[r0], %[valu]          \n\t"
-               "movne  %[r0], #0               \n\t"
-               "moveq  %[r0], #1               \n\t"
-               "strb   %[r0], [%[result]]      \n\t"
+               "movne  %[result], #0           \n\t"
+               "moveq  %[result], #1           \n\t"
                  /* constraints used:
                   * = reg is write only
                   * + reg is read and write
