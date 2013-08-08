@@ -35,7 +35,7 @@
 #include "init.h"
 
 /** Histogram element size */
-#define BITS_PER_VALUE 8
+#define BITS_PER_VALUE 24
 
 #include "packet-comm.h"
 #include "timer1-measurement.h"
@@ -169,6 +169,11 @@ void __runRam ISR_PLA_INT0(void)
     table_element_inc(table_cur);
   }
   
+  /* if a certain threshold is reached do s.th. nice */
+  if (  table_element_cmp_eq(table_cur, 0xab)) {
+    TOG_LED2;
+  }
+
   /* reset the trigger latch */
   RST_EOI_ENA;
   RST_EOI_DIS;
@@ -204,7 +209,7 @@ void ISR_WAKEUP_TIMER2(void)
 
 
 #if DEBUG_TRIGGER
-
+#define TIMER3_INTERVAL 20000ULL // [us]
 #include "set_timer.h"
 
 void ISR_WATCHDOG_TIMER3(void){

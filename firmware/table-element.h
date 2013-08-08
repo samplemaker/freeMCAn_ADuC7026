@@ -98,7 +98,7 @@ void table_element_copy(volatile freemcan_uint24_t *dest,
 inline static
 void table_element_inc(volatile freemcan_uint24_t *element)
 {
-  register uint32_t r0, r1;
+  register uint32_t r0_, r1_;
   asm volatile("\n\t"
                /* load three bytes with respect to endianess (MSB2LSB) */
                "mov   %[r0], #0                     \n\t"
@@ -118,12 +118,10 @@ void table_element_inc(volatile freemcan_uint24_t *element)
                "strb  %[r0], [%[elem], #2]          \n\t"
                : /* output operands */
                  /* let compiler decide which registers to clobber */
-                 [r1] "=&r" (r1), [r0] "=&r" (r0),
+                 [r1] "+&r" (r1_), [r0] "+&r" (r0_),
                  /* input and output operand (treated inside output list) */
                  [elem] "+r" (element)
                : /* no input operands */
-                 /* inform that we change the condition code flag */
-                 /* : "cc"*/
                  /* store all cached values before and reload them after */
                : "memory"
   );
@@ -149,16 +147,36 @@ uint8_t table_element_cmp_eq(volatile freemcan_uint24_t *element,
                              const uint32_t value)
 {
   uint8_t result_bool;
-  asm volatile(
-        "\n\t"
-
-/* \todo */
-
-        : /* output operands */
-          [result] "=&r" (result_bool)
-        : /* input operands */
-          [elem] "b" (element),
-          [valu] "r" (value)
+  uint32_t r0_, r1_;
+  asm volatile("\n\t"
+               "mov    %[r0], #0               \n\t"
+               "ldrb   %[r1], [%[elem], #2]    \n\t"
+               "orr    %[r0], %[r1] ,LSL #16   \n\t"
+               "ldrb   %[r1], [%[elem], #1]    \n\t"
+               "orr    %[r0], %[r1] ,LSL #8    \n\t"
+               "ldrb   %[r1], [%[elem]]        \n\t"
+               "orr    %[r0], %[r1]            \n\t"
+               "teq    %[r0], %[valu]          \n\t"
+               "movne  %[r0], #0               \n\t"
+               "moveq  %[r0], #1               \n\t"
+               "strb   %[r0], [%[result]]      \n\t"
+                 /* constraints used:
+                  * = reg is write only
+                  * + reg is read and write
+                  * & different regs for in and out
+                  * r parameter shall go through a register 
+                  */
+               : /* output operands */
+                 [result] "=&r" (result_bool),
+                 /* let compiler decide which registers to clobber */
+                 [r0] "+&r" (r0_),
+                 [r1] "+&r" (r1_)
+               : /* input operands */
+                 [elem] "r" (element),
+                 [valu] "r" (value)
+                 /* inform that we change the condition code flag (teq)
+                    store all cached values before and reload them after */
+               : "cc", "memory"
                );
   return result_bool;
 }
