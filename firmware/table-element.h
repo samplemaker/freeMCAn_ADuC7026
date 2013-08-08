@@ -118,7 +118,8 @@ void table_element_inc(volatile freemcan_uint24_t *element)
                "strb  %[r0], [%[elem], #2]          \n\t"
                : /* output operands */
                  /* let compiler decide which registers to clobber */
-                 [r1] "+&r" (r1_), [r0] "+&r" (r0_),
+                 [r1] "=&r" (r1_),
+                 [r0] "=&r" (r0_),
                  /* input and output operand (treated inside output list) */
                  [elem] "+r" (element)
                : /* no input operands */
@@ -160,16 +161,16 @@ uint8_t table_element_cmp_eq(volatile freemcan_uint24_t *element,
                "movne  %[result], #0           \n\t"
                "moveq  %[result], #1           \n\t"
                  /* constraints used:
-                  * = reg is write only
-                  * + reg is read and write
+                  * = param is write only
+                  * + param is read and write
                   * & different regs for in and out
                   * r parameter shall go through a register 
                   */
                : /* output operands */
                  [result] "=&r" (result_bool),
                  /* let compiler decide which registers to clobber */
-                 [r0] "+&r" (r0_),
-                 [r1] "+&r" (r1_)
+                 [r0] "=&r" (r0_),
+                 [r1] "=&r" (r1_)
                : /* input operands */
                  [elem] "r" (element),
                  [valu] "r" (value)
