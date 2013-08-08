@@ -66,33 +66,40 @@ typedef
 inline static
 void table_element_zero(volatile freemcan_uint24_t *dest)
 {
- asm("\n\t"
-
-/* \todo */      : /* output operands */
-
-      : /* input operands */
-        [preg] "b" (dest)
-        /* no clobber */
+  register uint32_t r0_;
+  asm volatile("\n\t"
+               "mov   %[r0], #0                    \n\t"
+               "strb  %[r0], [%[dst], #2]          \n\t"
+               "strb  %[r0], [%[dst], #1]          \n\t"
+               "strb  %[r0], [%[dst]]              \n\t"
+               : /* output operands */
+                 [r0] "=&r" (r0_)
+               : /* input operands */
+                 [dst] "r" (dest)
+                 /* no clobber */
       );
-
 }
 
 inline static
 void table_element_copy(volatile freemcan_uint24_t *dest,
                         volatile freemcan_uint24_t *source)
 {
-  asm("\n\t"
-
-/* \todo */      : /* output operands */
-
-      : /* input operands */
-        [dst] "b" (dest),
-        [src] "b" (source)
-        /* no clobbers */
+  register uint32_t r0_;
+  asm volatile("\n\t"
+               "ldrb  %[r0], [%[src], #2]          \n\t"
+               "strb  %[r0], [%[dst], #2]          \n\t"
+               "ldrb  %[r0], [%[src], #1]          \n\t"
+               "strb  %[r0], [%[dst], #1]          \n\t"
+               "ldrb  %[r0], [%[src]]              \n\t"
+               "strb  %[r0], [%[dst]]              \n\t"
+               : /* output operands */
+                 [r0] "=&r" (r0_)
+               : /* input operands */
+                 [dst] "r" (dest),
+                 [src] "r" (source)
+               /* no clobbers */
       );
-
 }
-
 
 
 inline static
@@ -119,10 +126,10 @@ void table_element_inc(volatile freemcan_uint24_t *element)
                : /* output operands */
                  /* let compiler decide which registers to clobber */
                  [r1] "=&r" (r1_),
-                 [r0] "=&r" (r0_),
+                 [r0] "=&r" (r0_)
                  /* input and output operand (treated inside output list) */
-                 [elem] "+r" (element)
-               : /* no input operands */
+               : /* input operands */
+                 [elem] "r" (element)
                  /* store all cached values before and reload them after */
                : "memory"
   );
