@@ -28,7 +28,7 @@
  */
 
 
-#include <stdlib.h>
+#include <stddef.h>
 
 /** Histogram element size */
 #define BITS_PER_VALUE 24

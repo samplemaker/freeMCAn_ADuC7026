@@ -27,7 +27,7 @@
 #define UART_COMM_H
 
 #include <stdint.h>
-#include <stdlib.h>
+#include <stddef.h>
 
 
 void uart_putc(const char c);

@@ -29,7 +29,7 @@
 #define DATA_TABLE_H
 
 
-#include <stdlib.h>
+#include <stddef.h>
 
 #include "packet-defs.h"
 

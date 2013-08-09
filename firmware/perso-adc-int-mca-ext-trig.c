@@ -28,7 +28,7 @@
  */
 
 
-#include <stdlib.h>
+#include <stddef.h>
 
 #include "aduc.h"
 #include "init.h"

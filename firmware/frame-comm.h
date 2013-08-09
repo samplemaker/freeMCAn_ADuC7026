@@ -25,7 +25,7 @@
 #ifndef FRAME_COMM_H
 #define FRAME_COMM_H
 
-#include <stdlib.h>
+#include <stddef.h>
 
 #include "frame-defs.h"
 
