@@ -195,9 +195,12 @@ poll_t2ready:
 	 * stop timer2 */
 	mov	r1, #0
 	strh	r1, [r3]
-	/* clear timer2 irq flag */
+	/* clear timer2 irq enable flag */
 	mov	r1, #_BV(INT_WAKEUP_TIMER2)
 	str	r1, [r0, #IRQCLR]
+        /* clear timer2 irq sta flag */
+	mov	r1, #0
+	str	r1, [r0, #T2CLRI]
 	/* in case of crystal loss we will execute an ISR (halt the target) */
 	mov	r1, #_BV(INT_PLL_LOCK)
 	str	r1, [r0, #IRQEN]

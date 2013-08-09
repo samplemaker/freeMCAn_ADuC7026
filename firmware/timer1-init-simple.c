@@ -64,8 +64,6 @@ void timer1_init(const uint16_t timer1_value)
   /* Timer compare match value */
   T2LD = TIMER2_LOAD_VALUE_DOWNCNT;
   T2CON |= _BV(TIMER2_ENABLE);
-  /* clear timer2 interrupt flag */
-  T2CLRI = 0x00;
   /* Enable interrupt flag for Timer2 */
   IRQEN |= _BV(INT_WAKEUP_TIMER2);
 }
