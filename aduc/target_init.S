@@ -2,6 +2,8 @@
  * \brief ADuC specific target initialization
  *
  * \author Copyright (C) 2011 samplemaker
+ *         Copyright (C) 2012 samplemaker
+ *         Copyright (C) 2013 samplemaker
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
@@ -195,10 +197,10 @@ poll_t2ready:
 	 * stop timer2 */
 	mov	r1, #0
 	strh	r1, [r3]
-	/* clear timer2 irq enable flag */
+	/* clear timer2 irq ENA flag */
 	mov	r1, #_BV(INT_WAKEUP_TIMER2)
 	str	r1, [r0, #IRQCLR]
-        /* clear timer2 irq sta flag */
+        /* clear timer2 irq SIG flag */
 	mov	r1, #0
 	str	r1, [r0, #T2CLRI]
 	/* in case of crystal loss we will execute an ISR (halt the target) */
