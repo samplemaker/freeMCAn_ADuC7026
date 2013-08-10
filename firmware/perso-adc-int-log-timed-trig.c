@@ -144,10 +144,11 @@ module_init(data_table_print_status, 8);
 
 /** AD conversion complete interrupt entry point
  *
- * This function is called when an A/D conversion has completed.
- * Downsampling of base analog samples and update of sample table.
- * Actually one could implement a low pass filter here before
- * downsampling to fullfill shannons sample theoreme
+ * Benchmark:
+ * Runtime ISR_ADC in 12Bits per value approx 3.5us (depends on state)
+ * Rising edge ADC_Busy <-> Entry point of ISR_ADC() = 2.5us
+ * Firmware tested down to 8us Timer1 reload (125kHz sampling rate)
+ *
  */
 void __runRam ISR_ADC(void){
   /* toggle a time base signal */

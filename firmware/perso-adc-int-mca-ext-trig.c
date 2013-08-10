@@ -142,9 +142,15 @@ adctest_init(void){
  *
  * This function is called when an A/D conversion has completed.
  * Update histogram
- * Discharge peak hold capacitor
+ *
+ * Benchmark (_irq_handler and ISR_ADC runs from RAM):
+ * PLA-HW PIN <-> Entry point ISR_ADC = 2.9us
+ * PLA-HW PIN <-> Exit point ISR_ADC = 4.2us
+ * PLA-HW PIN <-> Rising edge ADC-Busy = 190ns
+ * ADC-Busy width = 1.18us
+ *
  */
-void ISR_ADC(void){
+void __runRam ISR_ADC(void){
   /* pull pin to discharge peak hold capacitor                    */
   /** \todo worst case calculation: runtime & R7010 */
   // \todo
