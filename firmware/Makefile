@@ -1,15 +1,16 @@
 include ../common.mk
 
-ARMPATH=~/DevelToolbin/binaries/armThumb-4.7.1/bin/
-# ARMPATH= 
+# ARMPATH=~/DevelToolbin/binaries/armThumb-4.7.1/bin/
+ARMPATH= 
 CC=$(ARMPATH)arm-none-eabi-gcc
 OBJCPY=$(ARMPATH)arm-none-eabi-objcopy
 OBJDUMP=$(ARMPATH)arm-none-eabi-objdump
 
 LIBADUC = ../aduc/
+STDLIB = ../aduc/include/
 
 # include directory
-CINCS = -I../include -I$(LIBADUC)
+CINCS = -I../include -I$(LIBADUC) -I$(STDLIB)
 
 CCFLAGS=  -mcpu=arm7tdmi -g -Wall -Wextra -Wstrict-prototypes -std=gnu99
 # uncomment if you want to have optimized code otherwise resonably debug the code
@@ -22,7 +23,7 @@ CCLFAGS_LCMD = -E -nostdinc -P -C $(CINCS)
 ASMFLAGS= -mcpu=arm7tdmi -I. -x assembler-with-cpp -g -Wall -Wextra
 
 # linker flags used in all personalities
-LDFLAGS_COMMON = -mcpu=arm7tdmi -Os -I. -nostartfiles
+LDFLAGS_COMMON = -mcpu=arm7tdmi -Os -I. -nostartfiles -nostdlib
 
 OBJ_LIBADUC = $(LIBADUC)flash.o  $(LIBADUC)init.o  $(LIBADUC)interrupt.o  $(LIBADUC)target_init.o
 OBJ_COMMON = main.o checksum.o uart-comm.o frame-comm.o packet-comm.o software-version.o switch.o
