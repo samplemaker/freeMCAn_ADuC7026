@@ -27,17 +27,17 @@
 #define BEEP_H
 
 /**
- *  Gating signal (timer0)
+ *  Gating signal
  */
 
-#define BEEP_LENGTH 21 /*ms*/
+#define BEEP_LENGTH 21000ULL /*us*/
 
 
 /**
 * Square wave generator waveform generation for beep signal
 */
 
-/** Frequency timer0 [Hz] (resonant frequency of piezo sounder) */
+/** Frequency (resonant frequency of piezo sounder) */
 #define BEEP_FREQUENCY 4000ULL
 
 void beep_kill_all(void);
@@ -45,10 +45,12 @@ void beep_kill_all(void);
 inline static
 void _beep(void)
 {
-    /* start sqare wave generator */
- 
-    /* trigger gating signal (start timer0) */
- }
+  /* dcyc = 50% */
+  PWMCH0 = 0x0;
+
+  /* trigger gating signal (start timer) */
+  T0CON |= _BV(TIMER0_ENABLE);
+}
 
 #endif /* !BEEP_H */
 
