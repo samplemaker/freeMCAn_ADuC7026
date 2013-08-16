@@ -62,6 +62,8 @@ void ISR_WAKEUP_TIMER2(void)
       measurement_finished = 1;
     }
   }
+  /* clear timer2 interrupt flag at eoi */
+  T2CLRI = 0x00;
 }
 
 
@@ -79,3 +81,4 @@ void on_measurement_finished(void)
  * indent-tabs-mode: nil
  * End:
  */
+

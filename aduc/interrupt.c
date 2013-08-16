@@ -68,7 +68,7 @@ void ISR_TIMER1(void)                   __stub(_isr_trap);
 void ISR_WAKEUP_TIMER2(void)            __stub(_isr_trap);
 void ISR_WATCHDOG_TIMER3(void)          __stub(_isr_trap);
 void ISR_PLL_LOCK(void)                 __stub(_isr_trap);
-void ISR_PLA_INT0(void)                  __stub(_isr_trap);
+void ISR_PLA_INT0(void)                 __stub(_isr_trap);
 
 
 /** Default interrupt service handler
@@ -109,31 +109,15 @@ void _irq_handler(void)
   }
   if (bit_is_set(IRQSTA, INT_TIMER0)){
     ISR_TIMER0();
-    /* clear timer0 interrupt flag at eoi */
-    T0CLRI = 0x00;
   }
-  /* Note:
-   * When using an asynchronous clock-to-clock timer, the
-   * interrupt in the timer block may take more time to clear
-   * than the time it takes for the code in the interrupt routine to
-   * execute. Ensure that the interrupt signal is cleared before
-   * leaving the interrupt service routine. This can be done by
-   * checking the IRQSTA MMR.
-   */
   if (bit_is_set(IRQSTA, INT_TIMER1)){
     ISR_TIMER1();
-    /* clear timer1 interrupt flag at eoi */
-    T1CLRI = 0x00;
   }
   if (bit_is_set(IRQSTA, INT_WAKEUP_TIMER2)){
     ISR_WAKEUP_TIMER2();
-    /* clear timer2 interrupt flag at eoi */
-    T2CLRI = 0x00;
   }
   if (bit_is_set(IRQSTA, INT_WATCHDOG_TIMER3)){
     ISR_WATCHDOG_TIMER3();
-    /* clear timer3 interrupt flag at eoi */
-    T3CLRI = 0x00;
   }
   if (bit_is_set(IRQSTA, INT_PLL_LOCK)){
     ISR_PLL_LOCK();

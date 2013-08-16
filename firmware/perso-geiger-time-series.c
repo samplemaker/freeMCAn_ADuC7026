@@ -168,7 +168,7 @@ void __runRam ISR_PLA_INT0(void)
   if (table_cur < table_end) {
     table_element_inc(table_cur);
   }
-  
+
   /* if a certain threshold is reached do s.th. nice */
   if (  table_element_cmp_eq(table_cur, 0xab)) {
     TOG_LED2;
@@ -204,6 +204,8 @@ void ISR_WAKEUP_TIMER2(void)
       }
     }
   }
+  /* clear timer2 interrupt flag at eoi */
+  T2CLRI = 0x00;
 }
 
 
@@ -214,10 +216,12 @@ void ISR_WAKEUP_TIMER2(void)
 
 void ISR_WATCHDOG_TIMER3(void){
   GP1DAT ^= _BV(GP_DATA_OUTPUT_Px5);
+  /* clear timer3 interrupt flag at eoi */
+  T3CLRI = 0x00;
 }
 inline static void
 trig_test_init(void){
-  /* clear TIMER3_WDT_ENABLE, TIMER3_COUNT_DIR 
+  /* clear TIMER3_WDT_ENABLE, TIMER3_COUNT_DIR
    * (force down counting) and TIMER3_SECURE
    * set prescaler and run timer in periodic mode
    * (automatic reload from T3LD)                  */
@@ -237,7 +241,7 @@ trig_test_init(void){
 inline static
 void trigger_src_conf(void)
 {
-  PLAIRQ = (_BV(PLA_IRQ0_ENA) | 
+  PLAIRQ = (_BV(PLA_IRQ0_ENA) |
             _FS(PLA_IRQ0_SRC, MASK_0001) );
 
   /* Configure PLA ELEMENT0 (BLOCK0)
@@ -357,3 +361,4 @@ void personality_start_measurement_sram(void)
  * indent-tabs-mode: nil
  * End:
  */
+

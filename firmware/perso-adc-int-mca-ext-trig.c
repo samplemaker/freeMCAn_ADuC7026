@@ -1,3 +1,4 @@
+
 /** \file firmware/perso-adc-int-mca-ext-trig.c
  * \brief Personality: MCA with internal ADC and external trigger
  *
@@ -119,11 +120,13 @@ module_init(hw_init, 5);
 
 void ISR_WATCHDOG_TIMER3(void){
   GP1DAT ^= _BV(GP_DATA_OUTPUT_Px5);
+  /* clear timer3 interrupt flag at eoi */
+  T3CLRI = 0x00;
 }
 inline static void
 adctest_init(void){
 
-  /* clear TIMER3_WDT_ENABLE, TIMER3_COUNT_DIR 
+  /* clear TIMER3_WDT_ENABLE, TIMER3_COUNT_DIR
    * (force down counting) and TIMER3_SECURE
    * set prescaler and run timer in periodic mode
    * (automatic reload from T3LD)                  */
@@ -316,3 +319,4 @@ void personality_start_measurement_sram(void)
  * indent-tabs-mode: nil
  * End:
  */
+
