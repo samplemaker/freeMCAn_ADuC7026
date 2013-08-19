@@ -32,14 +32,14 @@
 /* Eepflash memory service identifier. Define here various BLOCKIDs */
 enum {
   EEPFLASH_FRAME_CMD_PARAMS,
-  EEPFLASH_HISTOGRAM_TABLE,
+  EEPFLASH_DATA_TABLE,
   /* Termination is need by the EEPFLASH tools */
   EEPFLASH_NUM_USED_BLOCKS
 };
 
 
 void eepflash_write(const char *src, const uint16_t user_len, const uint8_t block_id);
-bool eepflash_copy_block(char *p_ram, const uint8_t block_id);
+uint16_t eepflash_copy_block(char *p_ram, const uint8_t block_id);
 
 
 /** @} */

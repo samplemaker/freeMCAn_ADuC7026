@@ -354,6 +354,8 @@ void tui_fmlog_help(void)
   fmlog("    m           send command \"start (m)easurement\" with adequate parameters");
   fmlog("    r           send command \"(r)eset\"");
   fmlog("    w           send command \"intermediate result\" and (w)rite data to file");
+  fmlog("    C           (c)opy data table from flash to ram");
+  fmlog("    c           set flag to (c)opy data table into flash after measurement");
 }
 
 
@@ -569,6 +571,12 @@ void tui_do_io(void)
         break;
       case 'i':
         tui_device_send_simple_command(FRAME_CMD_INTERMEDIATE);
+        break;
+      case 'C':
+        tui_device_send_simple_command(FRAME_CMD_COPY_TABLE_FROM_FLASH);
+        break;
+      case 'c':
+        tui_device_send_simple_command(FRAME_CMD_FLAG_WRITE_TABLE_TO_FLASH);
         break;
       case 'w':
         write_next_intermediate_packet = true;
