@@ -31,6 +31,7 @@
 #include "main.h"
 #include "aduc.h"
 
+#define TOG_LED_TIME_BASE (GP4DAT ^= _BV(GP_DATA_OUTPUT_Px1))
 
 volatile uint16_t timer1_count;
 
@@ -49,9 +50,7 @@ volatile uint16_t orig_timer1_count;
  */
 void ISR_WAKEUP_TIMER2(void)
 {
-  /* toggle a sign */
-  #define TOG_LED_TIMER (GP4DAT ^= _BV(GP_DATA_OUTPUT_Px1))
-  TOG_LED_TIMER;
+  TOG_LED_TIME_BASE;
 
   if (!measurement_finished) {
     /** We do not touch #measurement_finished ever again after setting

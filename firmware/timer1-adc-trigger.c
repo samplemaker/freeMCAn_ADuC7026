@@ -85,7 +85,7 @@ void adc_power_up(void)
  */
 void __init hw_init(void)
 {
-  /* measurement in progress LED */
+  /* LED_TIME_BASE (measurement in progress LED) */
   GP4CON |= _FS(GP_SELECT_FUNCTION_Px1, MASK_00);
   GP4DAT |= _BV(GP_DATA_DIRECTION_Px1);
   /* wake up adc */

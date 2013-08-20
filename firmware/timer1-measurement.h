@@ -31,7 +31,6 @@
 
 #include <stdint.h>
 
-
 /** timer counter
  *
  * Initialized once by main() with value received from host

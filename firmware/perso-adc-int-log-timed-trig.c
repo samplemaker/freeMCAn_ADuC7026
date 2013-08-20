@@ -44,6 +44,8 @@
 #include "timer1-adc-trigger.h"
 #include "main.h"
 
+#define TOG_LED_TIME_BASE (GP4DAT ^= _BV(GP_DATA_OUTPUT_Px1))
+
 typedef enum {
   STATE_A,
   STATE_B,
@@ -152,7 +154,7 @@ module_init(data_table_print_status, 8);
  */
 void __runRam ISR_ADC(void){
   /* toggle a time base signal */
-  TOG_LED_ISR;
+  TOG_LED_TIME_BASE;
 
   /* starting from bit 16 the result is stored in ADCDAT.
      reading the ADCDATA also clears flag in ADCSTA */
@@ -214,9 +216,6 @@ void __runRam ISR_ADC(void){
 }
 
 
-
-
-
 /** Switch off trigger to stop any sampling of the analog signal
  *
  *
@@ -235,7 +234,7 @@ void timer1_halt(void)
 inline static
 void timer1_init_quick(void)
 {
-/* \todo */
+  /* on ADuC7026 it is not possible to toggle an LED without having the IRQ flag enabled */
 }
 
 

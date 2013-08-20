@@ -96,12 +96,6 @@ void adc_power_up(void)
 static
 void __init hw_init(void)
 {
-  /* measurement in progress LED */
-  /* configure P4.1 as GPIO: */
-  GP4CON |= _FS(GP_SELECT_FUNCTION_Px1, MASK_00);
-  /* configure P4.1 as output */
-  GP4DAT |= _BV(GP_DATA_DIRECTION_Px1);
-
   /* wake up adc */
   adc_power_up();
 

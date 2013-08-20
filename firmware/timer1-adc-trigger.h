@@ -34,8 +34,6 @@ extern volatile uint16_t orig_timer1_count;
 extern volatile uint16_t skip_samples;
 extern volatile uint16_t orig_skip_samples;
 
-#define TOG_LED_ISR (GP4DAT ^= _BV(GP_DATA_OUTPUT_Px1))
-
 #endif /* !TIMER1_ADC_TRIGGER_H */
 
 

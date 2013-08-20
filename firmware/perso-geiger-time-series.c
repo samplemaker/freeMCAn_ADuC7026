@@ -45,8 +45,8 @@
 #include "data-table.h"
 #include "beep.h"
 
-#define TOG_LED1 (GP4DAT ^= _BV(GP_DATA_OUTPUT_Px0))
-#define TOG_LED2 (GP4DAT ^= _BV(GP_DATA_OUTPUT_Px1))
+#define TOG_LED_TIME_BASE (GP4DAT ^= _BV(GP_DATA_OUTPUT_Px1))
+#define TOG_LED_EVENT (GP4DAT ^= _BV(GP_DATA_OUTPUT_Px0))
 
 #define RST_EOI_ENA (PLADIN |= _BV(1))
 #define RST_EOI_DIS (PLADIN &=~ _BV(1))
@@ -143,38 +143,32 @@ module_init(data_table_print_status, 8);
  */
 void __init personality_io_init(void)
 {
-  /* configure P4.1 as GPIO: */
-  GP4CON |= _FS(GP_SELECT_FUNCTION_Px1, MASK_00);
-  /* configure P4.1 as output */
-  GP4DAT |= _BV(GP_DATA_DIRECTION_Px1);
-
+  /* LED_EVENT (will be toggled when a GM event is detected) */
   /* configure P4.0 as GPIO */
   GP4CON |= _FS(GP_SELECT_FUNCTION_Px0, MASK_00);
   /* configure P4.0 as output */
   GP4DAT |= _BV(GP_DATA_DIRECTION_Px0);
-
-  /*todo: speaker*/
+  /* clear LED (set to VDD) */
+  GP4DAT |= _BV(GP_DATA_OUTPUT_Px1);
 }
 module_init(personality_io_init, 5);
 
 
 void __runRam ISR_PLA_INT0(void)
 {
-  /* activate loudspeaker */
   _beep();
-  /* toggle output pin with LED */
-  TOG_LED2;
+  TOG_LED_EVENT;
 
   if (table_cur < table_end) {
     table_element_inc(table_cur);
   }
 
   /* if a certain threshold is reached do s.th. nice */
-  if (  table_element_cmp_eq(table_cur, 0xab)) {
-    TOG_LED2;
-  }
+  /*if (  table_element_cmp_eq(table_cur, 0xab)) {
+    TOG_LED_TIME_BASE;
+  }*/
 
-  /* reset the trigger latch */
+  /* reset the PLA trigger latch */
   RST_EOI_ENA;
   RST_EOI_DIS;
 }
@@ -186,7 +180,7 @@ volatile uint16_t orig_timer1_count;
 
 void ISR_WAKEUP_TIMER2(void)
 {
-  TOG_LED1;
+  TOG_LED_TIME_BASE;
 
   if (!gf_measurement_finished) {
     /** We do not touch the measurement_finished flag ever again after

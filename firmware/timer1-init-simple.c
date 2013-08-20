@@ -37,6 +37,22 @@
 
 #include "set_timer.h"
 
+
+/** Set up our IO pins */
+void timer1_simple_io_init()
+ {
+  /* LED_TIME_BASE (measurement in progress LED) */  
+  /* configure P4.1 as GPIO: */
+  GP4CON |= _FS(GP_SELECT_FUNCTION_Px1, MASK_00);
+  /* configure P4.1 as output */
+  GP4DAT |= _BV(GP_DATA_DIRECTION_Px1);
+  /* Light up LED on PD5. Will be periodically toggled with different
+   * blinking patterns during and after measurement. */
+
+ }
+module_init(timer1_simple_io_init, 5);
+
+
 /** Configure 32 bit timer to trigger an ISR every second (time base)
  *
  */
@@ -71,7 +87,7 @@ void timer1_init(const uint16_t timer1_value)
 
 void timer1_init_quick(void)
 {
- // \todo
+ /* on ADuC7026 it is not possible to toggle an LED without having the IRQ flag enabled */
 }
 
 

@@ -43,6 +43,8 @@
 #include "main.h"
 
 
+#define TOG_LED_TIME_BASE (GP4DAT ^= _BV(GP_DATA_OUTPUT_Px1))
+
 /** Number of elements in the histogram table */
 #define MAX_COUNTER (1<<ADC_RESOLUTION)
 
@@ -89,7 +91,7 @@ PERSONALITY("adc-int-mca-timed",
   */
 void ISR_ADC(void){
   /* toggle a time base signal */
-  TOG_LED_ISR;
+  TOG_LED_TIME_BASE;
 
   /* starting from bit 16 the result is stored in ADCDAT.
      reading the ADCDATA also clears flag in ADCSTA */
