@@ -37,6 +37,8 @@
 #include "timer1-adc-trigger.h"
 #include "packet-comm.h"
 
+#define TIMER1_INTERVAL 3000ULL
+#define TIMER1_CLOCK_DIVISION_FACTOR 16000000ULL
 #include "set_timer.h"
 
 /** timer counter

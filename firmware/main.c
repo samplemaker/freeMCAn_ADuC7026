@@ -101,7 +101,7 @@ const char PSTR_RESET[]               = "RESET";
 /** Global flag controlling the measurement in progress flow */
 volatile uint8_t measurement_finished;
 
-
+static uint8_t write_table_to_flash = 0;
 
 /** Configure unused pins */
 void __init main_io_init_unused_pins(void)
@@ -185,6 +185,14 @@ void send_eeprom_params_in_sram(void)
 }
 
 
+uint16_t table_data_copy_from_flash(void)
+{
+  data_table_info.size =  eepflash_copy_block((char *)data_table,
+                                              EEPFLASH_DATA_TABLE);
+  return(data_table_info.size);
+}
+
+
 void params_copy_from_eeprom_to_sram(void)
 {
   eepflash_copy_block((char *)&pparam_sram, EEPFLASH_FRAME_CMD_PARAMS);
@@ -238,6 +246,10 @@ firmware_state_t firmware_handle_measurement_finished(const firmware_state_t pst
     disable_IRQs_usermode();
     on_measurement_finished();
     send_table(PACKET_VALUE_TABLE_DONE);
+    if (write_table_to_flash){
+      eepflash_write((const char *)data_table, data_table_info.size,
+                     EEPFLASH_DATA_TABLE);
+    }
     return STP_DONE;
     break;
   default:
@@ -309,8 +321,7 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
     case FRAME_CMD_PARAMS_TO_EEPROM:
       /* The param length has already been checked by the frame parser */
       send_state("PARAMS_TO_EEPROM");
-
-      eepflash_write((char *)&pparam_sram, sizeof(pparam_sram),
+      eepflash_write((const char *)&pparam_sram, sizeof(pparam_sram),
                      EEPFLASH_FRAME_CMD_PARAMS);
       send_state(PSTR_READY);
       return STP_READY;
@@ -318,6 +329,23 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
     case FRAME_CMD_PARAMS_FROM_EEPROM:
       params_copy_from_eeprom_to_sram();
       send_eeprom_params_in_sram();
+      send_state(PSTR_READY);
+      return STP_READY;
+      break;
+    case FRAME_CMD_COPY_TABLE_FROM_FLASH:
+      if (table_data_copy_from_flash()){
+        send_table(PACKET_VALUE_TABLE_ABORTED);
+        send_state(PSTR_DONE);
+        return STP_DONE;
+      }
+      else{
+        /* virgin flash, nothing to copy */
+        send_state(PSTR_READY);
+        return STP_READY;
+      }
+      break;
+    case FRAME_CMD_FLAG_WRITE_TABLE_TO_FLASH:
+      write_table_to_flash = 1;
       send_state(PSTR_READY);
       return STP_READY;
       break;
@@ -365,6 +393,8 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
     case FRAME_CMD_PERSONALITY_INFO:
       send_personality_info();
       /* fall through */
+    case FRAME_CMD_COPY_TABLE_FROM_FLASH:
+    case FRAME_CMD_FLAG_WRITE_TABLE_TO_FLASH:
     case FRAME_CMD_PARAMS_TO_EEPROM:
     case FRAME_CMD_PARAMS_FROM_EEPROM:
     case FRAME_CMD_MEASURE:

@@ -364,9 +364,9 @@ void flashsections_cleanup(const uint8_t expunge_id)
 
 /** Copy data from newest valid block with BLOCKID
  *
- * Returns true if no valid block was found, false elsewise
+ * Returns 0 if no valid block was found, the copied block length elsewise
  */
-bool
+uint16_t
 eepflash_copy_block(char *p_ram, const uint8_t block_id)
 {
   char *p_flash;
@@ -381,10 +381,10 @@ eepflash_copy_block(char *p_ram, const uint8_t block_id)
     /* copy data from flash to ram */
     while (p_data != p_end)
       *(p_dst++) = *(p_data++);
-    return false;
+    return header->data_size;
   }
   else{
-    return true;
+    return 0;
   }
 }
 
