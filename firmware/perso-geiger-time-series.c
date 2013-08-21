@@ -148,8 +148,6 @@ void __init personality_io_init(void)
   GP4CON |= _FS(GP_SELECT_FUNCTION_Px0, MASK_00);
   /* configure P4.0 as output */
   GP4DAT |= _BV(GP_DATA_DIRECTION_Px0);
-  /* clear LED (set to VDD) */
-  GP4DAT |= _BV(GP_DATA_OUTPUT_Px1);
 }
 module_init(personality_io_init, 5);
 
