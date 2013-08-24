@@ -321,6 +321,10 @@ void trigger_src_conf(void)
    */
   PLACLK |= _FS(PLA_BLOCK0_CLK_SRC, MASK_011);
 
+  /* reset the PLA trigger latch */
+  RST_EOI_ENA;
+  RST_EOI_DIS;
+
   IRQEN |= _BV(INT_PLA_IRQ0);
 }
 
