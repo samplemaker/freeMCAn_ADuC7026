@@ -136,7 +136,8 @@ packet_value_table_t *packet_value_table_new(const packet_value_table_reason_t r
     */
   case 12:
     if (1){
-    uint32_t v, temp;
+    uint32_t v;
+    uint32_t temp = 0;
     state_compress_t state = STATE_A;
     uint32_t j = 0;
     for (size_t i=0; j<element_count; i++) {
@@ -158,7 +159,7 @@ packet_value_table_t *packet_value_table_new(const packet_value_table_reason_t r
              state = STATE_C;
          break;
          case (STATE_C) :
-             v= (temp & 0x00ff);
+             v = (temp & 0x00ff);
              temp = ((((uint32_t)e8[2*i+0]) << 0) +
                     (((uint32_t)e8[2*i+1]) << 8));
              v = (v << 4) + (temp >> 12);
