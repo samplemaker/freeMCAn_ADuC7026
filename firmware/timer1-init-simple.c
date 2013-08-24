@@ -39,7 +39,7 @@
 
 
 /** Set up our IO pins */
-void timer1_simple_io_init()
+void timer1_simple_io_init(void)
  {
   /* LED_TIME_BASE (measurement in progress LED) */  
   /* configure P4.1 as GPIO: */
