@@ -52,11 +52,11 @@ void __init data_table_init(void)
                "ldr  r1, =data_table                     \n\t"
                "ldr  r2, =data_table_end                 \n\t"
 
-               "zero_table:                              \n\t"
+               "zero_table%=:                            \n\t"
                "cmp  r1, r2                              \n\t"
                /* if (r1-r2)<0 (N, V flag): *(r1)=r0 then r1+=4 */
                "stmltia r1!, {r0}                        \n\t"
-               "blt zero_table                           \n\t"
+               "blt zero_table%=                         \n\t"
 
                /* if (r1-r2)<0 (C flag):  *(r1)=r0 then r1+=4
                "strlo r0,[r1], #4                        \n\t"
