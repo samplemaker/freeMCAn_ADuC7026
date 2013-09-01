@@ -205,11 +205,11 @@ typedef enum {
   /** Transmit intermediate results, then resume measurement */
   FRAME_CMD_INTERMEDIATE = 'i',
 
-  /** Copy stored data table from flash to ram */
-  FRAME_CMD_COPY_TABLE_FROM_FLASH = 'C',
+  /** Copy data table from flash to ram */
+  FRAME_CMD_TABLE_FROM_FLASH = 'C',
 
-  /** Toggle flag "copy table to flash after measurement finished" */
-  FRAME_CMD_FLAG_WRITE_TABLE_TO_FLASH = 'c',
+  /** Set flag to write the table to the flash after measurement finished */
+  FRAME_CMD_TABLE_TO_FLASH_AFTER_MSMT = 'c',
 
   /** Abort running measurement and transmit current results */
   FRAME_CMD_ABORT = 'a',

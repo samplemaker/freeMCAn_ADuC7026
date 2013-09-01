@@ -185,7 +185,7 @@ void send_eeprom_params_in_sram(void)
 }
 
 
-uint16_t table_data_copy_from_flash(void)
+size_t table_data_copy_from_flash(void)
 {
   data_table_info.size =  eepflash_copy_block((char *)data_table,
                                               EEPFLASH_DATA_TABLE);
@@ -332,7 +332,7 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
       send_state(PSTR_READY);
       return STP_READY;
       break;
-    case FRAME_CMD_COPY_TABLE_FROM_FLASH:
+    case FRAME_CMD_TABLE_FROM_FLASH:
       if (table_data_copy_from_flash()){
         send_table(PACKET_VALUE_TABLE_ABORTED);
         send_state(PSTR_DONE);
@@ -344,7 +344,7 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
         return STP_READY;
       }
       break;
-    case FRAME_CMD_FLAG_WRITE_TABLE_TO_FLASH:
+    case FRAME_CMD_TABLE_TO_FLASH_AFTER_MSMT:
       write_table_to_flash = 1;
       send_state(PSTR_READY);
       return STP_READY;
@@ -393,8 +393,8 @@ firmware_state_t firmware_handle_command(const firmware_state_t pstate,
     case FRAME_CMD_PERSONALITY_INFO:
       send_personality_info();
       /* fall through */
-    case FRAME_CMD_COPY_TABLE_FROM_FLASH:
-    case FRAME_CMD_FLAG_WRITE_TABLE_TO_FLASH:
+    case FRAME_CMD_TABLE_FROM_FLASH:
+    case FRAME_CMD_TABLE_TO_FLASH_AFTER_MSMT:
     case FRAME_CMD_PARAMS_TO_EEPROM:
     case FRAME_CMD_PARAMS_FROM_EEPROM:
     case FRAME_CMD_MEASURE:

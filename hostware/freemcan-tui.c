@@ -573,10 +573,10 @@ void tui_do_io(void)
         tui_device_send_simple_command(FRAME_CMD_INTERMEDIATE);
         break;
       case 'C':
-        tui_device_send_simple_command(FRAME_CMD_COPY_TABLE_FROM_FLASH);
+        tui_device_send_simple_command(FRAME_CMD_TABLE_FROM_FLASH);
         break;
       case 'c':
-        tui_device_send_simple_command(FRAME_CMD_FLAG_WRITE_TABLE_TO_FLASH);
+        tui_device_send_simple_command(FRAME_CMD_TABLE_TO_FLASH_AFTER_MSMT);
         break;
       case 'w':
         write_next_intermediate_packet = true;

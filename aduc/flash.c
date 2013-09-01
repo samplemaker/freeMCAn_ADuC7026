@@ -137,7 +137,7 @@ void flash_erase(const uint8_t sector_start, const uint8_t sector_end)
   for (uint8_t cnt = sector_start; cnt <= sector_end; cnt++){
     FEEADR = FLASH_SECTOR_SIZE_BYTES * cnt;
     FEECON = FEE_CMD_SINGLE_ERASE;
-    uint8_t fee_controller_busy = true;
+    bool fee_controller_busy = true;
     while (fee_controller_busy){
       volatile uint8_t flash_status = FEESTA;
       switch (flash_status & (_BV(FEE_FAIL) | _BV(FEE_PASS)) ) {
@@ -178,7 +178,7 @@ void flash_write(const char *src,  const char *dst, const uint16_t len)
     }
     FEEADR = dst_vma;
     FEECON = FEE_CMD_SINGLE_WRITE;
-    uint8_t fee_controller_busy = true;
+    bool fee_controller_busy = true;
     while (fee_controller_busy){
       /* FEESTA is reset if it is read */
       volatile uint8_t flash_status = FEESTA;
@@ -366,7 +366,7 @@ void flashsections_cleanup(const uint8_t expunge_id)
  *
  * Returns 0 if no valid block was found, the copied block length elsewise
  */
-uint16_t
+size_t
 eepflash_copy_block(char *p_ram, const uint8_t block_id)
 {
   char *p_flash;
